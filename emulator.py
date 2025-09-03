@@ -1,4 +1,3 @@
-from command import *
 from instructions import *
 from memory import *
 
@@ -6,7 +5,6 @@ class Emulator:
     def __init__(self):
         self.registers = [0,0,0]
 
-        self.command = Command(self)
         self.opcodes = Opcodes(self,self.command)
 
         self.cache = Cache()

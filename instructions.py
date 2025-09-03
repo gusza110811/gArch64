@@ -1,10 +1,8 @@
 from typing import Literal, TYPE_CHECKING
-from command import *
 import __future__
 
 class Opcodes:
-    def __init__(self, emulator:"em.Emulator", command:Command):
-        self.command = command
+    def __init__(self, emulator:"em.Emulator"):
         self.emulator = emulator
         self.sysrq = Sys_requests(self.emulator)
         self.OPCODES:dict[(str,dict[Literal["mnemonic","opcode","size","operands","desc"]])] = {}
