@@ -50,20 +50,28 @@ class Emulator:
     def core_dump(self):
         print("\n\n<--- REGISTER DUMP --->")
         # dump register
-        print(f"A: {self.registers[0]}")
-        print(f"X: {self.registers[1]}")
-        print(f"Y: {self.registers[2]}")
+        print(f"A: {self.registers[0]:03}  (x{self.registers[0]:02X})")
+        print(f"X: {self.registers[1]:03}  (x{self.registers[1]:02X})")
+        print(f"Y: {self.registers[2]:03}  (x{self.registers[2]:02X})")
 
-        self.dump_cache()
-        self.dump_ram()
+        if self.blocksize == 2:
+            self.dump_cache()
+            self.dump_ram()
+        else:
+            self.dump_cache(True)
+            self.dump_ram(True)
 
-    def dump_ram(self):
-        print("<--- RAM DUMP --->")
+    def dump_ram(self, long=False):
+        print("\n<--- RAM DUMP --->")
+        prevkey = 0
         for idx, (key,value) in enumerate(self.ram.data.items()):
-            print(f"{key:08X}: {value:02X}")
-
-    def dump_cache(self, start: int = 0, end: int = None):
-        print("<--- CACHE DUMP --->")
+            if not long:
+                print(f"{key:08X}: {value:02X}")
+            else:
+                print(f"{key:016X}: {value:02X}")
+    
+    def dump_cache(self, long=False, start: int = 0, end: int = None):
+        print("\n<--- CACHE DUMP --->")
         mem = self.cache.data
         if end is None:
             end = len(mem)
@@ -87,8 +95,10 @@ class Emulator:
                             print("... repeated")
                         printed = True
                     repeat_count = 0
-
-                print(f"{i:04X}: x{value:08X}")
+                if not long:
+                    print(f"{i:04X}: x{value:08X}")
+                else:
+                    print(f"{i:04X}: x{value:016X}")
                 prev_value = value
 
         if repeat_count > 0:
@@ -104,7 +114,6 @@ if __name__ == "__main__":
         0x00, 0x48,  0x00, 0x00, 0x00, 0xFF, # LDAX 255
         0x00, 0x84,  0x00, 0x00, 0x00, 0xFF, # STAR 255
         0x00, 0x80,  0x00, 0x00, 0x00, 0x10, # SYS x10   ; or SYS 16
-        0x00, 0x00, # HALT
         ])
     emulator.main(demo)
 
