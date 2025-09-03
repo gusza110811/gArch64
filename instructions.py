@@ -1,9 +1,29 @@
-from typing import Literal
+from typing import Literal, TYPE_CHECKING
+from command import *
+import __future__
 
 class Opcodes:
-    def __init__(self):
+    def __init__(self, emulator:"em.Emulator", command:Command):
+        self.command = command
+        self.emulator = emulator
+        self.sysrq = Sys_requests(self.emulator)
         self.OPCODES:dict[(str,dict[Literal["mnemonic","opcode","size","operands","desc"]])] = {}
         self.definitions()
+    
+    def execute(self, instruction:str, params:list[int]):
+        emulator = self.emulator
+        ram = emulator.ram
+        cache = emulator.cache
+        registers = emulator.registers
+
+        if instruction == "LDAI": registers[0] = params[0]
+        elif instruction == "LDXI": registers[1] = params[0]
+        elif instruction == "LDYI": registers[2] = params[0]
+
+        elif instruction == "SYS": self.sysrq.execute_sys(params[0])
+        elif instruction == "STAR": ram.store(params[0],registers[0])
+        elif instruction == "STXR": ram.store(params[1],registers[1])
+        elif instruction == "STYR": ram.store(params[2],registers[2])
 
     # Helper function to insert opcodes into the list
     def define(self,op, code, size, operands, desc):
@@ -29,13 +49,12 @@ class Opcodes:
         self.define('STX', 0x14, 1, ['addr'], 'Store X into address')
         self.define('STY', 0x15, 1, ['addr'], 'Store Y into address')
 
-        # --- Memory to Memory ---
+        # --- Cache to Cache ---
         self.define('MOV', 0x16, 2, ['addr_dst', 'addr_src'], 'Copy from addr_src to addr_dst')
 
         # --- Variable Load/store ---
-        self.define('LDV', 0x17, 0, [], 'Load value into register A, using X as high byte address and Y as low byte address')
-        self.define('STV', 0x18, 0, [], 'Load value into register A, using X as high byte address and Y as low byte address')
-
+        self.define('LDV', 0x17, 0, [], 'Load value from cache into register A, using X as address')
+        self.define('STV', 0x18, 0, [], 'Load value from cache into register A, using X as address')
 
         # --- Arithmetic ---
         self.define('ADD', 0x20, 0, [], 'A = X + Y')
@@ -89,4 +108,47 @@ class Opcodes:
         self.define("PUSHY", 0x64, 0, [], "Push Register Y to stack")
         self.define("POPY",  0x65, 0, [], "Pop from stack to Register Y")
 
+
+        # --- --- x32 Instructions --- ---
+        self.define("SYS", 0x80, 1, ["Command"], "Request the BIOS to do a certain task")
+        # --- RAM ---
+        self.define('LDAR', 0x81, 1, ['addr'], 'Load from address(ram) into A')
+        self.define('LDXR', 0x82, 1, ['addr'], 'Load from address(ram) into X')
+        self.define('LDYR', 0x83, 1, ['addr'], 'Load from address(ram) into Y')
+
+        self.define('STAR', 0x84, 1, ['addr'], 'Store A into address(ram)')
+        self.define('STXR', 0x85, 1, ['addr'], 'Store X into address(ram)')
+        self.define('STYR', 0x86, 1, ['addr'], 'Store Y into address(ram)')
+
+        self.define('LDVR', 0x87, 0, [], 'Load value from ram into register A, using X as address')
+        self.define('STVR', 0x88, 0, [], 'Load value from ram into register A, using X as address')
+
         return
+
+# Register X and Y are the first 2 registers respectively, more parameters will be in stack, top value first
+class Sys_requests:
+    def __init__(self,emulator:"em.Emulator"):
+        self.emulator = emulator
+        self.callNumTable = {
+            0x10:self.print
+        }
+
+    def execute_sys(self, call_number):
+        emulator = self.emulator
+        registers = emulator.registers[1:]
+
+        instruction = self.callNumTable[call_number]
+        instruction(registers)
+
+    def print(self, registers:list[int]): # Command 0x10
+        address = registers[0] # use X register
+        while 1:
+            value = self.emulator.ram.load(address)
+            if value != 0:
+                print(chr(value),end="")
+            else:
+                break
+            address += 1
+
+if TYPE_CHECKING:
+    import emulator as em
