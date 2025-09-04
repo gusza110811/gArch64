@@ -1,17 +1,20 @@
 from instructions import *
 from memory import *
+import argparse
 
 class Emulator:
     def __init__(self):
         self.registers = [0,0,0]
 
-        self.opcodes = Opcodes(self,self.command)
+        self.opcodes = Opcodes(self)
 
         self.cache = Cache()
         self.ram = Ram()
 
         self.counter = 0
         self.blocksize = 2
+
+        self.running = True
     
     def main(self, code:bytes):
         # Flash code to ram
@@ -23,7 +26,7 @@ class Emulator:
             self.counter += 1
             return value
 
-        while True:
+        while self.running:
             opcode = fetch()
             opcode = (opcode << 8) + fetch()
             info = self.opcodes.OPCODES[opcode]
@@ -40,8 +43,6 @@ class Emulator:
                 params.append(value)
 
             self.opcodes.execute(name,params)
-            if name == "HALT":
-                break
 
         return
 
@@ -107,12 +108,17 @@ class Emulator:
 
 if __name__ == "__main__":
     emulator = Emulator()
-    demo = bytes([
-        0x00, 0x47,  0x00, 0x00, 0x00, 0x41, # LDAI x41   : ascii hex for A (65)
-        0x00, 0x48,  0x00, 0x00, 0x00, 0xFF, # LDAX 255
-        0x00, 0x84,  0x00, 0x00, 0x00, 0xFF, # STAR 255
-        0x00, 0x80,  0x00, 0x00, 0x00, 0x10, # SYS x10   ; or SYS 16
-        ])
-    emulator.main(demo)
+
+    parser = argparse.ArgumentParser(description="gArch64 emulator")
+
+    parser.add_argument("source", help="Path to source binary", default="main.bin", nargs="?")
+
+    args = parser.parse_args()
+    source = args.source
+
+    with open(source,'rb') as sourcefile:
+        code = sourcefile.read()
+
+    emulator.main(code)
 
     emulator.core_dump()

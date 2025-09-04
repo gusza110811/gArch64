@@ -14,7 +14,11 @@ class Opcodes:
         cache = emulator.cache
         registers = emulator.registers
 
-        if instruction == "LDAI": registers[0] = params[0]
+        if instruction == "HALT": emulator.running = False
+        elif instruction == "LDA": registers[0] = ram.load(params[0])
+        elif instruction == "LDX": registers[1] = ram.load(params[0])
+        elif instruction == "LDY": registers[2] = ram.load(params[0])
+        elif instruction == "LDAI": registers[0] = params[0]
         elif instruction == "LDXI": registers[1] = params[0]
         elif instruction == "LDYI": registers[2] = params[0]
 
@@ -137,6 +141,7 @@ class Sys_requests:
 
         instruction = self.callNumTable[call_number]
         instruction(registers)
+        return
 
     def print(self, registers:list[int]): # Command 0x10
         address = registers[0] # use X register
