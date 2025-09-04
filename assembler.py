@@ -204,12 +204,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="gArch64 assembler")
 
     parser.add_argument("source", help="Path to source asm", default="main.asm", nargs="?")
-    parser.add_argument("-o","--output", help="Path to output binary", default="main.bin")
+    parser.add_argument("-o","--output", help="Path to output binary", default="\\/:*?\"<>|")
 
     args = parser.parse_args()
 
-    source = args.source
+    source:str = args.source
     dest = args.output
+
+    if dest == "\\/:*?\"<>|":
+        dest = ".".join(source.split(".")[:-1]) + ".bin"
 
     main = assembler()
 
