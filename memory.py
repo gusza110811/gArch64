@@ -3,7 +3,7 @@ import device
 class Cache:
     def __init__(self):
         self.data = [0] * (2**16)
-        self.stackstart = 0xFE00
+        self.stackstart = 0xF000
         self.stackaddr = 0
 
         self.INTstart=0xFF00

@@ -61,6 +61,19 @@ class Opcodes:
         elif instruction == "BEQ" and registers[1]==registers[2]: cache.push(emulator.counter); emulator.counter = params[0]
         elif instruction == "BNE" and registers[1]==registers[2]: cache.push(emulator.counter); emulator.counter = params[0]
 
+        elif instruction == "MVAX": registers[1] = registers[0]
+        elif instruction == "MVAY": registers[2] = registers[0]
+        elif instruction == "MVXA": registers[0] = registers[1]
+        elif instruction == "MVXY": registers[2] = registers[1]
+        elif instruction == "MVYA": registers[0] = registers[2]
+        elif instruction == "MVYX": registers[1] = registers[2]
+
+        elif instruction == "PUSHA": cache.push(registers[0])
+        elif instruction == "POPA": registers[0] = cache.pop()
+        elif instruction == "PUSHX": cache.push(registers[1])
+        elif instruction == "POPX": registers[1] = cache.pop()
+        elif instruction == "PUSHY": cache.push(registers[2])
+        elif instruction == "POPY": registers[2] = cache.pop()
 
 
         elif instruction == "INT":
