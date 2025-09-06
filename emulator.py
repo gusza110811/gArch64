@@ -135,8 +135,8 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="gArch64 emulator")
 
-    parser.add_argument("source", help="Path to source binary", default="main.bin", nargs="?")
-    parser.add_argument("-v", "--verbose", help="Dump Memory on halt", action="store_true")
+    parser.add_argument("source", help="path to source binary", default="main.bin", nargs="?")
+    parser.add_argument("-v", "--verbose", help="dump Memory on halt", action="store_true")
 
     args = parser.parse_args()
     source = args.source
