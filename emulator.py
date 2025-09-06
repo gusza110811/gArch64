@@ -37,8 +37,10 @@ class Emulator:
         with open(f"{os.path.dirname(__file__)}/bios.bin","rb") as biosfile:
             bios = biosfile.read()
         
-        for idx, value in enumerate(code):
-            self.ram.store(idx+0xFFFF_0000, value)
+        for idx, value in enumerate(bios):
+            self.ram.store(idx+0xFFFF_0000, value) # offset 4294901760
+        
+        self.counter = 0xFFFF_0000
 
         # register console
         console = SerialConsole()

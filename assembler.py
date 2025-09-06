@@ -244,7 +244,7 @@ if __name__ == "__main__":
     if dest == "\\/:*?\"<>|":
         dest = ".".join(source.split(".")[:-1]) + ".bin"
 
-    main = assembler(args.offset)
+    main = assembler(int(args.offset))
 
     with open(source) as sourcefile:
         code = sourcefile.readlines()

@@ -1,16 +1,10 @@
 const console xFE00_0000
+const counter x0
 
-INTR 5 subroutine
-
-INT 5
-INT 5
+LDAI text
+INT x10
 
 HALT
 
-label subroutine
-    LDXI x10
-    STXR console
-    LDXI 'A
-    STXR console
-    STYR console
-RET
+label text
+.ascii Hello, World!

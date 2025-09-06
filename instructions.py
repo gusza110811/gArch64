@@ -4,7 +4,6 @@ import __future__
 class Opcodes:
     def __init__(self, emulator:"em.Emulator"):
         self.emulator = emulator
-        self.sysrq = Sys_requests(self.emulator)
         self.OPCODES:dict[(str,dict[Literal["mnemonic","opcode","size","operands","desc"]])] = {}
         self.definitions()
     
@@ -21,9 +20,9 @@ class Opcodes:
         elif instruction == "LDX": registers[1] = cache.load(params[0])
         elif instruction == "LDY": registers[2] = cache.load(params[0])
 
-        elif instruction == "STA": cache.load(registers[0])
-        elif instruction == "STX": cache.load(registers[1])
-        elif instruction == "STY": cache.load(registers[2])
+        elif instruction == "STA": cache.store(params[0],registers[0])
+        elif instruction == "STX": cache.store(params[0],registers[1])
+        elif instruction == "STY": cache.store(params[0],registers[2])
 
         elif instruction == "MOV": cache.store(params[0],cache.load(params[1]))
 
@@ -31,7 +30,7 @@ class Opcodes:
         elif instruction == "LDXI": registers[1] = params[0]
         elif instruction == "LDYI": registers[2] = params[0]
 
-        elif instruction == "LDV": registers[0] = cache.load(registers[1])
+        elif instruction == "LDV":registers[0] = cache.load(registers[1])
         elif instruction == "STV": cache.store(registers[1], registers[0])
 
         elif instruction == "ADD": registers[0] = registers[1] + registers[2] ; emulator.correct_register()
@@ -88,6 +87,9 @@ class Opcodes:
         elif instruction == "STAR": ram.store(params[0],registers[0])
         elif instruction == "STXR": ram.store(params[0],registers[1])
         elif instruction == "STYR": ram.store(params[0],registers[2])
+
+        elif instruction == "LDVR": registers[0] = ram.load(registers[1])
+        elif instruction == "STVR": ram.store(registers[1],registers[0])
 
         elif instruction == "INTR": cache.register_int(params[0],params[1])
 
@@ -194,35 +196,6 @@ class Opcodes:
 
         return
 
-# Register X and Y are the first 2 parameters respectively, more parameters will be in stack, top value first
-class Sys_requests:
-    def __init__(self,emulator:"em.Emulator"):
-        self.emulator = emulator
-        self.callNumTable = {
-            0x10:self.print,
-            0x11:self.printnum
-        }
-
-    def execute_sys(self, call_number):
-        emulator = self.emulator
-
-        instruction = self.callNumTable[call_number]
-        instruction()
-        return
-
-    def print(self): # Command 0x10
-        address = self.emulator.registers[1] # use X register
-        while 1:
-            value = self.emulator.ram.load(address)
-            if value != 0:
-                print(chr(value),end="")
-            else:
-                break
-            address += 1
-    
-    def printnum(self):
-        address = self.emulator.registers(1)
-        print(self.emulator.ram[address])
 
 if TYPE_CHECKING:
     import emulator as em
