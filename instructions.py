@@ -44,14 +44,6 @@ class Opcodes:
         elif instruction == "XOR": registers[0] = registers[1] ^ registers[2]
         elif instruction == "NOT": registers[0] = ~registers[1]
 
-        elif instruction == "SYS": self.sysrq.execute_sys(params[0])
-        elif instruction == "LDAR": registers[0] = ram.load(params[0])
-        elif instruction == "LDXR": registers[1] = ram.load(params[1])
-        elif instruction == "LDYR": registers[2] = ram.load(params[2])
-        elif instruction == "STAR": ram.store(params[0],registers[0])
-        elif instruction == "STXR": ram.store(params[1],registers[1])
-        elif instruction == "STYR": ram.store(params[2],registers[2])
-
         elif instruction == "JMP": emulator.counter = params[0]
         elif instruction == "JZ" and registers[0] == 0: emulator.counter = params[0]
         elif instruction == "JNZ" and registers[0] != 0: emulator.counter = params[0]
@@ -59,6 +51,33 @@ class Opcodes:
         elif instruction == "JNC" and (not carry): emulator.counter = params[0]
         elif instruction == "JEQ" and registers[1]==registers[2]: emulator.counter = params[0]
         elif instruction == "JNE" and registers[1]==registers[2]: emulator.counter = params[0]
+
+        elif instruction == "RET": emulator.counter = cache.pop()
+        elif instruction == "CALL": cache.push(emulator.counter); emulator.counter = params[0]
+        elif instruction == "BZ" and registers[0] == 0: cache.push(emulator.counter); emulator.counter = params[0]
+        elif instruction == "BNZ" and registers[0] != 0: cache.push(emulator.counter); emulator.counter = params[0]
+        elif instruction == "BC" and carry: cache.push(emulator.counter); emulator.counter = params[0]
+        elif instruction == "BNC" and (not carry): cache.push(emulator.counter); emulator.counter = params[0]
+        elif instruction == "BEQ" and registers[1]==registers[2]: cache.push(emulator.counter); emulator.counter = params[0]
+        elif instruction == "BNE" and registers[1]==registers[2]: cache.push(emulator.counter); emulator.counter = params[0]
+
+
+
+        elif instruction == "INT":
+            address = cache.find_int(params[0])
+            cache.push(emulator.counter)
+            emulator.counter = address
+
+        elif instruction == "LDAR": registers[0] = ram.load(params[0])
+        elif instruction == "LDXR": registers[1] = ram.load(params[0])
+        elif instruction == "LDYR": registers[2] = ram.load(params[0])
+
+        elif instruction == "STAR": ram.store(params[0],registers[0])
+        elif instruction == "STXR": ram.store(params[0],registers[1])
+        elif instruction == "STYR": ram.store(params[0],registers[2])
+
+        elif instruction == "INTR": cache.register_int(params[0],params[1])
+
 
     # Helper function to insert opcodes into the list
     def define(self,op, code, size, operands, desc):
@@ -145,7 +164,7 @@ class Opcodes:
 
 
         # --- --- x32 Instructions --- ---
-        self.define("SYS", 0x80, 1, ["Command"], "Request the BIOS to do a certain task")
+        self.define("INT", 0x80, 1, ["Command"], "Raise interrupt to do a certain task")
         # --- RAM ---
         self.define('LDAR', 0x81, 1, ['addr'], 'Load from address(ram) into A')
         self.define('LDXR', 0x82, 1, ['addr'], 'Load from address(ram) into X')
@@ -157,6 +176,8 @@ class Opcodes:
 
         self.define('LDVR', 0x87, 0, [], 'Load value from ram into register A, using X as address')
         self.define('STVR', 0x88, 0, [], 'Load value from ram into register A, using X as address')
+
+        self.define('INTR', 0x90, 2, ['int_id','subroutine_address'], 'Map [int_id] to [subroutine_address]')
 
         return
 

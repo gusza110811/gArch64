@@ -1,9 +1,16 @@
-label begin
-LDXI text
-SYS X10
-JMP begin
+const console xFE00_0000
+
+INTR 5 subroutine
+
+INT 5
+INT 5
+
 HALT
 
-label text
-.ascii Hello, World!
-x0A
+label subroutine
+    LDXI x10
+    STXR console
+    LDXI 'A
+    STXR console
+    STYR console
+RET

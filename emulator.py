@@ -1,6 +1,8 @@
 from instructions import *
 from memory import *
+from device import *
 import argparse
+import os
 
 class Emulator:
     def __init__(self):
@@ -30,6 +32,18 @@ class Emulator:
         for idx, value in enumerate(code):
             self.ram.store(idx,value)
         
+        # Flash Bios
+        bios = bytes()
+        with open(f"{os.path.dirname(__file__)}/bios.bin","rb") as biosfile:
+            bios = biosfile.read()
+        
+        for idx, value in enumerate(code):
+            self.ram.store(idx+0xFFFF_0000, value)
+
+        # register console
+        console = SerialConsole()
+        self.ram.register_device(console)
+
         def fetch():
             value = self.ram.load(self.counter)
             self.counter += 1

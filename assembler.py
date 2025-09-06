@@ -6,7 +6,8 @@ import sys
 active_modules = []
 
 class assembler:
-    def __init__(self):
+    def __init__(self, offset=0):
+        self.offset = offset
         self.length = 2
         self.constants:dict[str,bytes] = {}
         self.aliases:dict[str,bytes] = {}
@@ -78,6 +79,7 @@ class assembler:
             "popy" :0x65,
 
             # x32
+            "int":0x80,
             "sys":0x80,
 
             "ldar":0x81,
@@ -90,6 +92,8 @@ class assembler:
 
             "ldvr":0x87,
             "stvr":0x88,
+
+            "intr":0x90
 
         }
     
@@ -108,7 +112,7 @@ class assembler:
 
             if line.lower().startswith("label"):
                 words = line.split()[1:]
-                value = length.to_bytes(self.length*2)
+                value = (length+self.offset).to_bytes(self.length*2)
                 self.constants[words[0]] = value
             for word in line.split():
                 if self.decode_helpers(line,idx):
@@ -183,25 +187,29 @@ class assembler:
         elif word in list(self.aliases.keys()):
             return self.aliases[word]
         elif word[0] == "'":
-            return word[1].encode()
+            return ord(word[1]).to_bytes(self.length*2)
         elif word[0] == '"':
             return word[1:].encode()
-        elif word[0] == "x":
+        elif word[0] == "X":
+            word.replace("_","")
             try:
                 return int(word[1:],base=16).to_bytes(math.ceil(len(word[1:])/2))
             except ValueError:
                 raise ValueError(f"Line {idx+1} '{line}': invalid hex '{word}'")
-        elif word[0] == "b":
+        elif word[0] == "B":
+            word.replace("_","")
             try:
                 return int(word[1:],base=2).to_bytes(len(word[1:]))
             except ValueError:
                 raise ValueError(f"Line {idx+1} '{line}': invalid binary '{word}'")
-        elif word[0] == "X":
+        elif word[0] == "x":
+            word.replace("_","")
             try:
                 return int(word[1:],base=16).to_bytes(self.length*2)
             except ValueError:
                 raise ValueError(f"Line {idx+1} '{line}': invalid hex '{word}'")
-        elif word[0] == "B":
+        elif word[0] == "b":
+            word.replace("_","")
             try:
                 return int(word[1:],base=2).to_bytes(self.length)
             except ValueError:
@@ -210,7 +218,7 @@ class assembler:
             return False
         else:
             try:
-                return bytes([int(word)])
+                return int(word).to_bytes(self.length*2)
             except ValueError:
                 raise ValueError(f"Line {idx+1} '{line}': can't decode `{word}`!")
 
@@ -226,6 +234,7 @@ if __name__ == "__main__":
 
     parser.add_argument("source", help="Path to source asm", default="main.asm", nargs="?")
     parser.add_argument("-o","--output", help="Path to output binary", default="\\/:*?\"<>|")
+    parser.add_argument("-O", "--offset", help="offset to labels", default=0)
 
     args = parser.parse_args()
 
@@ -235,7 +244,7 @@ if __name__ == "__main__":
     if dest == "\\/:*?\"<>|":
         dest = ".".join(source.split(".")[:-1]) + ".bin"
 
-    main = assembler()
+    main = assembler(args.offset)
 
     with open(source) as sourcefile:
         code = sourcefile.readlines()
