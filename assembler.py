@@ -77,6 +77,8 @@ class assembler:
             "popx" :0x63,
             "pushy":0x64,
             "popy" :0x65,
+            "pushr":0x66,
+            "popr":0x67,
 
             # x32
             "int":0x80,
@@ -92,8 +94,9 @@ class assembler:
 
             "ldvr":0x87,
             "stvr":0x88,
+            "movr":0x89,
 
-            "intr":0x90
+            "intr":0x90,
 
         }
     

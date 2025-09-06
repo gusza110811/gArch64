@@ -73,6 +73,14 @@ class Opcodes:
         elif instruction == "POPX": registers[1] = cache.pop()
         elif instruction == "PUSHY": cache.push(registers[2])
         elif instruction == "POPY": registers[2] = cache.pop()
+        elif instruction == "PUSHA":
+            cache.push(registers[0])
+            cache.push(registers[1])
+            cache.push(registers[2])
+        elif instruction == "POPA":
+            registers[2] = cache.pop()
+            registers[1] = cache.pop()
+            registers[0] = cache.pop()
 
 
         elif instruction == "INT":
@@ -90,6 +98,8 @@ class Opcodes:
 
         elif instruction == "LDVR": registers[0] = ram.load(registers[1])
         elif instruction == "STVR": ram.store(registers[1],registers[0])
+
+        elif instruction == "MOVR": ram.store(params[0],ram.load(params[1]))
 
         elif instruction == "INTR": cache.register_int(params[0],params[1])
 
@@ -176,6 +186,8 @@ class Opcodes:
         self.define("POPX",  0x63, 0, [], "Pop from stack to Register X")
         self.define("PUSHY", 0x64, 0, [], "Push Register Y to stack")
         self.define("POPY",  0x65, 0, [], "Pop from stack to Register Y")
+        self.define("PUSHR", 0x66, 0, [], "Push every Register to stack")
+        self.define("POPR",  0x67, 0, [], "Pop from stack to every Register")
 
 
         # --- --- x32 Instructions --- ---
@@ -191,6 +203,7 @@ class Opcodes:
 
         self.define('LDVR', 0x87, 0, [], 'Load value from ram into register A, using X as address')
         self.define('STVR', 0x88, 0, [], 'Load value from ram into register A, using X as address')
+        self.define('MOVR', 0x89, 2, ['addr_dst', 'addr_src'], 'Copy from addr_src to addr_dst (ram)')
 
         self.define('INTR', 0x90, 2, ['int_id','subroutine_address'], 'Map [int_id] to [subroutine_address]')
 
