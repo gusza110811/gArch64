@@ -1,4 +1,4 @@
-import keyboard
+import pynput
 from collections import deque
 
 class Device:
@@ -13,17 +13,22 @@ class Device:
 
 class SerialConsole(Device):
     def __init__(self):
-        keyboard.on_press(self.keyboard)
+        listener = pynput.keyboard.Listener(on_press=self.keyboard)
+        listener.start()
         self.writemode = False
         self.listen = False
         self.buffer:deque[int] = deque()
         super().__init__()
 
-    def keyboard(self, event:keyboard.KeyboardEvent):
+    def keyboard(self, key:pynput.keyboard.KeyCode):
         if self.listen:
-            key = event.name
-            if len(key) == 0:
-                self.buffer.append(key.encode())
+            try:
+                self.buffer.append(ord(key.char))
+            except AttributeError:
+                if key == pynput.keyboard.Key.enter:
+                    self.buffer.append(10)
+                elif key == pynput.keyboard.Key.space:
+                    self.buffer.append(32)
 
     def write(self, data:int):
         # Command mode

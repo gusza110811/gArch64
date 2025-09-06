@@ -89,7 +89,7 @@ class Emulator:
         prevkey = 0
         for idx, (key,value) in enumerate(self.ram.data.items()):
             if not long:
-                print(f"{key:08X}: {value:02X}")
+                print(f"{key:08X}: {value:02X}   : {chr(value)}")
             else:
                 print(f"{key:016X}: {value:02X}")
     
@@ -136,6 +136,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="gArch64 emulator")
 
     parser.add_argument("source", help="Path to source binary", default="main.bin", nargs="?")
+    parser.add_argument("-v", "--verbose", help="Dump Memory on halt", action="store_true")
 
     args = parser.parse_args()
     source = args.source
@@ -147,5 +148,7 @@ if __name__ == "__main__":
         emulator.main(code)
     except KeyboardInterrupt:
         print("INT")
-
-    emulator.core_dump()
+    
+    finally:
+        if bool(args.verbose):
+            emulator.core_dump()

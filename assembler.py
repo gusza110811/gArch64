@@ -31,6 +31,7 @@ class assembler:
             "sub":0x21,
             "mul":0x22,
             "div":0x23,
+            "mod":0x28,
 
             # Bitwise logic
             "and":0x24,
@@ -123,6 +124,8 @@ class assembler:
                     continue
                 if line.startswith("."):
                     length += len(self.decode_literal(line,idx))
+                    break
+                if word ==  ";":
                     break
                 try:
                     length += len(self.decode_value(word,idx,line))

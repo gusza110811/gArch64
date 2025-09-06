@@ -37,6 +37,7 @@ class Opcodes:
         elif instruction == "SUB": registers[0] = registers[1] - registers[2] ; emulator.correct_register()
         elif instruction == "MUL": registers[0] = registers[1] * registers[2] ; emulator.correct_register()
         elif instruction == "DIV": registers[0] = registers[1] // registers[2] ; emulator.correct_register()
+        elif instruction == "MOD": registers[0] = registers[1] % registers[2] ; emulator.correct_register()
 
         elif instruction == "AND": registers[0] = registers[1] & registers[2]
         elif instruction == "OR": registers[0] = registers[1] | registers[2]
@@ -146,6 +147,9 @@ class Opcodes:
         self.define('OR',  0x25, 0, [], 'A = X | Y')
         self.define('XOR', 0x26, 0, [], 'A = X ^ Y')
         self.define('NOT', 0x27, 0, [], 'A = ~X')
+
+        # --- Extended Arithmetic ---
+        self.define("MOD", 0x28, 0, [], 'A = X % Y')
 
         # --- Control Flow ---
         self.define('JMP', 0x30, 1, ['addr'], 'Jump to address')

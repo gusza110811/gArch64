@@ -23,9 +23,17 @@ Note that usage of defined `name` will be case-sensitive, but the `Command`s its
 #### Misc
 `.ascii [text]` -> Raw `text` encoded in ascii, can include space unlike `"` prefix
 
+## BIOS service
+The pre-loaded BIOS service program provides a few functions that would otherwise take lines of code
+
+| Function | Usage | Description |
+| --- | ---| --- |
+| print [address] | call INT 16 and set register A to your desired [address] | print a string at ram [address] until null byte
+
 ## Virtual Hardware Specification
 MMIO mapped to FE00_0000 to FE00_00FF
-the first one (FE00_0000) is always the serial console
+
+The first one (FE00_0000) is always the serial console
 
 ### The Serial Console
 | Command | use |
@@ -50,10 +58,11 @@ These are case-insensitive
 | `LDV` | Use value in register X as (cache) memory address and copy value from there to register A |
 | `STV` | Use value in register X as (cache) memory address and store value from register A to there |
 | **Arithmetic** |
-| `ADD` | Add register X and Y and save to register A |
-| `SUB` | Subtract register X and Y and save to register A |
-| `MUL` | Multiply register X and Y and save to register A |
-| `DIV` | Floor Divide register X and Y and save to register A |
+| `ADD` | Add register X and Y then save to register A |
+| `SUB` | Subtract register X by Y and save to register A |
+| `MUL` | Multiply register X and Y then save to register A |
+| `DIV` | Floor Divide register X by Y and save to register A |
+| `MOD` | Modulo X by Y and save to register A |
 | **Bitwise Logic** |
 | `AND` | Bitwise AND register X and Y and save to register A |
 | `OR` | Bitwise OR register X and Y and save to register A |
