@@ -13,19 +13,52 @@ class Opcodes:
         ram = emulator.ram
         cache = emulator.cache
         registers = emulator.registers
+        carry = emulator.carry
 
         if instruction == "HALT": emulator.running = False
-        elif instruction == "LDA": registers[0] = ram.load(params[0])
-        elif instruction == "LDX": registers[1] = ram.load(params[0])
-        elif instruction == "LDY": registers[2] = ram.load(params[0])
+
+        elif instruction == "LDA": registers[0] = cache.load(params[0])
+        elif instruction == "LDX": registers[1] = cache.load(params[0])
+        elif instruction == "LDY": registers[2] = cache.load(params[0])
+
+        elif instruction == "STA": cache.load(registers[0])
+        elif instruction == "STX": cache.load(registers[1])
+        elif instruction == "STY": cache.load(registers[2])
+
+        elif instruction == "MOV": cache.store(params[0],cache.load(params[1]))
+
         elif instruction == "LDAI": registers[0] = params[0]
         elif instruction == "LDXI": registers[1] = params[0]
         elif instruction == "LDYI": registers[2] = params[0]
 
+        elif instruction == "LDV": registers[0] = cache.load(registers[1])
+        elif instruction == "STV": cache.store(registers[1], registers[0])
+
+        elif instruction == "ADD": registers[0] = registers[1] + registers[2] ; emulator.correct_register()
+        elif instruction == "SUB": registers[0] = registers[1] - registers[2] ; emulator.correct_register()
+        elif instruction == "MUL": registers[0] = registers[1] * registers[2] ; emulator.correct_register()
+        elif instruction == "DIV": registers[0] = registers[1] // registers[2] ; emulator.correct_register()
+
+        elif instruction == "AND": registers[0] = registers[1] & registers[2]
+        elif instruction == "OR": registers[0] = registers[1] | registers[2]
+        elif instruction == "XOR": registers[0] = registers[1] ^ registers[2]
+        elif instruction == "NOT": registers[0] = ~registers[1]
+
         elif instruction == "SYS": self.sysrq.execute_sys(params[0])
+        elif instruction == "LDAR": registers[0] = ram.load(params[0])
+        elif instruction == "LDXR": registers[1] = ram.load(params[1])
+        elif instruction == "LDYR": registers[2] = ram.load(params[2])
         elif instruction == "STAR": ram.store(params[0],registers[0])
         elif instruction == "STXR": ram.store(params[1],registers[1])
         elif instruction == "STYR": ram.store(params[2],registers[2])
+
+        elif instruction == "JMP": emulator.counter = params[0]-1
+        elif instruction == "JZ" and registers[0] == 0: emulator.counter = params[0]-1
+        elif instruction == "JNZ" and registers[0] != 0: emulator.counter = params[0]-1
+        elif instruction == "JC" and carry: emulator.counter = params[0]-1
+        elif instruction == "JNC" and (not carry): emulator.counter = params[0]-1
+        elif instruction == "JEQ" and registers[1]==registers[2]: emulator.counter = params[0]-1
+        elif instruction == "JNE" and registers[1]==registers[2]: emulator.counter = params[0]-1
 
     # Helper function to insert opcodes into the list
     def define(self,op, code, size, operands, desc):
@@ -80,8 +113,8 @@ class Opcodes:
         self.define('JNE', 0x36, 1, ['addr'], 'Jump if X != Y')
 
         # --- Function Flow ---
-        self.define("RET",  0x37, 0, [], "Pop from stack twice, use the top value as lowbyte and bottom value as highbyte, and jump to that address")
-        self.define("CALL", 0x38, 1, ['addr'], "Jump to address, pushing current line to stack (high byte first)")
+        self.define("RET",  0x37, 0, [], "Pop from stack, and jump to that address")
+        self.define("CALL", 0x38, 1, ['addr'], "Jump to address, pushing current line to stack")
         self.define('BZ',   0x39, 1, ['addr'], 'Call if A == 0')
         self.define('BNZ',  0x3A, 1, ['addr'], 'Call if A != 0')
         self.define('BC',   0x3B, 1, ['addr'], 'Call if Carry')
@@ -127,7 +160,7 @@ class Opcodes:
 
         return
 
-# Register X and Y are the first 2 registers respectively, more parameters will be in stack, top value first
+# Register X and Y are the first 2 parameters respectively, more parameters will be in stack, top value first
 class Sys_requests:
     def __init__(self,emulator:"em.Emulator"):
         self.emulator = emulator
@@ -137,14 +170,13 @@ class Sys_requests:
 
     def execute_sys(self, call_number):
         emulator = self.emulator
-        registers = emulator.registers[1:]
 
         instruction = self.callNumTable[call_number]
-        instruction(registers)
+        instruction()
         return
 
-    def print(self, registers:list[int]): # Command 0x10
-        address = registers[0] # use X register
+    def print(self): # Command 0x10
+        address = self.emulator.registers[1] # use X register
         while 1:
             value = self.emulator.ram.load(address)
             if value != 0:

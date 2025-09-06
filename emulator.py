@@ -14,8 +14,17 @@ class Emulator:
         self.counter = 0
         self.blocksize = 2
 
+        self.carry = False
+
         self.running = True
     
+    def correct_register(self):
+        newvalue = self.registers[0] % 2^(16*self.blocksize)
+        if newvalue == self.registers[0]:
+            self.carry = False
+        else:
+            self.carry = True
+
     def main(self, code:bytes):
         # Flash code to ram
         for idx, value in enumerate(code):

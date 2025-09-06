@@ -80,6 +80,17 @@ class assembler:
             # x32
             "sys":0x80,
 
+            "ldar":0x81,
+            "ldxr":0x82,
+            "ldyr":0x83,
+
+            "star":0x84,
+            "stxr":0x85,
+            "styr":0x86,
+
+            "ldvr":0x87,
+            "stvr":0x88,
+
         }
     
     def labels(self,name):
