@@ -1,5 +1,5 @@
 const console xFE00_0000
-const counter xEF00
+const counter xEFFC
 
 INTR x10 print
 

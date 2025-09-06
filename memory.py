@@ -3,7 +3,7 @@ import device
 class Cache:
     def __init__(self):
         self.data = [0] * (2**16)
-        self.stackstart = 0xF000
+        self.stackstart = 0xFEFF # grows downward to 0xF000 , but no hard limit, it can certainly go beyond 0xF000, but please do not make it happen
         self.stackaddr = 0
 
         self.INTstart=0xFF00
@@ -16,12 +16,12 @@ class Cache:
         self.data[address] = value
 
     def push(self,value:int):
-        self.data[self.stackstart+self.stackaddr] = value
+        self.data[self.stackstart-self.stackaddr] = value
         self.stackaddr += 1
 
     def pop(self):
         self.stackaddr -= 1
-        return self.data[self.stackstart+self.stackaddr]
+        return self.data[self.stackstart-self.stackaddr]
     
     def register_int(self, id:int, target:int):
         self.store(id+self.INTstart,target)
