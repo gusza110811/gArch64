@@ -158,7 +158,7 @@ class assembler:
     def decode_literal(self, line:str, idx:int):
         global active_modules
         if line.lower().startswith(".ascii"):
-            return bytes(line[7:],encoding="ascii")+(0).to_bytes(1)
+            return bytes(line[7:],encoding="ascii")
 
         return
 
@@ -183,15 +183,25 @@ class assembler:
         elif word in list(self.aliases.keys()):
             return self.aliases[word]
         elif word[0] == "'":
-            return bytes(word[1],"ascii")
+            return word[1].encode()
         elif word[0] == '"':
-            return bytes(word[1:],"ascii")
+            return word[1:].encode()
         elif word[0] == "x":
+            try:
+                return int(word[1:],base=16).to_bytes(math.ceil(len(word[1:])/2))
+            except ValueError:
+                raise ValueError(f"Line {idx+1} '{line}': invalid hex '{word}'")
+        elif word[0] == "b":
+            try:
+                return int(word[1:],base=2).to_bytes(len(word[1:]))
+            except ValueError:
+                raise ValueError(f"Line {idx+1} '{line}': invalid binary '{word}'")
+        elif word[0] == "X":
             try:
                 return int(word[1:],base=16).to_bytes(self.length*2)
             except ValueError:
                 raise ValueError(f"Line {idx+1} '{line}': invalid hex '{word}'")
-        elif word[0] == "b":
+        elif word[0] == "B":
             try:
                 return int(word[1:],base=2).to_bytes(self.length)
             except ValueError:

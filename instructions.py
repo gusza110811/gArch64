@@ -52,13 +52,13 @@ class Opcodes:
         elif instruction == "STXR": ram.store(params[1],registers[1])
         elif instruction == "STYR": ram.store(params[2],registers[2])
 
-        elif instruction == "JMP": emulator.counter = params[0]-1
-        elif instruction == "JZ" and registers[0] == 0: emulator.counter = params[0]-1
-        elif instruction == "JNZ" and registers[0] != 0: emulator.counter = params[0]-1
-        elif instruction == "JC" and carry: emulator.counter = params[0]-1
-        elif instruction == "JNC" and (not carry): emulator.counter = params[0]-1
-        elif instruction == "JEQ" and registers[1]==registers[2]: emulator.counter = params[0]-1
-        elif instruction == "JNE" and registers[1]==registers[2]: emulator.counter = params[0]-1
+        elif instruction == "JMP": emulator.counter = params[0]
+        elif instruction == "JZ" and registers[0] == 0: emulator.counter = params[0]
+        elif instruction == "JNZ" and registers[0] != 0: emulator.counter = params[0]
+        elif instruction == "JC" and carry: emulator.counter = params[0]
+        elif instruction == "JNC" and (not carry): emulator.counter = params[0]
+        elif instruction == "JEQ" and registers[1]==registers[2]: emulator.counter = params[0]
+        elif instruction == "JNE" and registers[1]==registers[2]: emulator.counter = params[0]
 
     # Helper function to insert opcodes into the list
     def define(self,op, code, size, operands, desc):
@@ -165,7 +165,8 @@ class Sys_requests:
     def __init__(self,emulator:"em.Emulator"):
         self.emulator = emulator
         self.callNumTable = {
-            0x10:self.print
+            0x10:self.print,
+            0x11:self.printnum
         }
 
     def execute_sys(self, call_number):
@@ -184,6 +185,10 @@ class Sys_requests:
             else:
                 break
             address += 1
+    
+    def printnum(self):
+        address = self.emulator.registers(1)
+        print(self.emulator.ram[address])
 
 if TYPE_CHECKING:
     import emulator as em

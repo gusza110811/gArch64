@@ -52,7 +52,6 @@ class Emulator:
                 params.append(value)
 
             self.opcodes.execute(name,params)
-
         return
 
     def core_dump(self):
@@ -128,6 +127,9 @@ if __name__ == "__main__":
     with open(source,'rb') as sourcefile:
         code = sourcefile.read()
 
-    emulator.main(code)
+    try:
+        emulator.main(code)
+    except KeyboardInterrupt:
+        print("INT")
 
     emulator.core_dump()
