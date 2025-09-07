@@ -99,6 +99,9 @@ class assembler:
 
             "intr":0x90,
 
+            "reduce":0xA0,
+            "extend":0xA1,
+
         }
     
     def labels(self,name):
@@ -175,6 +178,12 @@ class assembler:
             with open(f"{name}.asm") as modulefile:
                 code = modulefile.readlines()
             return self.main(code,modulename=name)
+        if line.lower().startswith(".short"):
+            self.length = 1
+        if line.lower().startswith(".long"):
+            self.length = 2
+        if line.lower().startswith(".extended"):
+            self.length = 4
 
         return
 

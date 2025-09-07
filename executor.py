@@ -1,5 +1,6 @@
 from typing import Literal, TYPE_CHECKING
 import __future__
+import math
 
 class Executor:
     def __init__(self,emulator:"emulator.Emulator"):
@@ -102,6 +103,9 @@ class Executor:
         elif instruction == "MOVR": ram.store(params[0],ram.load(params[1]))
 
         elif instruction == "INTR": cache.register_int(params[0],params[1])
+
+        elif instruction == "REDUCE": emulator.blocksize = math.ceil(emulator.blocksize / 2)
+        elif instruction == "EXTEND": emulator.blocksize *= 2
 
 if TYPE_CHECKING:
     import emulator

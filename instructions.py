@@ -98,8 +98,10 @@ class Opcodes:
         self.define("POPR",  0x67, 0, [], "Pop from stack to every Register")
 
 
-        # --- --- x32 Instructions --- ---
+        # --- --- Extended Instructions --- ---
         self.define("INT", 0x80, 1, ["Command"], "Raise interrupt to do a certain task")
+        self.define('INTR', 0x90, 2, ['int_id','subroutine_address'], 'Map [int_id] to [subroutine_address]')
+
         # --- RAM ---
         self.define('LDAR', 0x81, 1, ['addr'], 'Load from address(ram) into A')
         self.define('LDXR', 0x82, 1, ['addr'], 'Load from address(ram) into X')
@@ -113,8 +115,9 @@ class Opcodes:
         self.define('STVR', 0x88, 0, [], 'Load value from ram into register A, using X as address')
         self.define('MOVR', 0x89, 2, ['addr_dst', 'addr_src'], 'Copy from addr_src to addr_dst (ram)')
 
-        self.define('INTR', 0x90, 2, ['int_id','subroutine_address'], 'Map [int_id] to [subroutine_address]')
-
+        # --- Block size ---
+        self.define('REDUCE', 0xA0, 0, [], 'Halves the block size (do nothing if blocksize is 1 word)')
+        self.define('EXTEND', 0xA1, 0, [], 'Doubles the block size')
         return
 
 
