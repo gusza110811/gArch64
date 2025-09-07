@@ -3,12 +3,14 @@ from memory import *
 from device import *
 import argparse
 import os
+import executor
 
 class Emulator:
     def __init__(self):
         self.registers = [0,0,0]
 
         self.opcodes = Opcodes(self)
+        self.executor = executor.Executor(self)
 
         self.cache = Cache()
         self.ram = Ram()
@@ -39,7 +41,7 @@ class Emulator:
         
         for idx, value in enumerate(bios):
             self.ram.store(idx+0xFFFF_0000, value) # offset 4294901760
-        
+
         self.counter = 0xFFFF_0000
 
         # register console
@@ -67,8 +69,9 @@ class Emulator:
                     value += fetch()
                 params.append(value)
 
-            self.opcodes.execute(name,params)
+            self.executor.execute(name,params)
         return
+
 
     def core_dump(self):
         print("\n\n<--- REGISTER DUMP --->")
@@ -141,8 +144,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
     source = args.source
 
-    with open(source,'rb') as sourcefile:
-        code = sourcefile.read()
+    try:
+        with open(source,'rb') as sourcefile:
+            code = sourcefile.read()
+    except FileNotFoundError:
+        with open(f"{os.path.dirname(__file__)}/source",'rb') as sourcefile:
+            code = sourcefile.read()
 
     try:
         emulator.main(code)

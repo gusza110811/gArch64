@@ -169,6 +169,12 @@ class assembler:
         global active_modules
         if line.lower().startswith(".ascii"):
             return bytes(line[7:],encoding="ascii")
+        if line.lower().startswith(".insert"):
+            name = line[8:]
+            code = []
+            with open(f"{name}.asm") as modulefile:
+                code = modulefile.readlines()
+            return self.main(code,modulename=name)
 
         return
 

@@ -6,9 +6,11 @@ class Device:
         pass
 
     def write(self, data):
+        "When the system attempts to write into the address this device is mapped to"
         return
 
     def read(self) -> int:
+        "When the system attempts to read from the address this device is mapped to"
         return
 
 class SerialConsole(Device):
@@ -24,13 +26,20 @@ class SerialConsole(Device):
         if self.listen:
             try:
                 self.buffer.append(ord(key.char))
+                print(key.char,end="",flush=True)
             except AttributeError:
                 if key == pynput.keyboard.Key.enter:
+                    print()
                     self.buffer.append(10)
                 elif key == pynput.keyboard.Key.space:
+                    print(" ",flush=True,end="")
                     self.buffer.append(32)
+                elif key == pynput.keyboard.Key.backspace:
+                    print("\x08 \x08",end="",flush=True)
+                    self.buffer.append(8)
 
     def write(self, data:int):
+        #print(f"{"Writing" if self.writemode else ""}{" and " if self.writemode and self.listen else ""}{"Listening" if self.listen else ""}",end="")
         # Command mode
         if not self.writemode:
             if data == 0x10: self.writemode = True
@@ -38,7 +47,7 @@ class SerialConsole(Device):
             elif data == 0x13: self.listen = False # stop_listen
         else:
             if data != 0:
-                print(chr(data),end="")
+                print(chr(data),end="",flush=True)
             else:
                 self.writemode = False
         return

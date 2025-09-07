@@ -7,30 +7,50 @@ INTR x12 input
 JMP x0
 label input
     PUSHR
-    STA counter ; register A is the target to save at
-    LDXI x12    ; listen command
+    STA counter         ; save target buffer pointer
+    LDXI x12            ; listen command
     STXR console
 
-    label listen_loop
-        LDYR console
-        LDXI x0A
+label listen_loop
+    LDYR console        ; read character into Y
 
-        JEQ end_loop
-        MVYA
+    ; check for backspace (0x08)
+    LDXI x08
+    JEQ handle_backspace
 
-        JZ listen_loop
-        LDX counter
-        LDYI 1
-        STVR
-        ADD
-        STA counter
-        JMP listen_loop
+    ; check for newline
+    LDXI x0A
+    JEQ end_loop
 
-    label end_loop
-    LDXI x13
+    ; store character
+    MVYA
+    JZ listen_loop      ; ignore zero
+    LDX counter
+    LDYI 1
+    STVR
+    ADD
+    STA counter
+    JMP listen_loop
+
+label handle_backspace
+    ; only backspace if counter > start
+    LDA counter
+    JZ listen_loop      ; if already at start, skip
+    MVAX
+    LDYI x1             ; check if counter > 1
+    SUB
+
+    STA counter         ; decrement counter
+    JMP listen_loop
+
+label end_loop
+    LDYI 0
+    STYR console
+    LDXI x13            ; stop listen command
     STXR console
     POPR
 RET
+
 
 label print
     ; To preserve state
