@@ -25,7 +25,10 @@ class SerialConsole(Device):
 
     def keyboard(self):
         while 1:
-            char = ord(sys.stdin.read(1))
+            try:
+                char = ord(sys.stdin.read(1))
+            except TypeError:
+                char = 0
             if self.listen:
                 self.buffer.append(char)
 

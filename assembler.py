@@ -2,6 +2,7 @@ import os
 import math
 import argparse
 import sys
+from collections import deque
 
 active_modules = []
 
@@ -169,15 +170,40 @@ class assembler:
         return self.output, self.constants
 
     def decode_literal(self, line:str, idx:int):
+        def decode_ascii(text:str):
+            text:deque[str] = deque(text)
+            result = bytes()
+            while text:
+                char = text.popleft()
+                if char != "\\":
+                    result += bytes(char,encoding="ascii")
+                    continue
+                code = text.popleft()
+                if code == "n":
+                    result += 0x0A.to_bytes(1)
+                elif code == "r":
+                    result += 0x0D.to_bytes(1)
+                elif code == "t":
+                    result += 0x09.to_bytes(1)
+                elif code == "0":
+                    result += 0x00.to_bytes(1)
+                elif code == "\\":
+                    result += bytes("\\",encoding="ascii")
+                else:
+                    raise SyntaxError(f"Line {idx+1} '{line}': Invalid escape code '{char+code}'")
+            return result
+
         global active_modules
         if line.lower().startswith(".ascii"):
-            return bytes(line[7:],encoding="ascii")
+            return decode_ascii(line[7:])
         if line.lower().startswith(".insert"):
             name = line[8:]
             code = []
             with open(f"{name}.asm") as modulefile:
                 code = modulefile.readlines()
-            return self.main(code,modulename=name)
+            return self.main(code,modulename=name)[0]
+        if line.lower().startswith(".blank"):
+            return bytes(int(line[7:].strip()))
         if line.lower().startswith(".short"):
             self.length = 1
         if line.lower().startswith(".long"):
@@ -185,7 +211,7 @@ class assembler:
         if line.lower().startswith(".extended"):
             self.length = 4
 
-        return
+        return bytes()
 
     def decode_helpers(self, line:str,idx):
         if line.lower().startswith("const"):
