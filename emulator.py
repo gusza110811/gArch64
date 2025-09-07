@@ -148,7 +148,7 @@ if __name__ == "__main__":
         with open(source,'rb') as sourcefile:
             code = sourcefile.read()
     except FileNotFoundError:
-        with open(f"{os.path.dirname(__file__)}/source",'rb') as sourcefile:
+        with open(f"{os.path.dirname(__file__)}/{source}",'rb') as sourcefile:
             code = sourcefile.read()
 
     try:

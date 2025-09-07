@@ -74,11 +74,11 @@ class Executor:
         elif instruction == "POPX": registers[1] = cache.pop()
         elif instruction == "PUSHY": cache.push(registers[2])
         elif instruction == "POPY": registers[2] = cache.pop()
-        elif instruction == "PUSHA":
+        elif instruction == "PUSHR":
             cache.push(registers[0])
             cache.push(registers[1])
             cache.push(registers[2])
-        elif instruction == "POPA":
+        elif instruction == "POPR":
             registers[2] = cache.pop()
             registers[1] = cache.pop()
             registers[0] = cache.pop()

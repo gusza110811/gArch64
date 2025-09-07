@@ -44,8 +44,10 @@ label handle_backspace
     JMP listen_loop
 
 label end_loop
-    LDYI 0
-    STYR console
+    LDX counter
+    LDAI x00
+    STVR
+
     LDXI x13            ; stop listen command
     STXR console
     POPR
