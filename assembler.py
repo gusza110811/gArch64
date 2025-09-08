@@ -15,93 +15,93 @@ class assembler:
         self.output = b""
         self.code:list[str]
         self.mnemonicToOP = {
-            "halt":0x00,
-            # Load and store
-            "lda":0x10,
-            "ldx":0x11,
-            "ldy":0x12,
-            "sta":0x13,
-            "stx":0x14,
-            "sty":0x15,
-            "mov":0x16,
-            "ldv":0x17,
-            "stv":0x18,
+        "halt":0x00,
+        # Load and store
+        "lda":0x10,
+        "ldx":0x11,
+        "ldy":0x12,
+        "sta":0x13,
+        "stx":0x14,
+        "sty":0x15,
+        "mov":0x16,
+        "ldv":0x17,
+        "stv":0x18,
 
-            # Arithmetic
-            "add":0x20,
-            "sub":0x21,
-            "mul":0x22,
-            "div":0x23,
-            "mod":0x28,
+        # Arithmetic
+        "add":0x20,
+        "sub":0x21,
+        "mul":0x22,
+        "div":0x23,
+        "mod":0x28,
 
-            # Bitwise logic
-            "and":0x24,
-            "or" :0x25,
-            "xor":0x26,
-            "not":0x27,
+        # Bitwise logic
+        "and":0x24,
+        "or" :0x25,
+        "xor":0x26,
+        "not":0x27,
 
-            # Control flow
-            "jmp":0x30,
-            "jz" :0x31,
-            "jnz":0x32,
-            "jc" :0x33,
-            "jnc":0x34,
-            "jeq":0x35,
-            "jne":0x36,
+        # Control flow
+        "jmp":0x30,
+        "jz" :0x31,
+        "jnz":0x32,
+        "jc" :0x33,
+        "jnc":0x34,
+        "jeq":0x35,
+        "jne":0x36,
 
-            # Function flow
-            "ret" :0x37,
-            "call":0x38,
-            "bz"  :0x39,
-            "bnz" :0x3A,
-            "bc"  :0x3B,
-            "bnc" :0x3C,
-            "be"  :0x3D,
-            "bne" :0x3E,
+        # Function flow
+        "ret" :0x37,
+        "call":0x38,
+        "bz"  :0x39,
+        "bnz" :0x3A,
+        "bc"  :0x3B,
+        "bnc" :0x3C,
+        "be"  :0x3D,
+        "bne" :0x3E,
 
-            # Load Immediate
-            "ldai":0x47,
-            "ldxi":0x48,
-            "ldyi":0x49,
+        # Load Immediate
+        "ldai":0x47,
+        "ldxi":0x48,
+        "ldyi":0x49,
 
-            # Register move
-            "mvax":0x50,
-            "mvay":0x51,
-            "mvxy":0x52,
-            "mvxa":0x52,
-            "mvyx":0x54,
-            "mvya":0x55,
+        # Register move
+        "mvax":0x50,
+        "mvay":0x51,
+        "mvxy":0x52,
+        "mvxa":0x52,
+        "mvyx":0x54,
+        "mvya":0x55,
 
-            # Stack
-            "pusha":0x60,
-            "popa" :0x61,
-            "pushx":0x62,
-            "popx" :0x63,
-            "pushy":0x64,
-            "popy" :0x65,
-            "pushr":0x66,
-            "popr":0x67,
+        # Stack
+        "pusha":0x60,
+        "popa" :0x61,
+        "pushx":0x62,
+        "popx" :0x63,
+        "pushy":0x64,
+        "popy" :0x65,
+        "pushr":0x66,
+        "popr":0x67,
 
-            # x32
-            "int":0x80,
-            "sys":0x80,
+        # x32
+        "int":0x80,
+        "sys":0x80,
 
-            "ldar":0x81,
-            "ldxr":0x82,
-            "ldyr":0x83,
+        "ldar":0x81,
+        "ldxr":0x82,
+        "ldyr":0x83,
 
-            "star":0x84,
-            "stxr":0x85,
-            "styr":0x86,
+        "star":0x84,
+        "stxr":0x85,
+        "styr":0x86,
 
-            "ldvr":0x87,
-            "stvr":0x88,
-            "movr":0x89,
+        "ldvr":0x87,
+        "stvr":0x88,
+        "movr":0x89,
 
-            "intr":0x90,
+        "intr":0x90,
 
-            "reduce":0xA0,
-            "extend":0xA1,
+        "reduce":0xA0,
+        "extend":0xA1,
 
         }
     
