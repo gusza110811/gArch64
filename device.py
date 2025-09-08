@@ -16,7 +16,7 @@ class Device:
 
 class SerialConsole(Device):
     def __init__(self):
-        listener = threading.Thread(target=self.keyboard)
+        listener = threading.Thread(target=self.keyboard, daemon=True)
         listener.start()
         self.writemode = False
         self.listen = False
