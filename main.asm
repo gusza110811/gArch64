@@ -15,12 +15,8 @@ label loop
     INT x12
     INT x10
 
-    LDAI x10
-    STAR console ; print command
     LDAI newline
     STAR console ; send newline
-    LDAI x00
-    STAR console ; null (stop printing)
 
 JMP loop
 

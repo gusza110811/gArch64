@@ -28,22 +28,11 @@ class SerialConsole(Device):
             try:
                 char = ord(sys.stdin.read(1))
             except TypeError:
-                char = 0
-            if self.listen:
-                self.buffer.append(char)
+                continue
+            self.buffer.append(char)
 
     def write(self, data:int):
-        # Command mode
-        if not self.writemode:
-            if data == 0x10: self.writemode = True
-            elif data == 0x12: self.listen = True # start_listen
-            elif data == 0x13: self.listen = False # stop_listen
-        else:
-            if data != 0:
-                print(chr(data),end="",flush=True)
-            else:
-                self.writemode = False
-        return
+        print(chr(data),end="",flush=True)
 
     def read(self):
         try:

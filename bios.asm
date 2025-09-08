@@ -8,8 +8,6 @@ JMP x0
 label input
     PUSHR
     STA counter         ; save target buffer pointer
-    LDXI x12            ; listen command
-    STXR console
 
 label listen_loop
     LDYR console        ; read character into Y
@@ -48,8 +46,6 @@ label end_loop
     LDAI x00
     STVR
 
-    LDXI x13            ; stop listen command
-    STXR console
     POPR
 RET
 
