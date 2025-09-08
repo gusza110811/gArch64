@@ -28,4 +28,4 @@ label prompt
 
 label text
 ; allocate 83 bytes for user's input
-.blank 83
+.blank 107
