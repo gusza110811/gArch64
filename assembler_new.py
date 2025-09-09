@@ -140,22 +140,36 @@ class Assembler:
                 self.const[name] = 0 # initialize
 
     def get_labels(self,lines:list[str]):
-        lines = lines.splitlines()
         for idx, line in enumerate(lines):
             words = line.split()
             if words[0].endswith(":") and len(words) == 1:
                 name = words[0][:-1]
-                value = self.parse_lines(lines[:idx])
+                value = len(self.parse_lines(lines[:idx]))+1
                 self.const[name] = value
 
     def main(self,source:str):
+
+        def strips(list:list[str]):
+            result = []
+            for item in list:
+                item = item.strip()
+                if item:
+                    result.append(item)
+            return result
+
         lines = source.splitlines()
+        lines = strips(lines)
         output = bytes()
 
         self.get_const(lines)
+        self.get_labels(lines)
         output = self.parse_lines(lines)
 
         return output
+
+def is_ascii_printable_byte(byte_value):
+    """Checks if an integer byte value is an ASCII printable character."""
+    return 32 <= byte_value <= 126
 
 if __name__ == "__main__":
     assembler = Assembler()
@@ -177,5 +191,14 @@ if __name__ == "__main__":
         code = sourcefile.read()
 
     output = assembler.main(code)
+    constants = assembler.const
+    print("\nConstants used:")
+    maxlen = len(str(len(constants)))
+    for idx, (name,value) in enumerate(constants.items()):
+        if is_ascii_printable_byte(value):
+            print(f"{str(idx).zfill(maxlen)}: {name} = {value} (`{value.decode("ascii")}` or {value:02X})")
+        else:
+            print(f"{str(idx).zfill(maxlen)}: {name} = {value} ({value:02X})")
+    print("<","="*len(constants)*2,">",sep="=")
 
     print(output.hex(sep=" "))
