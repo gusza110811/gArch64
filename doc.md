@@ -28,7 +28,8 @@ The pre-loaded BIOS service program provides a few functions that would otherwis
 
 | Function | Usage | Description |
 | --- | ---| --- |
-| print [address] | call INT 16 and set register A to your desired [address] | print a string at ram [address] until null byte
+| print [address] | Set register A to the address of the first character in your string then call INT 16 | print a string at ram [address] until null byte |
+| input [address] | Set register A to the beginning address of where you want you input string to be at, then call INT 18 | Recors user's input to [address]
 
 ## Virtual Hardware Specification
 MMIO mapped to FE00_0000 to FE00_00FF
