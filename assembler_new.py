@@ -4,7 +4,7 @@ from asm_types import *
 class Assembler:
     def __init__(self):
         self.const = {}
-        self.mnemonicToClass = {
+        self.mnemonicToClass:dict[(str,Command)] = {
             # Halt
             "halt": Halt,
 
@@ -49,9 +49,14 @@ class Assembler:
             "pushr": Pushr,
             "popr": Popr,
 
+            # Variable load/store
+            "ldv": Ldv,
+            "ldvr": Ldvr,
+            "stv": Stv,
+            "stvr": Stvr,
+
             # x32 system / interrupts
             "int": Int,
-            "sys": Sys,
             "intr": Intr,
 
             # Extended operations
@@ -71,26 +76,28 @@ class Assembler:
         elif word.startswith("'"):
             return ord(word[1])
         else:
-            return int(word)
+            try:
+                return int(word)
+            except ValueError:
+                return 0
 
     def parse_parameters(self,parameters:str):
+        if len(parameters) == 0:
+            return []
+
         parameters = parameters.split(",")
         result:list[Parameter] = []
 
-        for idx, parameter in parameters:
+        for parameter in parameters:
+            parameter = parameter.strip()
             prefix = parameter[0]
             if prefix in list("%$@*"):
                 parameter = parameter[1:]
             if prefix == "$":
-                name = parameter[1].lower()
+                name = parameter.lower()
                 if name == "a": result.append(Register(0))
                 if name == "x": result.append(Register(1))
                 if name == "y": result.append(Register(2))
-            elif prefix == "@":
-                name = parameter[1].lower()
-                if name == "a": result.append(AbstractRegister(0))
-                if name == "x": result.append(AbstractRegister(1))
-                if name == "y": result.append(AbstractRegister(2))
             else:
                 value = self.decode(parameter)
                 if prefix == "%":
@@ -102,7 +109,7 @@ class Assembler:
 
         return result
     
-    def parse_line(self,line:str):
+    def parse_line(self,line:str) -> bytes:
         result = bytes()
         words = line.split()
         # ignore if const definition, label or . command
@@ -110,25 +117,24 @@ class Assembler:
         if words[0].endswith(":"): return result
         if words[0].startswith("."): return result
 
-        command = words[0]
+        command:Command = self.mnemonicToClass[words[0].lower()]()
         parameters = self.parse_parameters(" ".join(words[1:]))
-        result = command
+        result = command.get_value(parameters)
 
-        return
+        return result
 
     def parse_lines(self,lines:list[str]):
         result = bytes()
         for idx, line in enumerate(lines):
             result += self.parse_line(line)
 
-        return
+        return result
 
     def get_const(self, lines:list[str]):
-        lines = lines.splitlines()
         for line in lines:
             words = line.split()
             if words[0] == "const":
-                self.const[words[1]] = self.parse_line(words[2:])
+                self.const[words[1]] = self.parse_lines(words[2:])
             if words[0].endswith(":") and len(words) == 1:
                 name = words[0][:-1]
                 self.const[name] = 0 # initialize
@@ -155,7 +161,7 @@ if __name__ == "__main__":
     assembler = Assembler()
     parser = argparse.ArgumentParser(description="gArch64 assembler")
 
-    parser.add_argument("source", help="Path to source asm", default="main.asm", nargs="?")
+    parser.add_argument("source", help="Path to source asm", default="test.asm", nargs="?")
     parser.add_argument("-o","--output", help="Path to output binary", default="\\/:*?\"<>|")
     parser.add_argument("-O", "--offset", help="offset to labels", default=0)
 
@@ -170,4 +176,6 @@ if __name__ == "__main__":
     with open(source) as sourcefile:
         code = sourcefile.read()
 
-    assembler.main(code)
+    output = assembler.main(code)
+
+    print(output.hex(sep=" "))

@@ -4,10 +4,10 @@ class Command:
     def __init__(self):
         pass
 
-    def get_value(self, params:list["Parameter"]=None):
+    def get_value(self, params:list["Parameter"]=None) -> bytes:
         return
 
-    def encode_params(self, params:list[Parameter]) -> bytes:
+    def encode_immediate(self, params:list[Parameter]) -> bytes:
         """Encode all params as 4-byte big-endian values."""
         return b''.join(p.value.to_bytes(4, "big") for p in params)
 
@@ -16,8 +16,64 @@ class Halt(Command):
         return bytes([0x00])
 
 class Mov(Command):
-    def get_value(self, params = None):
-        return super().get_value(params)
+    def get_value(self, params = None) -> bytes:
+        if len(params) < 2:
+            raise SyntaxError("Not enough parameters")
+        if len(params) > 2:
+            raise SyntaxError("Too many parameters")
+        destination = params[0]
+        source = params[-1]
+        if isinstance(destination,Immediate):
+            raise ValueError("Can't store value to an immediate value")
+        if isinstance(source,CacheAddr) and isinstance(destination,RamAddr):
+            raise ValueError("Can't directly copy from cache to ram")
+        if isinstance(source,RamAddr) and isinstance(destination,CacheAddr):
+            raise ValueError("Can't directly copy from ram to cache")
+        if isinstance(source,Immediate) and isinstance(destination,RamAddr):
+            raise ValueError("Can't directly store immediate value to ram")
+        if isinstance(source,Immediate) and isinstance(destination,CacheAddr):
+            raise ValueError("Can't directly store immediate value to cache")
+
+        # Load
+        if isinstance(destination,Register) and isinstance(source,CacheAddr):
+            return (0x10 + destination.value).to_bytes(2,"big") + source.value.to_bytes(4)
+        # Store
+        elif isinstance(destination,CacheAddr) and isinstance(source,Register):
+            return (0x13 + source.value).to_bytes(2,"big") + destination.value.to_bytes(4)
+        # MOV
+        elif isinstance(destination,CacheAddr) and isinstance(source,CacheAddr):
+            return 0x16.to_bytes(2,"big") + self.encode_immediate([destination,source])
+        # Load ram
+        if isinstance(destination,Register) and isinstance(source,RamAddr):
+            return (0x81 + destination.value).to_bytes(2,"big") + source.value.to_bytes(4)
+        # Store ram
+        elif isinstance(destination,RamAddr) and isinstance(source,Register):
+            return (0x84 + source.value).to_bytes(2,"big") + destination.value.to_bytes(4)
+        
+        # Register-Register
+        elif isinstance(destination,Register) and isinstance(source,Register):
+            destreg = destination.value
+            sourcereg = source.value
+            # there wasnt a meaningful pattern so it had to be hard coded, oops
+            if sourcereg == 0:
+                if destreg == 1:
+                    return 0x50.to_bytes(2,"big")
+                if destreg == 2:
+                    return 0x51.to_bytes(2,"big")
+            if sourcereg == 1:
+                if destreg == 0:
+                    return 0x52.to_bytes(2,"big")
+                if destreg == 2:
+                    return 0x53.to_bytes(2,"big")
+            if sourcereg == 2:
+                if destreg == 0:
+                    return 0x54.to_bytes(2,"big")
+                if destreg == 1:
+                    return 0x55.to_bytes(2,"big")
+        
+        # immediate value
+        elif isinstance(destination,Register) and isinstance(source,Immediate):
+            return (0x47+destination.value).to_bytes(2) + source.value.to_bytes(4)
 
 # Arithmetic
 class Add(Command):
@@ -60,31 +116,31 @@ class Not(Command):
 # Control flow
 class Jmp(Command):
     def get_value(self, params):
-        return bytes([0x00, 0x30]) + self.encode_params(params)
+        return bytes([0x00, 0x30]) + self.encode_immediate(params)
 
 class Jz(Command):
     def get_value(self, params):
-        return bytes([0x00, 0x31]) + self.encode_params(params)
+        return bytes([0x00, 0x31]) + self.encode_immediate(params)
 
 class Jnz(Command):
     def get_value(self, params):
-        return bytes([0x00, 0x32]) + self.encode_params(params)
+        return bytes([0x00, 0x32]) + self.encode_immediate(params)
 
 class Jc(Command):
     def get_value(self, params):
-        return bytes([0x00, 0x33]) + self.encode_params(params)
+        return bytes([0x00, 0x33]) + self.encode_immediate(params)
 
 class Jnc(Command):
     def get_value(self, params):
-        return bytes([0x00, 0x34]) + self.encode_params(params)
+        return bytes([0x00, 0x34]) + self.encode_immediate(params)
 
 class Jeq(Command):
     def get_value(self, params):
-        return bytes([0x00, 0x35]) + self.encode_params(params)
+        return bytes([0x00, 0x35]) + self.encode_immediate(params)
 
 class Jne(Command):
     def get_value(self, params):
-        return bytes([0x00, 0x36]) + self.encode_params(params)
+        return bytes([0x00, 0x36]) + self.encode_immediate(params)
 
 # Function flow
 class Ret(Command):
@@ -93,44 +149,46 @@ class Ret(Command):
 
 class Call(Command):
     def get_value(self, params):
-        return bytes([0x00, 0x38]) + self.encode_params(params)
+        return bytes([0x00, 0x38]) + self.encode_immediate(params)
 
 class Bz(Command):
     def get_value(self, params):
-        return bytes([0x00, 0x39]) + self.encode_params(params)
+        return bytes([0x00, 0x39]) + self.encode_immediate(params)
 
 class Bnz(Command):
     def get_value(self, params):
-        return bytes([0x00, 0x3A]) + self.encode_params(params)
+        return bytes([0x00, 0x3A]) + self.encode_immediate(params)
 
 class Bc(Command):
     def get_value(self, params):
-        return bytes([0x00, 0x3B]) + self.encode_params(params)
+        return bytes([0x00, 0x3B]) + self.encode_immediate(params)
 
 class Bnc(Command):
     def get_value(self, params):
-        return bytes([0x00, 0x3C]) + self.encode_params(params)
+        return bytes([0x00, 0x3C]) + self.encode_immediate(params)
 
 class Be(Command):
     def get_value(self, params):
-        return bytes([0x00, 0x3D]) + self.encode_params(params)
+        return bytes([0x00, 0x3D]) + self.encode_immediate(params)
 
 class Bne(Command):
     def get_value(self, params):
-        return bytes([0x00, 0x3E]) + self.encode_params(params)
+        return bytes([0x00, 0x3E]) + self.encode_immediate(params)
 
 # Stack
 class Push(Command):
     def get_value(self, params):
         if not isinstance(params[0],Register):
             raise ValueError("Must only Push to registers")
-        return bytes([0x00, 0x60]) + self.encode_params(params)
+        register = params[0]
+        return bytes([0x00, [0x60,0x62,0x64][register]])
 
 class Pop(Command):
     def get_value(self, params):
         if not isinstance(params[0],Register):
             raise ValueError("Must only Pop to registers")
-        return bytes([0x00, 0x61]) + self.encode_params(params)
+        register = params[0]
+        return bytes([0x00, [0x61,0x63,0x65][register]])
 
 class Pushr(Command):
     def get_value(self, params=None):
@@ -140,31 +198,44 @@ class Popr(Command):
     def get_value(self, params=None):
         return bytes([0x00, 0x67])
 
+# Variable Load/Store
+class Ldv(Command):
+    def get_value(self, params):
+        return b"\x00\x17"
+
+class Ldvr(Command):
+    def get_value(self, params):
+        return b"\x00\x87"
+
+class Stv(Command):
+    def get_value(self, params):
+        return b"\x00\x18"
+
+class Stvr(Command):
+    def get_value(self, params):
+        return b"\x00\x88"
+
 # x32
 class Int(Command):
     def get_value(self, params):
-        return bytes([0x00, 0x80]) + self.encode_params(params)
-
-class Sys(Command):
-    def get_value(self, params):
-        return bytes([0x00, 0x80]) + self.encode_params(params)
+        return bytes([0x00, 0x80]) + self.encode_immediate(params)
 
 class Intr(Command):
     def get_value(self, params):
-        return bytes([0x00, 0x90]) + self.encode_params(params)
+        return bytes([0x00, 0x90]) + self.encode_immediate(params)
 
 class Reduce(Command):
     def get_value(self, params):
-        return bytes([0x00, 0xA0]) + self.encode_params(params)
+        return bytes([0x00, 0xA0])
 
 class Extend(Command):
     def get_value(self, params):
-        return bytes([0x00, 0xA1]) + self.encode_params(params)
+        return bytes([0x00, 0xA1])
 
 
 class Parameter:
     def __init__(self,value:0):
-        self.value = value
+        self.value:int = value
         pass
 
 class Immediate(Parameter): # prefix %
@@ -172,10 +243,6 @@ class Immediate(Parameter): # prefix %
         super().__init__(value)
 
 class Register(Parameter): # prefix $
-    def __init__(self, value):
-        super().__init__(value)
-
-class AbstractRegister(Register): # prefix @ ; only for STV LDV STVR and LDVR
     def __init__(self, value):
         super().__init__(value)
 
