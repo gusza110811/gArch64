@@ -37,11 +37,7 @@ MMIO mapped to FE00_0000 to FE00_00FF
 The first one (FE00_0000) is always the serial console
 
 ### The Serial Console
-| Command | use |
-| --- | --- |
-| write (`0x10`) | Begin outputting, stop when null (`0`) is sent |
-| input (`0x12`)  |  Begin reading keyboard input into a buffer that can be loaded |
-| stop_input (`0x13`) | Stop reading keyboard input |
+Store to it to write, read from it to get input buffer
 
 
 ## Instruction Definitions
