@@ -285,6 +285,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    print("! WARNING: This is an older assembler which is deprecated, not every instruction is included. please do not use it in the future")
+
     source:str = args.source
     dest = args.output
 

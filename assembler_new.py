@@ -1,5 +1,6 @@
 import argparse
 from asm_types import *
+from collections import deque
 
 class Assembler:
     def __init__(self):
@@ -67,7 +68,9 @@ class Assembler:
         return
 
     def decode(self,word:str):
-        if word.startswith("b"):
+        if word in self.const:
+            return self.const[word]
+        elif word.startswith("b"):
             return int(word[1:],base=2)
         elif word.startswith("x"):
             return int(word[1:],base=16)
@@ -108,14 +111,47 @@ class Assembler:
                     result.append(RamAddr(value))
 
         return result
-    
+
+    def parse_special(self,line:str) -> bytes:
+        command = line.split()[0].strip()
+
+        def decode_ascii(text:str):
+            text:deque[str] = deque(text)
+            result = bytes()
+            while text:
+                char = text.popleft()
+                if char != "\\":
+                    result += bytes(char,encoding="ascii")
+                    continue
+                code = text.popleft()
+                if code == "n":
+                    result += 0x0A.to_bytes(1)
+                elif code == "r":
+                    result += 0x0D.to_bytes(1)
+                elif code == "t":
+                    result += 0x09.to_bytes(1)
+                elif code == "0":
+                    result += 0x00.to_bytes(1)
+                elif code == "\\":
+                    result += bytes("\\",encoding="ascii")
+                else:
+                    raise SyntaxError(f"Line {idx+1} '{line}': Invalid escape code '{char+code}'")
+            return result
+
+        if command == ".ascii":
+            return decode_ascii(line[7:])
+
+
+        else:
+            raise SyntaxError(f"Invalid dot command `{command}`")
+
     def parse_line(self,line:str) -> bytes:
         result = bytes()
         words = line.split()
         # ignore if const definition, label or . command
         if words[0] == "const": return result
         if words[0].endswith(":"): return result
-        if words[0].startswith("."): return result
+        if words[0].startswith("."): return self.parse_special(line)
 
         command:Command = self.mnemonicToClass[words[0].lower()]()
         parameters = self.parse_parameters(" ".join(words[1:]))
@@ -134,7 +170,7 @@ class Assembler:
         for line in lines:
             words = line.split()
             if words[0] == "const":
-                self.const[words[1]] = self.parse_lines(words[2:])
+                self.const[words[1]] = self.decode(" ".join(words[2:]))
             if words[0].endswith(":") and len(words) == 1:
                 name = words[0][:-1]
                 self.const[name] = 0 # initialize
@@ -144,7 +180,7 @@ class Assembler:
             words = line.split()
             if words[0].endswith(":") and len(words) == 1:
                 name = words[0][:-1]
-                value = len(self.parse_lines(lines[:idx]))+1
+                value = len(self.parse_lines(lines[:idx]))
                 self.const[name] = value
 
     def main(self,source:str):
@@ -196,9 +232,10 @@ if __name__ == "__main__":
     maxlen = len(str(len(constants)))
     for idx, (name,value) in enumerate(constants.items()):
         if is_ascii_printable_byte(value):
-            print(f"{str(idx).zfill(maxlen)}: {name} = {value} (`{value.decode("ascii")}` or {value:02X})")
+            print(f"{str(idx).zfill(maxlen)}: {name} = {value} (`{chr(value)}` or {value:02X})")
         else:
             print(f"{str(idx).zfill(maxlen)}: {name} = {value} ({value:02X})")
     print("<","="*len(constants)*2,">",sep="=")
 
-    print(output.hex(sep=" "))
+    with open(dest,"wb") as destfile:
+        destfile.write(output)

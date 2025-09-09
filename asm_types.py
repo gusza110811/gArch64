@@ -13,7 +13,7 @@ class Command:
 
 class Halt(Command):
     def get_value(self, params=None):
-        return bytes([0x00])
+        return bytes([0x00,0x00])
 
 class Mov(Command):
     def get_value(self, params = None) -> bytes:

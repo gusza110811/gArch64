@@ -1,6 +1,10 @@
-main:
-    mov $y, %5
-    mov $x, %255
+const console xFE00_0000
 
-notmain:
-    add
+main:
+    mov $A, %text
+    INT %x10
+halt:
+    HALT
+
+text:
+    .ascii Hellooo\n\0

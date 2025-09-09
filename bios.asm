@@ -57,10 +57,6 @@ label print
     ; Get source
     STA counter
 
-    ; initialize
-    LDAI x10
-    STAR console
-
     CALL printloop
 
     ; Revert to previous state
