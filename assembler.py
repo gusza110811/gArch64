@@ -41,7 +41,7 @@ class Assembler:
             "be": Be,
             "bne": Bne,
 
-            # Register moves (non-RAM)
+            # Move
             "mov": Mov,
 
             # Stack
