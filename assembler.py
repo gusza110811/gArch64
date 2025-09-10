@@ -1,175 +1,120 @@
-import os
-import math
 import argparse
-import sys
+from asm_types import *
 from collections import deque
 
-active_modules = []
+class Assembler:
+    def __init__(self):
+        self.const = {}
+        self.mnemonicToClass:dict[(str,Command)] = {
+            # Halt
+            "halt": Halt,
 
-class assembler:
-    def __init__(self, offset=0):
-        self.offset = offset
-        self.length = 2
-        self.constants:dict[str,bytes] = {}
-        self.aliases:dict[str,bytes] = {}
-        self.output = b""
-        self.code:list[str]
-        self.mnemonicToOP = {
-        "halt":0x00,
-        # Load and store
-        "lda":0x10,
-        "ldx":0x11,
-        "ldy":0x12,
-        "sta":0x13,
-        "stx":0x14,
-        "sty":0x15,
-        "mov":0x16,
-        "ldv":0x17,
-        "stv":0x18,
+            # Arithmetic
+            "add": Add,
+            "sub": Sub,
+            "mul": Mul,
+            "div": Div,
+            "mod": Mod,
 
-        # Arithmetic
-        "add":0x20,
-        "sub":0x21,
-        "mul":0x22,
-        "div":0x23,
-        "mod":0x28,
+            # Bitwise
+            "and": And,
+            "or": Or,
+            "xor": Xor,
+            "not": Not,
 
-        # Bitwise logic
-        "and":0x24,
-        "or" :0x25,
-        "xor":0x26,
-        "not":0x27,
+            # Control flow
+            "jmp": Jmp,
+            "jz": Jz,
+            "jnz": Jnz,
+            "jc": Jc,
+            "jnc": Jnc,
+            "jeq": Jeq,
+            "jne": Jne,
 
-        # Control flow
-        "jmp":0x30,
-        "jz" :0x31,
-        "jnz":0x32,
-        "jc" :0x33,
-        "jnc":0x34,
-        "jeq":0x35,
-        "jne":0x36,
+            # Function flow
+            "ret": Ret,
+            "call": Call,
+            "bz": Bz,
+            "bnz": Bnz,
+            "bc": Bc,
+            "bnc": Bnc,
+            "be": Be,
+            "bne": Bne,
 
-        # Function flow
-        "ret" :0x37,
-        "call":0x38,
-        "bz"  :0x39,
-        "bnz" :0x3A,
-        "bc"  :0x3B,
-        "bnc" :0x3C,
-        "be"  :0x3D,
-        "bne" :0x3E,
+            # Register moves (non-RAM)
+            "mov": Mov,
 
-        # Load Immediate
-        "ldai":0x47,
-        "ldxi":0x48,
-        "ldyi":0x49,
+            # Stack
+            "push": Push,
+            "pop": Pop,
+            "pushr": Pushr,
+            "popr": Popr,
 
-        # Register move
-        "mvax":0x50,
-        "mvay":0x51,
-        "mvxy":0x52,
-        "mvxa":0x52,
-        "mvyx":0x54,
-        "mvya":0x55,
+            # Variable load/store
+            "ldv": Ldv,
+            "ldvr": Ldvr,
+            "stv": Stv,
+            "stvr": Stvr,
 
-        # Stack
-        "pusha":0x60,
-        "popa" :0x61,
-        "pushx":0x62,
-        "popx" :0x63,
-        "pushy":0x64,
-        "popy" :0x65,
-        "pushr":0x66,
-        "popr":0x67,
+            # x32 system / interrupts
+            "int": Int,
+            "intr": Intr,
 
-        # x32
-        "int":0x80,
-        "sys":0x80,
-
-        "ldar":0x81,
-        "ldxr":0x82,
-        "ldyr":0x83,
-
-        "star":0x84,
-        "stxr":0x85,
-        "styr":0x86,
-
-        "ldvr":0x87,
-        "stvr":0x88,
-        "movr":0x89,
-
-        "intr":0x90,
-
-        "reduce":0xA0,
-        "extend":0xA1,
-
+            # Extended operations
+            "reduce": Reduce,
+            "extend": Extend,
         }
-    
-    def labels(self,name):
-        # Prelabel
-        for idx,line in enumerate(code):
-            line = line.strip()
-            self.decode_helpers(line,idx)
-            if line.lower().startswith("label"):
-                words = line.split()[1:]
-                self.constants[words[0]] = bytes(self.length*2)
-        length = 0
-        # Label and stuff
-        for idx,line in enumerate(code):
-            line = line.strip()
 
-            if line.lower().startswith("label"):
-                words = line.split()[1:]
-                value = (length+self.offset).to_bytes(self.length*2)
-                self.constants[words[0]] = value
-            for word in line.split():
-                if self.decode_helpers(line,idx):
-                    code[idx]=""
-                    continue
-                if line.startswith("."):
-                    length += len(self.decode_literal(line,idx))
-                    break
-                if word ==  ";":
-                    break
-                try:
-                    length += len(self.decode_value(word,idx,line))
-                except ValueError as e:
-                    print(f"An Error in {name}:")
-                    print(f"    {e}")
-                    sys.exit()
+        return
 
-    def main(self, code:list[str],modulename="main"):
-        self.code = code
+    def decode(self,word:str):
+        if word in self.const:
+            return self.const[word]
+        elif word.startswith("b"):
+            return int(word[1:],base=2)
+        elif word.startswith("x"):
+            return int(word[1:],base=16)
+        elif word.startswith("o"):
+            return int(word[1:],base=8)
+        elif word.startswith("'"):
+            return ord(word[1])
+        else:
+            try:
+                return int(word)
+            except ValueError:
+                return 0
 
-        self.labels(modulename)
+    def parse_parameters(self,parameters:str):
+        if len(parameters) == 0:
+            return []
 
-        # Main
-        for idx,line in enumerate(code):
+        parameters = parameters.split(",")
+        result:list[Parameter] = []
 
-            line = line.strip()
-            
-            if self.decode_helpers(line,idx):
-                continue
-
-            if line.startswith("."):
-                self.output += self.decode_literal(line,idx)
-                continue
-
-            # Word decoder
-            for word in line.split():
-                try:
-                    result = self.decode_value(word,idx,line)
-                except ValueError as e:
-                    print(f"An Error in {modulename}:")
-                    print(f"    {e}")
-                    sys.exit()
-                if result:
-                    self.output += result
+        for parameter in parameters:
+            parameter = parameter.strip()
+            prefix = parameter[0]
+            if prefix in list("%$@*"):
+                parameter = parameter[1:]
+            if prefix == "$":
+                name = parameter.lower()
+                if name == "a": result.append(Register(0))
+                if name == "x": result.append(Register(1))
+                if name == "y": result.append(Register(2))
+            else:
+                value = self.decode(parameter)
+                if prefix == "%":
+                    result.append(Immediate(value))
+                elif prefix == "*":
+                    result.append(CacheAddr(value))
                 else:
-                    break
-        return self.output, self.constants
+                    result.append(RamAddr(value))
 
-    def decode_literal(self, line:str, idx:int):
+        return result
+
+    def parse_special(self,line:str) -> bytes:
+        command = line.split()[0].strip()
+
         def decode_ascii(text:str):
             text:deque[str] = deque(text)
             result = bytes()
@@ -193,120 +138,104 @@ class assembler:
                     raise SyntaxError(f"Line {idx+1} '{line}': Invalid escape code '{char+code}'")
             return result
 
-        global active_modules
-        if line.lower().startswith(".ascii"):
+        if command == ".ascii":
             return decode_ascii(line[7:])
-        if line.lower().startswith(".insert"):
-            name = line[8:]
-            code = []
-            with open(f"{name}.asm") as modulefile:
-                code = modulefile.readlines()
-            return self.main(code,modulename=name)[0]
-        if line.lower().startswith(".blank"):
-            return bytes(int(line[7:].strip()))
-        if line.lower().startswith(".short"):
-            self.length = 1
-        if line.lower().startswith(".long"):
-            self.length = 2
-        if line.lower().startswith(".extended"):
-            self.length = 4
 
-        return bytes()
 
-    def decode_helpers(self, line:str,idx):
-        if line.lower().startswith("const"):
-            words = line.split()[1:]
-            value:bytes = self.decode_value(words[1],idx,line)
-            self.constants[words[0]] = value
-            return True
-        if line.lower().startswith("label"):
-            return True
-        if line.lower().startswith(";"):
-            return True
-        
-        return False
-
-    def decode_value(self, word:str,idx=0,line=""):
-        if word.lower() in list(self.mnemonicToOP.keys()):
-            return self.mnemonicToOP[word.lower()].to_bytes(self.length)
-        elif word in list(self.constants.keys()):
-            return self.constants[word]
-        elif word in list(self.aliases.keys()):
-            return self.aliases[word]
-        elif word[0] == "'":
-            return ord(word[1]).to_bytes(self.length*2)
-        elif word[0] == '"':
-            return word[1:].encode()
-        elif word[0] == "X":
-            word.replace("_","")
-            try:
-                return int(word[1:],base=16).to_bytes(math.ceil(len(word[1:])/2))
-            except ValueError:
-                raise ValueError(f"Line {idx+1} '{line}': invalid hex '{word}'")
-        elif word[0] == "B":
-            word.replace("_","")
-            try:
-                return int(word[1:],base=2).to_bytes(len(word[1:]))
-            except ValueError:
-                raise ValueError(f"Line {idx+1} '{line}': invalid binary '{word}'")
-        elif word[0] == "x":
-            word.replace("_","")
-            try:
-                return int(word[1:],base=16).to_bytes(self.length*2)
-            except ValueError:
-                raise ValueError(f"Line {idx+1} '{line}': invalid hex '{word}'")
-        elif word[0] == "b":
-            word.replace("_","")
-            try:
-                return int(word[1:],base=2).to_bytes(self.length)
-            except ValueError:
-                raise ValueError(f"Line {idx+1} '{line}': invalid binary '{word}'")
-        elif word[0] == ";":
-            return False
         else:
-            try:
-                return int(word).to_bytes(self.length*2)
-            except ValueError:
-                raise ValueError(f"Line {idx+1} '{line}': can't decode `{word}`!")
+            raise SyntaxError(f"Invalid dot command `{command}`")
+
+    def parse_line(self,line:str) -> bytes:
+        result = bytes()
+        words = line.split()
+        # ignore if const definition, label or . command
+        if words[0] == "const": return result
+        if words[0].endswith(":"): return result
+        if words[0].startswith("."): return self.parse_special(line)
+
+        command:Command = self.mnemonicToClass[words[0].lower()]()
+        parameters = self.parse_parameters(" ".join(words[1:]))
+        result = command.get_value(parameters)
+
+        return result
+
+    def parse_lines(self,lines:list[str]):
+        result = bytes()
+        for idx, line in enumerate(lines):
+            result += self.parse_line(line)
+
+        return result
+
+    def get_const(self, lines:list[str]):
+        for line in lines:
+            words = line.split()
+            if words[0] == "const":
+                self.const[words[1]] = self.decode(" ".join(words[2:]))
+            if words[0].endswith(":") and len(words) == 1:
+                name = words[0][:-1]
+                self.const[name] = 0 # initialize
+
+    def get_labels(self,lines:list[str]):
+        for idx, line in enumerate(lines):
+            words = line.split()
+            if words[0].endswith(":") and len(words) == 1:
+                name = words[0][:-1]
+                value = len(self.parse_lines(lines[:idx]))
+                self.const[name] = value
+
+    def main(self,source:str):
+
+        def strips(list:list[str]):
+            result = []
+            for item in list:
+                item = item.strip()
+                if item:
+                    result.append(item)
+            return result
+
+        lines = source.splitlines()
+        lines = strips(lines)
+        output = bytes()
+
+        self.get_const(lines)
+        self.get_labels(lines)
+        output = self.parse_lines(lines)
+
+        return output
 
 def is_ascii_printable_byte(byte_value):
     """Checks if an integer byte value is an ASCII printable character."""
     return 32 <= byte_value <= 126
 
 if __name__ == "__main__":
-    source = ""
-    code:str
-    dest = ""
+    assembler = Assembler()
     parser = argparse.ArgumentParser(description="gArch64 assembler")
 
-    parser.add_argument("source", help="Path to source asm", default="main.asm", nargs="?")
+    parser.add_argument("source", help="Path to source asm", default="test.asm", nargs="?")
     parser.add_argument("-o","--output", help="Path to output binary", default="\\/:*?\"<>|")
     parser.add_argument("-O", "--offset", help="offset to labels", default=0)
 
     args = parser.parse_args()
-
-    print("! WARNING: This is an older assembler which is deprecated, not every instruction is included. please do not use it in the future")
 
     source:str = args.source
     dest = args.output
 
     if dest == "\\/:*?\"<>|":
         dest = ".".join(source.split(".")[:-1]) + ".bin"
-
-    main = assembler(int(args.offset))
-
+    
     with open(source) as sourcefile:
-        code = sourcefile.readlines()
+        code = sourcefile.read()
 
-    result,constants = main.main(code,source)
-
+    output = assembler.main(code)
+    constants = assembler.const
     print("\nConstants used:")
     maxlen = len(str(len(constants)))
     for idx, (name,value) in enumerate(constants.items()):
-        if is_ascii_printable_byte(int.from_bytes(value)):
-            print(f"{str(idx).zfill(maxlen)}: {name} = {int.from_bytes(value)} (`{value.decode("ascii")}` or {int.from_bytes(value):02X})")
+        if is_ascii_printable_byte(value):
+            print(f"{str(idx).zfill(maxlen)}: {name} = {value} (`{chr(value)}` or {value:02X})")
         else:
-            print(f"{str(idx).zfill(maxlen)}: {name} = {int.from_bytes(value)} ({int.from_bytes(value):02X})")
+            print(f"{str(idx).zfill(maxlen)}: {name} = {value} ({value:02X})")
     print("<","="*len(constants)*2,">",sep="=")
-    with open(dest, "wb") as destfile:
-        destfile.write(result)
+
+    with open(dest,"wb") as destfile:
+        destfile.write(output)
