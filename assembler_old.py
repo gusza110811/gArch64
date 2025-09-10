@@ -285,8 +285,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    print("! WARNING: This is an older assembler which is deprecated, not every instruction is included. please do not use it in the future")
-
     source:str = args.source
     dest = args.output
 
@@ -310,3 +308,5 @@ if __name__ == "__main__":
     print("<","="*len(constants)*2,">",sep="=")
     with open(dest, "wb") as destfile:
         destfile.write(result)
+    
+    print("\033[33mWARNING: This is an older assembler which is deprecated, not every instruction is included. please do not use it in the future\033[0m")

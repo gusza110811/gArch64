@@ -140,6 +140,9 @@ class Assembler:
 
         if command == ".ascii":
             return decode_ascii(line[7:])
+        
+        if command == ".zero":
+            return bytes(int(line[6:].strip()))
 
 
         else:
@@ -147,7 +150,9 @@ class Assembler:
 
     def parse_line(self,line:str) -> bytes:
         result = bytes()
-        words = line.split()
+        words = line.split(";")[0].split()
+        if len(words) == 0:
+            return bytes()
         # ignore if const definition, label or . command
         if words[0] == "const": return result
         if words[0].endswith(":"): return result
@@ -211,7 +216,7 @@ if __name__ == "__main__":
     assembler = Assembler()
     parser = argparse.ArgumentParser(description="gArch64 assembler")
 
-    parser.add_argument("source", help="Path to source asm", default="test.asm", nargs="?")
+    parser.add_argument("source", help="Path to source asm", default="main.asm", nargs="?")
     parser.add_argument("-o","--output", help="Path to output binary", default="\\/:*?\"<>|")
     parser.add_argument("-O", "--offset", help="offset to labels", default=0)
 
