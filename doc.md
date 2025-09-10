@@ -32,11 +32,11 @@ to the format of the value
 Use `const` keyword followed by the name, then its value (`const [name] [value]`)
 
 #### Label Definition
-Add `:` to the label's name (`[name]:`), it is recommended to use indentation for the part that should
-be inside, but not forced
+Add `:` to the label's name (`[name]:`), it is recommended (but not required) to use indentation for the part that should
+be inside
 
 ### Special Directives
-These are helper commands that help you make you code more readable (code-insensitive)
+These are helper commands that you more control over the output binary (code-insensitive)
 | Command | Usage |
 | --- | --- |
 | `.literal [values]` | Add literal values |
@@ -62,9 +62,9 @@ Use `;`, can be anywhere
 | **HALT** |
 | `halt` | End execution immediately |
 | **Arithmetic** |
-| `add` | Add X and Y and save to A |
+| `add` | Add X by Y and save to A |
 | `sub` | Subtract X by Y and save to A |
-| `mul` | Multiply X and Y and save to A |
+| `mul` | Multiply X by Y and save to A |
 | `div` | Divide X by Y and save to A |
 | `mod` | Modulo X by Y and save to A |
 | **Bitwise** |
