@@ -113,7 +113,7 @@ class Assembler:
         return result
 
     def parse_special(self,line:str) -> bytes:
-        command = line.split()[0].strip()
+        command = line.split()[0].strip().lower()
 
         def decode_ascii(text:str):
             text:deque[str] = deque(text)
@@ -140,7 +140,10 @@ class Assembler:
 
         if command == ".ascii":
             return decode_ascii(line[7:])
-        
+
+        if command == ".literal":
+            return self.decode(line[8:].split())
+
         if command == ".zero":
             return bytes(int(line[6:].strip()))
 

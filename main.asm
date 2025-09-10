@@ -1,7 +1,6 @@
 const newline x0A
 const console xFE00_0000
 
-; the label isnt necessary but just for source code readability
 main:
     mov $a, %starttext
     int %x10
