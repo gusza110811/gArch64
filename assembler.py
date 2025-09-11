@@ -143,7 +143,7 @@ class Assembler:
             return decode_ascii(line[7:])
 
         if command == ".literal":
-            return self.decode(line[8:].split())
+            return [self.decode(word) for word in line[8:].split()]
 
         if command == ".zero":
             return bytes(int(line[6:].strip()))
