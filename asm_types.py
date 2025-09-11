@@ -61,14 +61,14 @@ class Mov(Command):
                 if destreg == 2:
                     return 0x51.to_bytes(2,"big")
             if sourcereg == 1:
-                if destreg == 0:
-                    return 0x52.to_bytes(2,"big")
                 if destreg == 2:
+                    return 0x52.to_bytes(2,"big")
+                if destreg == 0:
                     return 0x53.to_bytes(2,"big")
             if sourcereg == 2:
-                if destreg == 0:
-                    return 0x54.to_bytes(2,"big")
                 if destreg == 1:
+                    return 0x54.to_bytes(2,"big")
+                if destreg == 0:
                     return 0x55.to_bytes(2,"big")
         
         # immediate value

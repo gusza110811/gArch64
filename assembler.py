@@ -1,10 +1,18 @@
 import argparse
 from asm_types import *
 from collections import deque
+import sys
+import os
+
+class parsingError(Exception):
+    def __init__(self, *args):
+        super().__init__(*args)
 
 class Assembler:
-    def __init__(self, offset=0):
+    def __init__(self, name:str=None, offset=0, verbose=False):
         self.offset = offset
+        self.verbose = verbose
+        self.name = os.path.abspath(name) if name else "main"
         self.const = {}
         self.mnemonicToClass:dict[(str,Command)] = {
             # Halt
@@ -68,22 +76,40 @@ class Assembler:
 
         return
 
+    def get_line(self,rawline:str):
+        result = rawline.split(";")[0].strip()
+        return result
+
     def decode(self,word:str):
         if word in self.const:
             return self.const[word]
         elif word.startswith("b"):
-            return int(word[1:],base=2)
+            try:
+                return int(word[1:],base=2)
+            except ValueError:
+                raise ValueError(f"Can't decode `{word}` as binary")
         elif word.startswith("x"):
-            return int(word[1:],base=16)
+            try:
+                return int(word[1:],base=16)
+            except ValueError:
+                raise ValueError(f"Can't decode `{word}` as hexadecimal")
         elif word.startswith("o"):
-            return int(word[1:],base=8)
+            try:
+                return int(word[1:],base=8)
+            except ValueError:
+                raise ValueError(f"Can't decode `{word}` as octal")
         elif word.startswith("'"):
-            return ord(word[1])
+            try:
+                return ord(word)
+            except TypeError:
+                raise SyntaxError(f"`'` prefix only accepts one character")
         else:
             try:
                 return int(word)
             except ValueError:
-                return 0
+                if not word:
+                    return 0
+                raise ValueError(f"Can't decode {word} as integer number")
 
     def parse_parameters(self,parameters:str):
         if len(parameters) == 0:
@@ -100,8 +126,9 @@ class Assembler:
             if prefix == "$":
                 name = parameter.lower()
                 if name == "a": result.append(Register(0))
-                if name == "x": result.append(Register(1))
-                if name == "y": result.append(Register(2))
+                elif name == "x": result.append(Register(1))
+                elif name == "y": result.append(Register(2))
+                else: raise SyntaxError(f"{name} is not a valid register")
             else:
                 value = self.decode(parameter)
                 if prefix == "%":
@@ -155,7 +182,7 @@ class Assembler:
     def parse_line(self,line:str) -> bytes:
         result = bytes()
         words = line.split(";")[0].split()
-        if len(words) == 0:
+        if not words:
             return bytes()
         # ignore if const definition, label or . command
         if words[0] == "const": return result
@@ -163,20 +190,38 @@ class Assembler:
         if words[0].startswith("."): return self.parse_special(line)
 
         command:Command = self.mnemonicToClass[words[0].lower()]()
-        parameters = self.parse_parameters(" ".join(words[1:]))
-        result = command.get_value(parameters)
+        try:
+            parameters = self.parse_parameters(" ".join(words[1:]))
+            result = command.get_value(parameters)
+        except SyntaxError as e:
+            raise parsingError(f"SyntaxError: {e}")
+        except ValueError as e:
+            raise parsingError(f"ValueError: {e}")
+
+        if self.verbose:
+            print(f"`{line.strip()}` => `{result.hex(sep=" ")}`")
 
         return result
 
     def parse_lines(self,lines:list[str]):
         result = bytes()
         for idx, line in enumerate(lines):
-            result += self.parse_line(line)
+            try:
+                result += self.parse_line(line)
+            except Exception as e:
+                print(f"In file `{self.name}` at line {idx+1}:")
+                print(f"\x1b[31m    {line}")
+                print(f"    {"^"*len(line)}\n")
+                print(f"\x1b[35m{str(e)}")
+                print("\x1b[0m",end="")
+                sys.exit(1)
 
         return result
 
     def get_const(self, lines:list[str]):
         for line in lines:
+            line = self.get_line(line)
+            if not line: continue
             words = line.split()
             if words[0] == "const":
                 self.const[words[1]] = self.decode(" ".join(words[2:]))
@@ -186,6 +231,8 @@ class Assembler:
 
     def get_labels(self,lines:list[str]):
         for idx, line in enumerate(lines):
+            line = self.get_line(line)
+            if not line: continue
             words = line.split()
             if words[0].endswith(":") and len(words) == 1:
                 name = words[0][:-1]
@@ -194,16 +241,7 @@ class Assembler:
 
     def main(self,source:str):
 
-        def strips(list:list[str]):
-            result = []
-            for item in list:
-                item = item.strip()
-                if item:
-                    result.append(item)
-            return result
-
         lines = source.splitlines()
-        lines = strips(lines)
         output = bytes()
 
         self.get_const(lines)
@@ -219,15 +257,16 @@ def is_ascii_printable_byte(byte_value):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="gArch64 assembler")
 
-    parser.add_argument("source", help="Path to source asm", default="main.asm", nargs="?")
-    parser.add_argument("-o","--output", help="Path to output binary", default="\\/:*?\"<>|")
-    parser.add_argument("-O", "--offset", help="offset to labels", default=0)
+    parser.add_argument("source", help="path to source asm", default="main.asm", nargs="?")
+    parser.add_argument("-o","--output", help="path to output binary", default="\\/:*?\"<>|")
+    parser.add_argument("-O", "--offset", help="offset to labels", default=0, type=int)
+    parser.add_argument("-v", "--verbose", help="send assembling info", action="store_true")
 
     args = parser.parse_args()
 
     source:str = args.source
     dest = args.output
-    assembler = Assembler(int(args.offset))
+    assembler = Assembler(source, int(args.offset), args.verbose)
 
     if dest == "\\/:*?\"<>|":
         dest = ".".join(source.split(".")[:-1]) + ".bin"

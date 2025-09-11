@@ -1,2 +1,2 @@
 #!/bin/bash
-python3 assembler_old.py bios.asm -O 4294901760
+python3 assembler.py bios.asm -O 4294901760

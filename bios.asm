@@ -1,83 +1,73 @@
 const console xFE00_0000
 const counter xEFFC
 
-INTR x10 print
-INTR x12 input
+intr %x10, print
+intr %x12, input
 
-JMP x0
-label input
-    PUSHR
-    STA counter         ; save target buffer pointer
+jmp x0
 
-label listen_loop
-    LDYR console        ; read character into Y
+input:
+    pushr
+    mov *counter, $a        ; save target buffer pointer
+
+listen_loop:
+    mov $y, console         ; read character into Y
 
     ; check for backspace (0x08)
-    LDXI x08
-    JEQ handle_backspace
+    mov $x, %x08
+    jeq handle_backspace
 
     ; check for newline
-    LDXI x0A
-    JEQ end_loop
+    mov $x, %x0A
+    jeq end_loop
 
     ; store character
-    MVYA
-    JZ listen_loop      ; ignore zero
-    LDX counter
-    LDYI 1
-    STVR
-    ADD
-    STA counter
-    JMP listen_loop
+    mov $a, $y
+    jz listen_loop          ; ignore zero
+    mov $x, *counter
+    mov $y, %1
+    stvr
+    add
+    mov *counter, $a
+    jmp listen_loop
 
-label handle_backspace
+handle_backspace:
     ; only backspace if counter > start
-    LDA counter
-    JZ listen_loop      ; if already at start, skip
-    MVAX
-    LDYI x1             ; check if counter > 1
-    SUB
+    mov $a, *counter
+    jz listen_loop          ; if already at start, skip
+    mov $x, $a
+    mov $y, %1
+    sub
+    mov *counter, $a         ; decrement counter
+    jmp listen_loop
 
-    STA counter         ; decrement counter
-    JMP listen_loop
+end_loop:
+    mov $x, *counter
+    mov $a, %0
+    stvr
+    popr
+ret
 
-label end_loop
-    LDX counter
-    LDAI x00
-    STVR
+print:
+    pushr
 
-    POPR
-RET
+    mov *counter, $a
 
+    call printloop
 
-label print
-    ; To preserve state
-    PUSHR
+    popr
+ret
 
-    ; Get source
-    STA counter
+printloop:
+    mov $x, *counter
+    ldvr
+    mov console, $a         ; print character
 
-    CALL printloop
+    mov $y, %1
+    add
+    mov *counter, $a
 
-    ; Revert to previous state
-    POPR
-RET
-
-label printloop
-    ; print
-    LDX counter
-    LDVR
-    STAR console
-
-    ; increment
-    LDYI 1
-    ADD
-    STA counter
-
-    ; check loop condition
-    LDX counter
-    LDVR
-
-    JNZ printloop
-    STAR console
-RET
+    ldvr
+    jnz printloop
+    mov console, $a
+ret
