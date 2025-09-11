@@ -3,7 +3,8 @@ from asm_types import *
 from collections import deque
 
 class Assembler:
-    def __init__(self):
+    def __init__(self, offset=0):
+        self.offset = offset
         self.const = {}
         self.mnemonicToClass:dict[(str,Command)] = {
             # Halt
@@ -188,7 +189,7 @@ class Assembler:
             words = line.split()
             if words[0].endswith(":") and len(words) == 1:
                 name = words[0][:-1]
-                value = len(self.parse_lines(lines[:idx]))
+                value = len(self.parse_lines(lines[:idx]))+self.offset
                 self.const[name] = value
 
     def main(self,source:str):
@@ -216,7 +217,6 @@ def is_ascii_printable_byte(byte_value):
     return 32 <= byte_value <= 126
 
 if __name__ == "__main__":
-    assembler = Assembler()
     parser = argparse.ArgumentParser(description="gArch64 assembler")
 
     parser.add_argument("source", help="Path to source asm", default="main.asm", nargs="?")
@@ -227,6 +227,7 @@ if __name__ == "__main__":
 
     source:str = args.source
     dest = args.output
+    assembler = Assembler(int(args.offset))
 
     if dest == "\\/:*?\"<>|":
         dest = ".".join(source.split(".")[:-1]) + ".bin"
