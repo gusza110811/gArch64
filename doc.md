@@ -36,7 +36,7 @@ Add `:` to the label's name (`[name]:`), it is recommended (but not required) to
 be inside
 
 ### Special Directives
-These are helper commands that you more control over the output binary (code-insensitive)
+These are helper commands that you more control over the output binary (case-insensitive)
 | Command | Usage |
 | --- | --- |
 | `.literal [values]` | Add literal values |
@@ -56,6 +56,19 @@ Used within `.ascii` directive to add a normally non-printable and unusable char
 ### Comment
 Use `;`, can be anywhere
 
+## System and Hardware specification
+There is a BIOS program that runs on every execution. it sets up useful commands
+
+These can be called through `int [id]` instruction with thr `id` as the command number in this table below
+You set the A register to its parameter
+| Command | Usage |
+| --- | --- |
+| `print` (`16`) | Print string that starts at ram address stored in A |
+| `input` (`18`) | Get user input and save it to ram address stored in A |
+
+You can also interact with the SerialConsole device directly by copying data from or to it. By default this device is mapped to memory address `0xFE00_0000`
+
+Copy value to it for printing, Copy value from it to read user input buffer
 ## Opcodes
 | OPCODE | Meaning/Usage |
 | --- | --- |
@@ -103,4 +116,4 @@ Use `;`, can be anywhere
 | `popr` | Pop from stack to every register (Y register first, return to state "saved" by `pushr`) |
 | **Interrupts** |
 | `int [int-id]` | Call interrupt assigned to [int-id] |
-| `intr [int-id] [address]` | Assign [int-id] to function at [address] |
+| `intr [int-id], [address]` | Assign [int-id] to function at [address] |
