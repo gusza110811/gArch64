@@ -34,16 +34,19 @@ class Ram:
         self.data:dict[(int,int)] = {}
         self.DEVICE_ADDRESSES = range(0xFE00_0000,0xFE00_00FF)
 
-        self.devices:list[device.Device] = []
+        self.ports:list[device.Device] = []
     
-    def register_device(self, device:device.Device):
-        self.devices.append(device)
+    def register_port(self, port:device.Port):
+        self.ports.append(port)
+
+    def register_device(self,device:device.Device):
+        device.set_port(self.register_port)
 
     def load(self,address:int):
         try:
             if address in self.DEVICE_ADDRESSES:
                 Id = address-0xFE00_0000
-                device = self.devices[Id]
+                device = self.ports[Id]
                 return device.read()
         except IndexError:
             pass
@@ -59,7 +62,7 @@ class Ram:
         if address in self.DEVICE_ADDRESSES:
             try:
                 Id = address-0xFE00_0000
-                device = self.devices[Id]
+                device = self.ports[Id]
                 device.write(value)
                 return
             except IndexError:

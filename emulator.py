@@ -4,6 +4,8 @@ from device import *
 import argparse
 import os
 import executor
+import time
+from color import *
 
 class Emulator:
     def __init__(self):
@@ -21,6 +23,8 @@ class Emulator:
         self.carry = False
 
         self.running = True
+
+        self.time = []
     
     def correct_register(self):
         newvalue = self.registers[0] % 2^(16*self.blocksize)
@@ -54,6 +58,8 @@ class Emulator:
             return value
 
         while self.running:
+            prev_time = time.time()
+
             opcode = fetch()
             opcode = (opcode << 8) + fetch()
             info = self.opcodes.OPCODES[opcode]
@@ -70,6 +76,7 @@ class Emulator:
                 params.append(value)
 
             self.executor.execute(name,params)
+            self.time.append(time.time()-prev_time)
         return
 
 
@@ -139,7 +146,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="gArch64 emulator")
 
     parser.add_argument("source", help="path to source binary", default="main.bin", nargs="?")
-    parser.add_argument("-v", "--verbose", help="dump Memory on halt", action="store_true")
+    parser.add_argument("-v", "--verbose", help="print extra info on halt", action="store_true")
 
     args = parser.parse_args()
     source = args.source
@@ -159,3 +166,15 @@ if __name__ == "__main__":
     finally:
         if bool(args.verbose):
             emulator.core_dump()
+            emulator.time.sort()
+            # time in ns
+            unit = 10**9
+            average_time = sum(emulator.time)/len(emulator.time) * unit
+            median_time = emulator.time[len(emulator.time)//2] * unit
+            max_time = max(emulator.time) * unit
+            min_time = min(emulator.time) * unit
+            print("\nTime spent executing instruction")
+            print(f"{fg.RED}Max:{RESET} {max_time:,.0f}ns")
+            print(f"{fg.YELLOW}Median:{RESET} {median_time:,.0f}ns")
+            print(f"{fg.GREEN}Min:{RESET} {min_time:,.0f}ns")
+            print(f"{fg.BLUE}Average:{RESET} {average_time:,.0f}ns")

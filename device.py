@@ -2,17 +2,23 @@ import sys
 import threading
 from collections import deque
 
-class Device:
+class Port:
     def __init__(self):
         pass
 
     def write(self, data):
-        "When the system attempts to write into the address this device is mapped to"
+        "When the system attempts to write into the address this port is mapped to"
         return
 
     def read(self) -> int:
-        "When the system attempts to read from the address this device is mapped to"
+        "When the system attempts to read from the address this port is mapped to"
         return
+
+class Device:
+    def __init__(self):
+        pass
+    def set_port(self, register_port:object):
+        pass
 
 class SerialConsole(Device):
     def __init__(self):
@@ -22,6 +28,12 @@ class SerialConsole(Device):
         self.listen = False
         self.buffer:deque[int] = deque()
         super().__init__()
+
+    def set_port(self, register_port):
+        self.port = Port()
+        self.port.write = self.write
+        self.port.read = self.read
+        register_port(self.port)
 
     def keyboard(self):
         while 1:
