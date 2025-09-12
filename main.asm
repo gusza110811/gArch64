@@ -37,11 +37,11 @@ loop:
 jmp loop
 
 starttext:
-    .zero 128
+    .zero 256
 
 prompt:
     .ascii input>\0
 
-; allocate 107 bytes for user's input
+; 512 byte final binary size funny number go brrr
 text:
-    .zero 107
+    .zero 141
