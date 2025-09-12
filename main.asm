@@ -1,5 +1,22 @@
 const newline x0A
 const console xFE00_0000
+const disk_com xFE00_0001
+const disk_data xFE00_0002
+const disk_stat xFE00_0003
+
+diskload:
+    mov $a, %x20
+    mov disk_com, $a
+    mov $x, %starttext
+    mov $y, %1
+
+    diskloop:
+        mov $a, disk_data
+        stvr
+        add
+        mov $x, $a
+        mov $a, disk_stat
+        jnz diskloop
 
 main:
     mov $a, %starttext
@@ -20,7 +37,7 @@ loop:
 jmp loop
 
 starttext:
-    .ascii Welcome to the very interesting program that echoes back whatever you just typed\n\0
+    .zero 128
 
 prompt:
     .ascii input>\0

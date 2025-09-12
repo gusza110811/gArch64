@@ -52,6 +52,10 @@ class Emulator:
         console = SerialConsole()
         self.ram.register_device(console)
 
+        # register disk controller
+        diskio = DiskIO()
+        self.ram.register_device(diskio)
+
         def fetch():
             value = self.ram.load(self.counter)
             self.counter += 1

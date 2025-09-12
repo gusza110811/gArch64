@@ -51,3 +51,46 @@ class SerialConsole(Device):
             return self.buffer.popleft()
         except IndexError:
             return 0
+
+class DiskIO(Device):
+    "Disk controller"
+    def __init__(self):
+        self.command = ""
+        self.databuffer:deque
+        self.sector = 0
+        self.SECTORSIZE = 256 # bytes
+        self.disk = open("disk.img","rb+")
+        super().__init__()
+
+    def set_port(self, register_port):
+        command = Port()
+        command.write = self.get_command
+        data = Port()
+        data.read = self.read
+        status = Port()
+        status.read = self.status
+        register_port(command)
+        register_port(data)
+        register_port(status)
+
+    def get_command(self, data:int):
+        if data == 0x10:
+            self.command = "SET_SECTOR"
+        elif data == 0x20:
+            self.command = "READ"
+            self.disk.seek(self.SECTORSIZE*self.sector)
+            self.databuffer = deque(self.disk.read(self.SECTORSIZE))
+    
+    def status(self):
+        if self.command == "READ":
+            return 0x20
+        elif not self.command:
+            return 0
+
+    def read(self):
+        try:
+            if len(self.databuffer) == 1:
+                self.command = ""
+            return self.databuffer.popleft()
+        except IndexError:
+            return 0
