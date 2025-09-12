@@ -168,7 +168,7 @@ class Assembler:
             return result
 
         if command == ".ascii":
-            return decode_ascii(line[7:])
+            return decode_ascii(line[7:].strip())
 
         if command == ".literal":
             return [self.decode(word) for word in line[8:].split()]
