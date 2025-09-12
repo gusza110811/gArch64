@@ -3,6 +3,7 @@ from asm_types import *
 from collections import deque
 import sys
 import os
+import color
 
 class parsingError(Exception):
     def __init__(self, *args):
@@ -188,9 +189,17 @@ class Assembler:
         # ignore if const definition, label or . command
         if words[0] == "const": return result
         if words[0].endswith(":"): return result
-        if words[0].startswith("."): return self.parse_special(line)
+        try:
+            if words[0].startswith("."): return self.parse_special(line)
+        except SyntaxError as e:
+            raise parsingError(f"SyntaxError: {e}")
+        except ValueError as e:
+            raise parsingError(f"ValueError: {e}")
 
-        command:Command = self.mnemonicToClass[words[0].lower()]()
+        try:
+            command:Command = self.mnemonicToClass[words[0].lower()]()
+        except KeyError:
+            raise parsingError(f"SyntaxError: `{words[0]}` is not a valid instruction")
         try:
             parameters = self.parse_parameters(" ".join(words[1:]))
             result = command.get_value(parameters)
@@ -209,12 +218,11 @@ class Assembler:
         for idx, line in enumerate(lines):
             try:
                 result += self.parse_line(line)
-            except Exception as e:
-                print(f"In file `{self.name}` at line {idx+1}:")
-                print(f"\x1b[31m    {line}")
-                print(f"    {"^"*len(line)}\n")
-                print(f"\x1b[35m{str(e)}")
-                print("\x1b[0m",end="")
+            except parsingError as e:
+                print(color.fg.BRIGHT_MAGENTA+f"In file `{self.name}` at line {idx+1}:"+color.RESET)
+                print(color.fg.BRIGHT_RED+f"    {line}")
+                print(color.fg.RED+f"    {"^"*len(line)}")
+                print(color.fg.BRIGHT_MAGENTA+f"{str(e)}"+color.RESET)
                 sys.exit(1)
 
         return result
