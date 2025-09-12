@@ -4,6 +4,7 @@ const disk_com xFE00_0001
 const disk_data xFE00_0002
 const disk_stat xFE00_0003
 
+; Read disk data
 diskload:
     mov $a, %x20
     mov disk_com, $a
