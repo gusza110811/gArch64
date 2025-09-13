@@ -65,7 +65,7 @@ class Emulator:
             prev_time = time.time()
 
             opcode = fetch()
-            opcode = (opcode << 8) + fetch()
+            opcode = opcode + (fetch() << 8)
             info = self.opcodes.OPCODES[opcode]
             name = info["mnemonic"]
             size = info["size"]
@@ -75,8 +75,8 @@ class Emulator:
             for idx in range(size):
                 value = 0
                 for idk in range(self.blocksize * 2 ): # blocksize is in words, not bytes
-                    value = value << 8
-                    value += fetch()
+                    value = value >> 8
+                    value += fetch() << (self.blocksize * 2 * 8)-8
                 params.append(value)
 
             self.executor.execute(name,params)

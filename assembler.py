@@ -223,9 +223,14 @@ class Assembler:
             try:
                 result += self.parse_line(line)
             except parsingError as e:
+                def find_first_non_whitespace(s):
+                    for i, char in enumerate(s):
+                        if not char.isspace():
+                            return i
+                    return -1  # Return -1 if no non-whitespace character is found
                 print(color.fg.BRIGHT_MAGENTA+f"In file `{self.name}` at line {idx+1}:"+color.RESET)
                 print(color.fg.BRIGHT_RED+f"    {line}")
-                print(color.fg.RED+f"    {"^"*len(line.strip())}")
+                print(color.fg.RED+f"    {" "*find_first_non_whitespace(line)}{"^"*len(line.strip)}")
                 print(color.fg.BRIGHT_MAGENTA+f"{str(e)}"+color.RESET)
                 sys.exit(1)
 
