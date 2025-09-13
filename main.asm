@@ -5,19 +5,10 @@ const disk_data xFE00_0002
 const disk_stat xFE00_0003
 
 ; Read disk data
-diskload:
-    mov $a, %x20
-    mov disk_com, $a
-    mov $x, %starttext
-    mov $y, %1
-
-    diskloop:
-        mov $a, disk_data
-        stvr
-        add
-        mov $x, $a
-        mov $a, disk_stat
-        jnz diskloop
+mov $a, %1
+int x13
+mov $a, %starttext
+int x14
 
 main:
     mov $a, %starttext

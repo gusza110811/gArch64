@@ -1,10 +1,54 @@
 const console xFE00_0000
 const counter xEFFC
+const disk_com xFE00_0001
+const disk_data xFE00_0002
+const disk_stat xFE00_0003
 
 intr %x10, print
 intr %x12, input
 
+intr %x13, disk_set_sector
+intr %x14, disk_read
+
 jmp x0
+
+; A is the sector number
+disk_set_sector:
+    pushr
+    mov $x, %x10
+    mov disk_com, $x
+    mov $x, $a
+    mov disk_data, $x
+    shrb
+    mov $x, $a
+    mov disk_data, $x
+    shrb
+    mov $x, $a
+    mov disk_data, $x
+    shrb
+    mov $x, $a
+    mov disk_data, $x
+    popr
+ret
+
+
+; A is the target address to save to
+disk_read:
+    pushr
+    mov $x, $a
+    mov $a, %x20
+    mov disk_com, $a
+    mov $y, %1
+
+    readloop:
+        mov $a, disk_data
+        stvr
+        add
+        mov $x, $a
+        mov $a, disk_stat
+        jnz readloop
+    popr
+ret
 
 input:
     pushr
@@ -71,3 +115,6 @@ printloop:
     jnz printloop
     mov console, $a
 ret
+
+bad_sector_error:
+    .ascii BAD SECTOR\0

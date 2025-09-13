@@ -43,6 +43,11 @@ class Executor:
         elif instruction == "OR": registers[0] = registers[1] | registers[2]
         elif instruction == "XOR": registers[0] = registers[1] ^ registers[2]
         elif instruction == "NOT": registers[0] = ~registers[1]
+        elif instruction == "SHL": registers[0] = registers[1] << registers[2]; emulator.correct_register()
+        elif instruction == "SHR": registers[0] = registers[1] >> registers[2]; emulator.correct_register()
+        elif instruction == "SHLB": registers[0] = registers[1] << 8
+        elif instruction == "SHRB": registers[0] = registers[1] >> 8
+        
 
         elif instruction == "JMP": emulator.counter = params[0]
         elif instruction == "JZ" and registers[0] == 0: emulator.counter = params[0]

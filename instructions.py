@@ -51,6 +51,10 @@ class Opcodes:
         self.define('OR',  0x25, 0, [], 'A = X | Y')
         self.define('XOR', 0x26, 0, [], 'A = X ^ Y')
         self.define('NOT', 0x27, 0, [], 'A = ~X')
+        self.define('SHL', 0x28, 0, [], 'A = X << Y')
+        self.define('SHR', 0x29, 0, [], 'A = X >> Y')
+        self.define('SHLB', 0x2A, 0, [], 'A = X << 8')
+        self.define('SHRB', 0x2B, 0, [], 'A = X >> 8')
 
         # --- Extended Arithmetic ---
         self.define("MOD", 0x28, 0, [], 'A = X % Y')

@@ -31,6 +31,10 @@ class Assembler:
             "or": Or,
             "xor": Xor,
             "not": Not,
+            "shl":Shl,
+            "shr":Shr,
+            "shlb":Shlb,
+            "shrb":Shrb,
 
             # Control flow
             "jmp": Jmp,
@@ -221,7 +225,7 @@ class Assembler:
             except parsingError as e:
                 print(color.fg.BRIGHT_MAGENTA+f"In file `{self.name}` at line {idx+1}:"+color.RESET)
                 print(color.fg.BRIGHT_RED+f"    {line}")
-                print(color.fg.RED+f"    {"^"*len(line)}")
+                print(color.fg.RED+f"    {"^"*len(line.strip())}")
                 print(color.fg.BRIGHT_MAGENTA+f"{str(e)}"+color.RESET)
                 sys.exit(1)
 

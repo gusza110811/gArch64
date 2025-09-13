@@ -113,6 +113,19 @@ class Not(Command):
     def get_value(self, params=None, size=4):
         return (0x27).to_bytes(2, "big")
 
+class Shl(Command):
+    def get_value(self, params=None, size=4):
+        return (0x28).to_bytes(2, "big")
+class Shr(Command):
+    def get_value(self, params=None, size=4):
+        return (0x29).to_bytes(2, "big")
+class Shlb(Command):
+    def get_value(self, params=None, size=4):
+        return (0x2A).to_bytes(2, "big")
+class Shrb(Command):
+    def get_value(self, params=None, size=4):
+        return (0x2B).to_bytes(2, "big")
+
 # Control flow
 class Jmp(Command):
     def get_value(self, params, size=4):
