@@ -5,6 +5,8 @@ import argparse
 import os
 import executor
 import time
+import plot_time
+import multiprocessing
 from color import *
 
 class Emulator:
@@ -62,7 +64,7 @@ class Emulator:
             return value
 
         while self.running:
-            prev_time = time.time()
+            prev_time = time.perf_counter_ns()
 
             opcode = fetch()
             opcode = opcode + (fetch() << 8)
@@ -80,7 +82,7 @@ class Emulator:
                 params.append(value)
 
             self.executor.execute(name,params)
-            self.time.append(time.time()-prev_time)
+            self.time.append(time.perf_counter_ns()-prev_time)
         return
 
 
@@ -171,14 +173,16 @@ if __name__ == "__main__":
         if bool(args.verbose):
             emulator.core_dump()
             emulator.time.sort()
-            # time in ns
-            unit = 10**9
-            average_time = sum(emulator.time)/len(emulator.time) * unit
-            median_time = emulator.time[len(emulator.time)//2] * unit
-            max_time = max(emulator.time) * unit
-            min_time = min(emulator.time) * unit
+            with open(".data","w") as data:
+                data.writelines([f"{str(num)}\n" for num in emulator.time])
+            process = multiprocessing.Process(target=plot_time.main)
+            process.start()
+            average_time = sum(emulator.time)/len(emulator.time)
+            median_time = emulator.time[len(emulator.time)//2]
+            max_time = max(emulator.time)
+            min_time = min(emulator.time)
             print("\nTime spent executing instruction")
-            print(f"{fg.RED}Max:{RESET} {max_time:,.0f}ns")
-            print(f"{fg.YELLOW}Median:{RESET} {median_time:,.0f}ns")
-            print(f"{fg.GREEN}Min:{RESET} {min_time:,.0f}ns")
-            print(f"{fg.BLUE}Average:{RESET} {average_time:,.0f}ns")
+            print(f"{fg.RED}Max :{RESET} {max_time:,.0f}ns")
+            print(f"{fg.GREEN}Mid :{RESET} {median_time:,.0f}ns")
+            print(f"{fg.BLUE}Min :{RESET} {min_time:,.0f}ns")
+            print(f"{fg.GRAY}Mean:{RESET} {average_time:,.0f}ns")
