@@ -52,7 +52,7 @@ class Assembler:
             "bnz": Bnz,
             "bc": Bc,
             "bnc": Bnc,
-            "be": Be,
+            "beq": Beq,
             "bne": Bne,
 
             # Move
@@ -176,7 +176,7 @@ class Assembler:
             return decode_ascii(line[7:].strip())
 
         if command == ".literal":
-            return [self.decode(word) for word in line[8:].split()]
+            return bytes([self.decode(word) for word in line[8:].split()])
 
         if command == ".zero":
             return bytes(int(line[6:].strip()))
@@ -230,7 +230,7 @@ class Assembler:
                     return -1  # Return -1 if no non-whitespace character is found
                 print(color.fg.BRIGHT_MAGENTA+f"In file `{self.name}` at line {idx+1}:"+color.RESET)
                 print(color.fg.BRIGHT_RED+f"    {line}")
-                print(color.fg.RED+f"    {" "*find_first_non_whitespace(line)}{"^"*len(line.strip)}")
+                print(color.fg.RED+f"    {" "*find_first_non_whitespace(line)}{"^"*len(line.strip())}")
                 print(color.fg.BRIGHT_MAGENTA+f"{str(e)}"+color.RESET)
                 sys.exit(1)
 

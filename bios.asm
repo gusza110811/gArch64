@@ -29,7 +29,16 @@ disk_set_sector:
     shrb
     mov $x, $a
     mov disk_data, $x
+    mov $x, disk_stat
+    mov $y, %x31
+    jeq bad_sector
     popr
+    ret
+
+    bad_sector:
+        mov $a, %bad_sector_error
+        int x10
+        popr
 ret
 
 ; A is the source address to read from
@@ -135,4 +144,7 @@ printloop:
 ret
 
 bad_sector_error:
-    .ascii BAD SECTOR\0
+    .literal x1b
+    .ascii [31mBAD SECTOR
+    .literal x1b
+    .ascii [0m\0

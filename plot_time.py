@@ -1,5 +1,5 @@
+import matplotlib.pyplot as plt
 def main():
-    import matplotlib.pyplot as plt
     file_name = '.data'
 
     # Read numbers from the file
@@ -14,10 +14,10 @@ def main():
     x_values = list(range(1, len(numbers)+1))
 
     # Plot the numbers
-    plt.plot(x_values, numbers)  # line graph with markers
+    plt.plot(x_values, numbers)
     plt.title('Graph of execution time')
     plt.xlabel('Index')
-    plt.ylabel('Time (ns)')
+    plt.ylabel('Time (nanosecond)')
     plt.yscale('log')  # set y-axis to logarithmic
     plt.grid(True, which="both", ls="--")  # grid for better readability
     plt.show()

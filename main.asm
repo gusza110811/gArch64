@@ -1,8 +1,5 @@
 const newline x0A
 const console xFE00_0000
-const disk_com xFE00_0001
-const disk_data xFE00_0002
-const disk_stat xFE00_0003
 
 ; Read disk data
 mov $a, %starttext

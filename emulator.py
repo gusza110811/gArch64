@@ -5,8 +5,6 @@ import argparse
 import os
 import executor
 import time
-import plot_time
-import multiprocessing
 from color import *
 
 class Emulator:
@@ -18,6 +16,8 @@ class Emulator:
 
         self.cache = Cache()
         self.ram = Ram()
+        self.ram.allocate_page(0x00000)
+        self.ram.allocate_page(0xFFFF0)
 
         self.counter = 0
         self.blocksize = 2
@@ -39,7 +39,7 @@ class Emulator:
         # Flash code to ram
         for idx, value in enumerate(code):
             self.ram.store(idx,value)
-        
+
         # Flash Bios
         bios = bytes()
         with open(f"{os.path.dirname(__file__)}/bios.bin","rb") as biosfile:
@@ -87,6 +87,7 @@ class Emulator:
 
 
     def core_dump(self):
+        print(f"Stopped at {self.counter:x}")
         print("\n\n<--- REGISTER DUMP --->")
         # dump register
         print(f"A: {self.registers[0]:03}  (x{self.registers[0]:02X})")
@@ -102,12 +103,12 @@ class Emulator:
 
     def dump_ram(self, long=False):
         print("\n<--- RAM DUMP --->")
-        prevkey = 0
-        for idx, (key,value) in enumerate(self.ram.data.items()):
-            if not long:
-                print(f"{key:08X}: {value:02X}   : {chr(value)}")
-            else:
-                print(f"{key:016X}: {value:02X}")
+        for frame in self.ram.data.values():
+            for (key, value) in frame.items():
+                if not long:
+                    print(f"{key:08X}: {value:02X}   : {chr(value)}")
+                else:
+                    print(f"{key:016X}: {value:02X}")
     
     def dump_cache(self, long=False, start: int = 0, end: int = None):
         print("\n<--- CACHE DUMP --->")
@@ -171,12 +172,18 @@ if __name__ == "__main__":
     
     finally:
         if bool(args.verbose):
+            import plot_time
+            def reduce_list(original_list, target_size):
+                step = len(original_list) // target_size
+
+                reduced_list = original_list[::step]
+                return reduced_list
             emulator.core_dump()
-            emulator.time.sort()
+            emulator.time.sort(reverse=True)
+            emulator.time = reduce_list(emulator.time,2000)
             with open(".data","w") as data:
                 data.writelines([f"{str(num)}\n" for num in emulator.time])
-            process = multiprocessing.Process(target=plot_time.main)
-            process.start()
+            emulator.time.sort(reverse=True)
             average_time = sum(emulator.time)/len(emulator.time)
             median_time = emulator.time[len(emulator.time)//2]
             max_time = max(emulator.time)
@@ -186,3 +193,4 @@ if __name__ == "__main__":
             print(f"{fg.GREEN}Mid :{RESET} {median_time:,.0f}ns")
             print(f"{fg.BLUE}Min :{RESET} {min_time:,.0f}ns")
             print(f"{fg.GRAY}Mean:{RESET} {average_time:,.0f}ns")
+            plot_time.main()

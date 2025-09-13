@@ -180,7 +180,7 @@ class Bnc(Command):
     def get_value(self, params, size=4):
         return bytes([0x3C,0x00]) + self.encode_immediate(params,size)
 
-class Be(Command):
+class Beq(Command):
     def get_value(self, params, size=4):
         return bytes([0x3D,0x00]) + self.encode_immediate(params,size)
 

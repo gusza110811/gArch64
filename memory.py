@@ -1,4 +1,5 @@
 import device
+import color
 
 class Cache:
     def __init__(self):
@@ -31,47 +32,80 @@ class Cache:
 
 class Ram:
     def __init__(self):
-        self.data:dict[(int,int)] = {}
-        self.DEVICE_ADDRESSES = range(0xFE00_0000,0xFE00_00FF)
+        self.data:dict[(int,dict[(int,int)])] = {} # dict of int:frames(dict of int:int)
+        self.page_to_frame:dict[(int,int)] = {}
 
-        self.ports:list[device.Device] = []
+        # frame 0xFE000 is reserved for ports
+        self.allocate_page(0xFE000,0xFE000)
+        self.ports:list[device.Port] = []
     
+    def allocate_page(self, page:int, frame:int=None):
+        def find_lowest_free(numbers):
+            number_set = set(numbers)
+            
+            current_num = 0
+            while current_num in number_set:
+                current_num += 1
+            
+            return current_num
+        if frame is None:
+            frame = find_lowest_free(self.page_to_frame.values())
+
+        self.page_to_frame[page] = frame
+    
+    def getaddr_real(self,addr:int):
+        frame = (addr & 0xFFFF_F000) >> 12
+        address = addr & 0xFFF
+        return frame, address
+
+    def getaddr_virtual(self,virtualaddr:int):
+        page = (virtualaddr & 0xFFFF_F000 )>> 12
+        address = virtualaddr & 0xFFF
+        try:
+            frame = self.page_to_frame[page]
+        except KeyError:
+            frame = page
+        return frame, address
+
     def register_port(self, port:device.Port):
         self.ports.append(port)
 
     def register_device(self,device:device.Device):
         device.set_port(self.register_port)
 
-    def load(self,address:int):
+    def load(self, address:int, absolute=False):
+        frame, address = self.getaddr_real(address) if absolute else self.getaddr_virtual(address)
+
         try:
-            if address in self.DEVICE_ADDRESSES:
-                Id = address-0xFE00_0000
-                device = self.ports[Id]
+            if frame == 0xFE000:
+                device = self.ports[address]
                 return device.read()
         except IndexError:
             pass
 
         try:
-            return self.data[address]
+            return self.data[frame][address]
         except KeyError:
             return 0
 
-    def store(self,address:int,value:int):
+    def store(self, address:int, value:int, absolute=False):
+        frame, address = self.getaddr_real(address) if absolute else self.getaddr_virtual(address)
         value = value & 0xFF
         # device
-        if address in self.DEVICE_ADDRESSES:
+        if frame == 0xFE000:
             try:
-                Id = address-0xFE00_0000
-                device = self.ports[Id]
+                device = self.ports[address]
                 device.write(value)
                 return
             except IndexError:
                 pass
 
         if value != 0:
-            self.data[address] = value
+            if not self.data.get(frame):
+                self.data[frame] = {}
+            self.data[frame][address] = value
         else:
             try:
-                del self.data[address]
+                del self.data[frame][address]
             except:
                 pass

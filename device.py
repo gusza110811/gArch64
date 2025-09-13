@@ -156,6 +156,6 @@ class DiskIO(Device):
             self.databuffer.append(data)
             if len(self.databuffer) == 4:
                 self.sector = int.from_bytes(bytes(self.databuffer),byteorder="little")
-                if (self.sector*self.SECTORSIZE) > self.get_size(self.disk):
+                if (self.sector*self.SECTORSIZE) >= self.get_size(self.disk):
                     self.error = "SECTOR_ID_TOO_LARGE"
                 self.command = ""
