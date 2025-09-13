@@ -5,35 +5,33 @@ const disk_data xFE00_0002
 const disk_stat xFE00_0003
 
 ; Read disk data
-mov $a, %1
-int x13
 mov $a, %starttext
-int x14
+int %x14
 
 main:
     mov $a, %starttext
     int %x10
+    mov $a, %infotext
+    int %x10
 
-; Echo loop
-loop:
     mov $a, %prompt
     int %x10
 
     mov $a, %text
     int %x12
-    int %x10
 
-    mov $a, %newline
-    mov console, $a ; send newline
+    mov $a, %text
+    int %x15
 
-jmp loop
+halt
+
+infotext:
+    .ascii \nType something to print on next run\n\0
 
 starttext:
     .zero 256
 
 prompt:
-    .ascii input>\0
+    .ascii Message>\0
 
-; 512 byte final binary size funny number go brrr
 text:
-    .zero 141

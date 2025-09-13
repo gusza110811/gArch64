@@ -9,6 +9,7 @@ intr %x12, input
 
 intr %x13, disk_set_sector
 intr %x14, disk_read
+intr %x15, disk_write
 
 jmp x0
 
@@ -31,6 +32,23 @@ disk_set_sector:
     popr
 ret
 
+; A is the source address to read from
+disk_write:
+    pushr
+    mov $x, $a
+    mov $a, %x21
+    mov disk_com, $a
+    mov $y, %1
+
+    writeloop:
+        ldvr
+        mov disk_data, $a
+        add
+        mov $x, $a
+        mov $a, disk_stat
+        jnz writeloop
+    popr
+ret
 
 ; A is the target address to save to
 disk_read:
