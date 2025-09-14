@@ -153,6 +153,7 @@ class DiskIO(Device):
             if len(self.databuffer) >= self.SECTORSIZE:
                 self.command = ""
                 self.disk.write(bytearray(self.databuffer))
+                self.disk.flush()
                 self.databuffer = deque()
         elif self.command == "SET_SECTOR":
             self.databuffer.append(data)

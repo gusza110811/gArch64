@@ -46,20 +46,13 @@ write_error:
 jmp main
 
 get_sector:
-    mov $a, %sectorprompt
-    int x10
-    mov $a, %buffer
-    int x12
-
-    mov $x, buffer
+    mov $x, buffer1
     mov $y, %x30
     sub
 ret
 
 prompt:
     .ascii \ncommand>\0
-sectorprompt:
-    .ascii sector>\0
 dataprompt:
     .ascii data>\0
 writeerror:
@@ -69,10 +62,12 @@ writeerror:
     .ascii [0m\n\0
 
 buffer:
+.zero 1
+buffer1:
 
 ; because the output binary is a disk image
 zeroes:
     ; pad boot sector
     .org 512
     ; a few extra sector
-    .org 4608
+    .org 5120
