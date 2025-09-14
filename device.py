@@ -16,12 +16,14 @@ class Port:
         return
 
 class Device:
+    "Base Device"
     def __init__(self):
         pass
     def set_port(self, register_port:object):
         pass
 
 class SerialConsole(Device):
+    "Serial Console"
     def __init__(self):
         listener = threading.Thread(target=self.keyboard, daemon=True)
         listener.start()
@@ -55,13 +57,13 @@ class SerialConsole(Device):
 
 class DiskIO(Device):
     "Disk controller"
-    def __init__(self):
+    def __init__(self, diskpath:str=f"{os.path.dirname(__file__)}/disk.img"):
         self.command = ""
         self.error = ""
         self.databuffer = deque()
         self.sector = 0
-        self.SECTORSIZE = 256 # bytes
-        self.disk = open("disk.img","rb+")
+        self.SECTORSIZE = 512 # bytes
+        self.disk = open(diskpath,"rb+")
         super().__init__()
 
     def set_port(self, register_port):
@@ -159,3 +161,4 @@ class DiskIO(Device):
                 if (self.sector*self.SECTORSIZE) >= self.get_size(self.disk):
                     self.error = "SECTOR_ID_TOO_LARGE"
                 self.command = ""
+                self.databuffer = deque()

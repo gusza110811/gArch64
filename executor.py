@@ -109,6 +109,9 @@ class Executor:
 
         elif instruction == "INTR": cache.register_int(params[0],params[1])
 
+        elif instruction == "PAGE": ram.allocate_page(params[0])
+        elif instruction == "FREE": ram.free_page(params[0])
+
         elif instruction == "REDUCE": emulator.blocksize = math.ceil(emulator.blocksize / 2)
         elif instruction == "EXTEND": emulator.blocksize *= 2
 

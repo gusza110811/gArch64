@@ -53,6 +53,12 @@ class Ram:
 
         self.page_to_frame[page] = frame
     
+    def free_page(self,page:int):
+        try:
+            del self.page_to_frame[page]
+        except KeyError:
+            pass
+    
     def getaddr_real(self,addr:int):
         frame = (addr & 0xFFFF_F000) >> 12
         address = addr & 0xFFF

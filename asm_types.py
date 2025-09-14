@@ -237,6 +237,14 @@ class Intr(Command):
     def get_value(self, params, size=4):
         return bytes([0x90,0x00]) + self.encode_immediate(params,size)
 
+class Page(Command):
+    def get_value(self, params, size=4):
+        return bytes([0x9A,0x00]) + self.encode_immediate(params,size)
+
+class Free(Command):
+    def get_value(self, params, size=4):
+        return bytes([0x9B,0x00]) + self.encode_immediate(params,size)
+
 class Reduce(Command):
     def get_value(self, params, size=4):
         return bytes([0xA0,0x00])

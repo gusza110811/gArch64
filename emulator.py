@@ -35,10 +35,7 @@ class Emulator:
         else:
             self.carry = True
 
-    def main(self, code:bytes):
-        # Flash code to ram
-        for idx, value in enumerate(code):
-            self.ram.store(idx,value)
+    def main(self, disk:str):
 
         # Flash Bios
         bios = bytes()
@@ -55,7 +52,7 @@ class Emulator:
         self.ram.register_device(console)
 
         # register disk controller
-        diskio = DiskIO()
+        diskio = DiskIO(disk)
         self.ram.register_device(diskio)
 
         def fetch():
@@ -87,7 +84,7 @@ class Emulator:
 
 
     def core_dump(self):
-        print(f"Stopped at {self.counter:x}")
+        print(f"Stopped at x{self.counter:X}")
         print("\n\n<--- REGISTER DUMP --->")
         # dump register
         print(f"A: {self.registers[0]:03}  (x{self.registers[0]:02X})")
@@ -102,13 +99,17 @@ class Emulator:
             self.dump_ram(True)
 
     def dump_ram(self, long=False):
+        self.ram.data = dict(sorted(self.ram.data.items()))
         print("\n<--- RAM DUMP --->")
-        for frame in self.ram.data.values():
-            for (key, value) in frame.items():
+        for idf,frame in enumerate(self.ram.data.values()):
+            frame = dict(sorted(frame.items()))
+            for idx, (key, value) in enumerate(frame.items()):
                 if not long:
-                    print(f"{key:08X}: {value:02X}   : {chr(value)}")
+                    char = ascii(chr(value))
+                    print(f"{idf:05X}{key:03X}: {value:02X} : {char}{' '*(8-len(char))}{'\n' if (idx % 4) == 3 else ''}",end="")
                 else:
                     print(f"{key:016X}: {value:02X}")
+            print("\n")
     
     def dump_cache(self, long=False, start: int = 0, end: int = None):
         print("\n<--- CACHE DUMP --->")
@@ -152,21 +153,15 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="gArch64 emulator")
 
-    parser.add_argument("source", help="path to source binary", default="main.bin", nargs="?")
+    parser.add_argument("source", help="path to disk image", default="main.bin", nargs="?")
     parser.add_argument("-v", "--verbose", help="print extra info on halt", action="store_true")
 
     args = parser.parse_args()
     source = args.source
 
-    try:
-        with open(source,'rb') as sourcefile:
-            code = sourcefile.read()
-    except FileNotFoundError:
-        with open(f"{os.path.dirname(__file__)}/{source}",'rb') as sourcefile:
-            code = sourcefile.read()
 
     try:
-        emulator.main(code)
+        emulator.main(source)
     except KeyboardInterrupt:
         print("INT")
     
@@ -174,6 +169,8 @@ if __name__ == "__main__":
         if bool(args.verbose):
             import plot_time
             def reduce_list(original_list, target_size):
+                if target_size >= len(original_list):
+                    return original_list
                 step = len(original_list) // target_size
 
                 reduced_list = original_list[::step]

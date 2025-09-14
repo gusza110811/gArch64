@@ -85,6 +85,10 @@ Copy value to it for printing, Copy value from it to read user input buffer
 | `or` | Bitwise OR X by Y then save to A |
 | `xor` | Bitwise XOR X by Y then save to A |
 | `not` | Bitwise NOT X by Y then save to A |
+| `shr` | Shift X by Y to the right then save to A |
+| `shl` | Shift X by Y to the left then save to A |
+| `shrb` | Shift X by 8 to the right then save to A |
+| `shlb` | Shift X by 8 to the left then save to A |
 | **Control Flow** |
 | `jmp [address/label]` | Jump to [address/label] |
 | `jz [address/label]` | Jump to [address/label] if A = 0 |

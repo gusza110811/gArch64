@@ -119,6 +119,10 @@ class Opcodes:
         self.define('STVR', 0x88, 0, [], 'Load value from ram into register A, using X as address')
         self.define('MOVR', 0x89, 2, ['addr_dst', 'addr_src'], 'Copy from addr_src to addr_dst (ram)')
 
+        # --- Page allocation ---
+        self.define('PAGE', 0x9A, 1, ['page'], 'Allocate page to the first available frame')
+        self.define('FREE', 0x9B, 1, ['page'], 'Unallocate page')
+
         # --- Block size ---
         self.define('REDUCE', 0xA0, 0, [], 'Halves the block size (do nothing if blocksize is 1 word)')
         self.define('EXTEND', 0xA1, 0, [], 'Doubles the block size')

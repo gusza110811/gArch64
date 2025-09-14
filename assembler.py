@@ -70,11 +70,15 @@ class Assembler:
             "stv": Stv,
             "stvr": Stvr,
 
-            # x32 system / interrupts
+            # Interrupts
             "int": Int,
             "intr": Intr,
 
-            # Extended operations
+            # Paging
+            "page": Page,
+            "free": Free,
+
+            # Bitlength operations
             "reduce": Reduce,
             "extend": Extend,
         }
@@ -104,17 +108,17 @@ class Assembler:
             except ValueError:
                 raise ValueError(f"Can't decode `{word}` as octal")
         elif word.startswith("'"):
-            try:
-                return ord(word)
-            except TypeError:
-                raise SyntaxError(f"`'` prefix only accepts one character")
+            word = word[1:]
+            if len(word) > 1:
+                raise SyntaxError(f"`'` prefix only accepts one character, {word} is not accepted")
+            return ord(word)
         else:
             try:
                 return int(word)
             except ValueError:
                 if not word:
                     return 0
-                raise ValueError(f"Can't decode {word} as integer number")
+                raise ValueError(f"Can't decode {word}")
 
     def parse_parameters(self,parameters:str):
         if len(parameters) == 0:
@@ -145,7 +149,7 @@ class Assembler:
 
         return result
 
-    def parse_special(self,line:str) -> bytes:
+    def parse_special(self,line:str, pre:bytes) -> bytes:
         command = line.split()[0].strip().lower()
         line = line.strip()
 
@@ -180,12 +184,19 @@ class Assembler:
 
         if command == ".zero":
             return bytes(int(line[6:].strip()))
+        
+        if command == ".org":
+            target = int(line[5:].strip())
+            size = len(pre)+self.offset
+            if size > target:
+                raise SyntaxError(f"Target origin too low, target: {target}, size of binary preceding: {size}")
+            return bytes(target-size)
 
 
         else:
             raise SyntaxError(f"Invalid dot command `{command}`")
 
-    def parse_line(self,line:str) -> bytes:
+    def parse_line(self,line:str,pre:bytes) -> bytes:
         result = bytes()
         words = line.split(";")[0].split()
         if not words:
@@ -194,7 +205,7 @@ class Assembler:
         if words[0] == "const": return result
         if words[0].endswith(":"): return result
         try:
-            if words[0].startswith("."): return self.parse_special(line)
+            if words[0].startswith("."): return self.parse_special(line,pre)
         except SyntaxError as e:
             raise parsingError(f"SyntaxError: {e}")
         except ValueError as e:
@@ -221,7 +232,7 @@ class Assembler:
         result = bytes()
         for idx, line in enumerate(lines):
             try:
-                result += self.parse_line(line)
+                result += self.parse_line(line,lines)
             except parsingError as e:
                 def find_first_non_whitespace(s):
                     for i, char in enumerate(s):
