@@ -63,8 +63,11 @@ These can be called through `int [id]` instruction with the `id` as the command 
 You set the A register to its parameter
 | Command | Usage |
 | --- | --- |
-| `print` (`16`) | Print a null-terminated string that starts at ram address stored in A |
-| `input` (`18`) | Get user input and save it to ram address stored in A (cannot provide maximum length, following addresses *will* be overwritten) |
+| `print` (`16`) | Print string that starts at ram address stored in A |
+| `input` (`18`) | Get user input and save it to ram address stored in A |
+| `disk_set_sector` (`19`) | Change current sector of the hard disk to value in A |
+| `disk_read` (`20`) | Read the current 512 bytes sector to memory startimg at address stores in A |
+| `disk_write` (`21`) | Write a 512 byte chunk stored in memory starting at address stored in A |
 
 You can also interact with the Serial Console device directly by copying data from or to it. By default this device is mapped to memory address `0xFE00_0000`
 
