@@ -59,14 +59,14 @@ Use `;`, can be anywhere
 ## System and Hardware specification
 There is a BIOS program that runs on every execution. it sets up useful commands
 
-These can be called through `int [id]` instruction with thr `id` as the command number in this table below
+These can be called through `int [id]` instruction with the `id` as the command number in this table below
 You set the A register to its parameter
 | Command | Usage |
 | --- | --- |
-| `print` (`16`) | Print string that starts at ram address stored in A |
-| `input` (`18`) | Get user input and save it to ram address stored in A |
+| `print` (`16`) | Print a null-terminated string that starts at ram address stored in A |
+| `input` (`18`) | Get user input and save it to ram address stored in A (cannot provide maximum length, following addresses *will* be overwritten) |
 
-You can also interact with the SerialConsole device directly by copying data from or to it. By default this device is mapped to memory address `0xFE00_0000`
+You can also interact with the Serial Console device directly by copying data from or to it. By default this device is mapped to memory address `0xFE00_0000`
 
 Copy value to it for printing, Copy value from it to read user input buffer
 ## Opcodes
@@ -81,14 +81,14 @@ Copy value to it for printing, Copy value from it to read user input buffer
 | `div` | Divide X by Y and save to A |
 | `mod` | Modulo X by Y and save to A |
 | **Bitwise** |
-| `and` | Bitwise AND X by Y then save to A |
-| `or` | Bitwise OR X by Y then save to A |
-| `xor` | Bitwise XOR X by Y then save to A |
-| `not` | Bitwise NOT X by Y then save to A |
+| `and` | Bitwise AND X and Y then save to A |
+| `or` | Bitwise OR X and Y then save to A |
+| `xor` | Bitwise XOR X and Y then save to A |
+| `not` | Bitwise NOT X and Y then save to A |
 | `shr` | Shift X by Y to the right then save to A |
 | `shl` | Shift X by Y to the left then save to A |
-| `shrb` | Shift X by 8 to the right then save to A |
-| `shlb` | Shift X by 8 to the left then save to A |
+| `shrb` | Shift X by 8 bit to the right then save to A |
+| `shlb` | Shift X by 8 to bit the left then save to A |
 | **Control Flow** |
 | `jmp [address/label]` | Jump to [address/label] |
 | `jz [address/label]` | Jump to [address/label] if A = 0 |
