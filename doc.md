@@ -69,9 +69,10 @@ You set the A register to its parameter
 | `disk_read` (`20`) | Read the current 512 bytes sector to memory startimg at address stores in A |
 | `disk_write` (`21`) | Write a 512 byte chunk stored in memory starting at address stored in A |
 
-You can also interact with the Serial Console device directly by copying data from or to it. By default this device is mapped to memory address `0xFE00_0000`
+### Memory Management
+By default, 2 pages are allocated, 0x00000 and 0xFE000 for 4kib of memory and 4096 devices mappable
+allocate more by using `page [page-id]` where `page-id` is a new page
 
-Copy value to it for printing, Copy value from it to read user input buffer
 ## Opcodes
 | OPCODE | Meaning/Usage |
 | --- | --- |
@@ -124,3 +125,6 @@ Copy value to it for printing, Copy value from it to read user input buffer
 | **Interrupts** |
 | `int [int-id]` | Call interrupt assigned to [int-id] |
 | `intr [int-id], [address]` | Assign [int-id] to function at [address] |
+| **Page allocation and freeing** |
+| `page [page-id]` | Allocate a page to the first available frame |
+| `free [page-id]` | Unallocate a page |
