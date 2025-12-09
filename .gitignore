@@ -1,3 +1,7 @@
 .*
 !/.gitignore
+
+*.bin
+!/emulator/bios.bin
+
 __pycache__

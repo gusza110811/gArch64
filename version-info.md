@@ -8,7 +8,7 @@ This document explains how to interpret each type of version.
 The main versions you should normally use.  
 Format: **`MAJOR.minor.patch`** (classic semantic-style).  
 
-⚠️ Note: A stable release may be *revised in place* without bumping the patch number (rare).
+Note: A stable release may be *revised in place* without bumping the patch number.
 
 ---
 

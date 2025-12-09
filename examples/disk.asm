@@ -18,7 +18,7 @@ main:
 jmp main
 
 read_mode:
-    call get_sector ; ask for sector
+    call get_sector
     int x13
     mov $a, %buffer
     int x14
@@ -26,7 +26,7 @@ read_mode:
 jmp main
 
 write_mode:
-    call get_sector ; ask for sector
+    call get_sector
     mov $x, $a
     mov $y, %0
     jeq write_error
