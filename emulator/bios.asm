@@ -11,6 +11,7 @@ intr %x13, disk_set_sector
 intr %x14, disk_read
 intr %x15, disk_write
 
+; load the program in boot sector
 call disk_read
 
 jmp x0
@@ -43,7 +44,7 @@ disk_set_sector:
         popr
 ret
 
-; A is the source address to read from
+; A is the source address in memory to read from
 disk_write:
     pushr
     mov $x, $a
@@ -61,7 +62,7 @@ disk_write:
     popr
 ret
 
-; A is the target address to save to
+; A is the target address in memory to save to
 disk_read:
     pushr
     mov $x, $a

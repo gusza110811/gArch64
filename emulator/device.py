@@ -38,6 +38,7 @@ class SerialConsole(Device):
         self.port.read = self.read
         register_port(self.port)
 
+    # yes the newline does get sent
     def keyboard(self):
         while 1:
             try:
