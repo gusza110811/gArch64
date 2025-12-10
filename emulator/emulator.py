@@ -107,16 +107,16 @@ class Emulator:
                 # (relavent cache address, relavent cache value)
                 # (relavent ram address, relavent ram value)
                 # was a jump done
-                cache_revalence = r"ST(A|X|Y)|LD(A|X|Y)|MOV|STV"
-                ram_revalence = r"ST(A|X|Y)R|LD(A|X|Y)R|MOVR|STVR"
+                cache_revalence = r"LD(A|X|Y)?!R|MOV?!R"
+                ram_revalence = r"LD(A|X|Y)R|MOVR"
                 jumped = self.counter != prev_addr
                 self.trace.append((
                     self.counter,
                     opcode, name,
                     params.copy() + [0]*(2-len(params)),
                     self.registers.copy(),
-                    (params[0], self.cache.load(params[0])) if re.match(cache_revalence, name) else (self.registers[1], self.cache.load(self.registers[1])) if (name == "LDV") else None,
-                    (params[0], self.ram.load(params[0])) if re.match(ram_revalence, name) else (self.registers[1], self.cache.load(self.registers[1])) if (name == "LDVR") else None,
+                    (params[0], self.cache.load(params[0])) if re.match(cache_revalence, name) else (self.registers[1], self.cache.load(self.registers[1])) if (name == "LDV" or name == "STV") else None,
+                    (params[0], self.ram.load_bypass_dev(params[0])) if re.match(ram_revalence, name) else (self.registers[1], self.ram.load_bypass_dev(self.registers[1])) if (name == "LDVR" or name == "STVR") else None,
                     jumped
                 ))
             if self.do_trace and self.counter == 0: # begin tracing on the true start of the program
@@ -263,10 +263,12 @@ if __name__ == "__main__":
                     else:
                         tracefile.write(f"  ")
 
-                    tracefile.write(f"{entry[0]:08X}: [{entry[1]:02X}] {entry[2].ljust(4)} {', '.join([f"{param:10}" for param in entry[3]])}   //   A: {entry[4][0]:8X} , X: {entry[4][1]:8X} , Y: {entry[4][2]:8X}   //")
-                    if entry[5] is not None:
+                    tracefile.write(f"{entry[0]:08X}: [{entry[1]:02X}] {entry[2].ljust(5)} {', '.join([f"{param:10}" for param in entry[3]])}   //   A: {entry[4][0]:8X} , X: {entry[4][1]:8X} , Y: {entry[4][2]:8X}   //")
+                    if entry[5]:
                         tracefile.write(f"   *x{entry[5][0]:04X}     = {entry[5][1]:8X}")
-                    if entry[6] is not None:
-                        tracefile.write(f"    x{entry[6][0]:08X} =       {entry[6][1]:2X}")
-
+                    try:
+                        if entry[6]:
+                            tracefile.write(f"    x{entry[6][0]:08X} =       {entry[6][1]:2X}")
+                    except:
+                        print(entry)
                     tracefile.write(f"\n")

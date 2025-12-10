@@ -93,6 +93,14 @@ class Ram:
             return self.data[frame][address]
         except KeyError:
             return 0
+    
+    def load_bypass_dev(self, address:int, absolute=False):
+        frame, address = self.getaddr_real(address) if absolute else self.getaddr_virtual(address)
+
+        try:
+            return self.data[frame][address]
+        except KeyError:
+            return 0
 
     def store(self, address:int, value:int, absolute=False):
         frame, address = self.getaddr_real(address) if absolute else self.getaddr_virtual(address)
