@@ -27,14 +27,22 @@ class Emulator:
         self.running = True
 
         self.time = []
-    
-    def correct_register(self):
-        newvalue = self.registers[0] % 2^(16*self.blocksize)
-        if newvalue == self.registers[0]:
-            self.carry = False
-        else:
-            self.carry = True
 
+        self.trace = []
+        self.do_trace = False
+        self.block_recursion = False
+        self.recursion_limit = 10000
+    
+    # Ensure register A is within bounds
+    def correct_register(self):
+        max_value = (1 << (self.blocksize * 16)) - 1
+        self.carry = True
+        if self.registers[0] < 0:
+            self.registers[0] = max_value + self.registers[0] + 1
+        elif self.registers[0] > max_value:
+            self.registers[0] = self.registers[0] % max_value
+        else:
+            self.carry = False
     def main(self, disk:str):
 
         # Flash Bios
@@ -46,6 +54,10 @@ class Emulator:
             self.ram.store(idx+0xFFFF_0000, value) # offset 4294901760
 
         self.counter = 0xFFFF_0000
+
+        tracing = False
+
+        recursion_table = {}
 
         # register console
         console = SerialConsole()
@@ -77,9 +89,25 @@ class Emulator:
                     value = value >> 8
                     value += fetch() << (self.blocksize * 2 * 8)-8
                 params.append(value)
+            
+            self.correct_register()
 
             self.executor.execute(name,params)
             self.time.append(time.perf_counter_ns()-prev_time)
+            
+            if self.do_trace and tracing:
+                self.trace.append((self.counter, opcode, name, params.copy() + [0]*(2-len(params)), self.registers.copy()))
+            if self.do_trace and self.counter == 0: # being tracing on the true start of the program
+                tracing = True
+            
+            if self.block_recursion:
+                if self.counter not in recursion_table:
+                    recursion_table[self.counter] = 0
+                recursion_table[self.counter] += 1
+                if recursion_table[self.counter] > self.recursion_limit:
+                    print(f"{color.fg.RED}Recursion blocked: instruction at x{self.counter:X} executed too many times{color.RESET}")
+                    break
+
         return
 
 
@@ -154,20 +182,32 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="gArch64 emulator")
 
     parser.add_argument("source", help="path to disk image", default="main.bin", nargs="?")
-    parser.add_argument("-v", "--verbose", help="print extra info on halt", action="store_true")
+    parser.add_argument("-d", "--debug", help="print max/mid/min/median execution time, value of registers, cache and ram on halt", action="store_true")
+    parser.add_argument("-D", "--trace", help="trace program counter and dump to file", action="store_true")
+    parser.add_argument("-r", "--block-small-recursion", help="halt execution when a certain instruction is executed 1,000 times", action="store_true")
+    parser.add_argument("-R", "--block-recursion", help="halt execution when a certain instruction is executed 10,000 times", action="store_true")
+    parser.add_argument("--block-large-recursion", help="halt execution when a certain instruction is executed 1,000,000 times", action="store_true")
+    parser.add_argument("-g", "--graph", help="shows graph of execution time on halt", action="store_true")
 
     args = parser.parse_args()
     source = args.source
 
+    emulator.do_trace = bool(args.trace)
+    emulator.block_recursion = bool(args.block_recursion)
+    if bool(args.block_small_recursion):
+        emulator.block_recursion = True
+        emulator.recursion_limit = 1000
+    if bool(args.block_large_recursion):
+        emulator.block_recursion = True
+        emulator.recursion_limit = 1000000
 
     try:
         emulator.main(source)
     except KeyboardInterrupt:
-        print("INT")
+        print(color.fg.YELLOW+"INT"+color.RESET)
     
     finally:
-        if bool(args.verbose):
-            import plot_time
+        if bool(args.debug):
             def reduce_list(original_list, target_size):
                 if target_size >= len(original_list):
                     return original_list
@@ -190,4 +230,15 @@ if __name__ == "__main__":
             print(f"{fg.GREEN}Mid :{RESET} {median_time:,.0f}ns")
             print(f"{fg.BLUE}Min :{RESET} {min_time:,.0f}ns")
             print(f"{fg.GRAY}Mean:{RESET} {average_time:,.0f}ns")
+        if bool(args.graph):
+            import plot_time
             plot_time.main()
+        if bool(args.trace):
+            with open(".trace","w") as tracefile:
+                for idx, entry in enumerate(emulator.trace):
+                    if (emulator.trace[idx-1][2].startswith("J") or emulator.trace[idx-1][2].startswith("B") or emulator.trace[idx-1][2] == "CALL") and idx != 0:
+                        tracefile.write(f"> ")
+                    else:
+                        tracefile.write(f"  ")
+
+                    tracefile.write(f"{entry[0]:08X}: [{entry[1]:02X}] {entry[2].ljust(4)} {', '.join([f"{param:10}" for param in entry[3]])}   //   A: {entry[4][0]:08X}  X: {entry[4][1]:08X}  Y: {entry[4][2]:08X}\n")

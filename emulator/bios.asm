@@ -36,12 +36,16 @@ disk_set_sector:
     mov $y, %x31
     jeq bad_sector
     popr
+    mov $a, %0
     ret
 
-    bad_sector:
-        mov $a, %bad_sector_error
-        int x10
-        popr
+ret
+
+bad_sector:
+    mov $a, %bad_sector_error
+    int x10
+    popr
+    mov $a, %1
 ret
 
 ; A is the source address in memory to read from
