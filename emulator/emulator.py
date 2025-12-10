@@ -204,13 +204,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="gArch64 emulator")
 
     parser.add_argument("source", help="path to disk image", default="main.bin", nargs="?")
-    parser.add_argument("-d", "--debug", help="print max/mid/min/median execution time, value of registers, cache and ram on halt", action="store_true")
-    parser.add_argument("-D", "--trace", help="trace execution and dump to .trace in the current directory", action="store_true")
+    parser.add_argument("-t", "--time", help="print max/mid/min/median execution time on halt", action="store_true")
+    parser.add_argument("-d", "--trace", help="trace execution and dump to .trace in the current directory", action="store_true")
+    parser.add_argument("-m", "--dump", help="dump memory to console", action="store_true")
+    parser.add_argument("-M", "--dump-file", help="dump memory to .dump", action="store_true")
     parser.add_argument("-g", "--graph", help="shows graph of execution time on halt", action="store_true")
     parser.add_argument("-r", "--block-small-recursion", help="halt execution when a certain address is executed 1,000 times", action="store_true")
     parser.add_argument("-R", "--block-recursion", help="halt execution when a certain address is executed 10,000 times", action="store_true")
     parser.add_argument("--block-large-recursion", help="halt execution when a certain address is executed 1,000,000 times", action="store_true")
-
     args = parser.parse_args()
     source = args.source
 
@@ -222,6 +223,9 @@ if __name__ == "__main__":
     if bool(args.block_large_recursion):
         emulator.block_recursion = True
         emulator.recursion_limit = 1000000
+    
+    if (bool(args.block_recursion) + bool(args.block_small_recursion) + bool(args.block_large_recursion)) > 1:
+        sys.exit("Cannot use multiple recursion block flags at once")
 
     try:
         emulator.main(source)
@@ -229,7 +233,15 @@ if __name__ == "__main__":
         print(color.fg.YELLOW+"INT"+color.RESET)
     
     finally:
-        if bool(args.debug):
+        if bool(args.dump):
+            emulator.core_dump()
+        if bool(args.dump_file):
+            oldstdout = sys.stdout
+            sys.stdout = open(".dump","w")
+            emulator.core_dump()
+            sys.stdout = oldstdout
+
+        if bool(args.time):
             def reduce_list(original_list, target_size):
                 if target_size >= len(original_list):
                     return original_list
@@ -237,7 +249,6 @@ if __name__ == "__main__":
 
                 reduced_list = original_list[::step]
                 return reduced_list
-            emulator.core_dump()
             emulator.time.sort(reverse=True)
             emulator.time = reduce_list(emulator.time,2000)
             with open(".data","w") as data:
