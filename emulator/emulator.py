@@ -206,7 +206,7 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--time", help="print max/mid/min/median execution time on halt", action="store_true")
     parser.add_argument("-d", "--trace", help="trace execution and dump to .trace in the current directory", action="store_true")
     parser.add_argument("-m", "--dump", help="dump memory to console", action="store_true")
-    parser.add_argument("-M", "--dump-file", help="dump memory to .dump", action="store_true")
+    parser.add_argument("-M", "--dump-file", help="dump memory to .dump in the current directory", action="store_true")
     parser.add_argument("-g", "--graph", help="shows graph of execution time on halt", action="store_true")
     parser.add_argument("-r", "--block-small-recursion", help="halt execution when a certain address is executed 1,000 times", action="store_true")
     parser.add_argument("-R", "--block-recursion", help="halt execution when a certain address is executed 10,000 times", action="store_true")
