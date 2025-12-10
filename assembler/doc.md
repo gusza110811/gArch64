@@ -15,7 +15,7 @@ use `-O [offset]` or `--offset [offset]` if your binary wont be loaded to memory
 
 ### Format
 Each line is an instruction with its parameters. starts with the instruction's opcode, followed by
-parameters separated by comma(`,`), which ends up looking like `OPCODE param1, [param2]`
+parameters separated by comma(`,`), which ends up looking like `OPCODE param1, param2`
 
 ### Prefix
 | Prefix | Usage |
