@@ -11,6 +11,9 @@ intr %x13, disk_set_sector
 intr %x14, disk_read
 intr %x15, disk_write
 
+; allocate the 0 page
+page 0
+
 ; load the program in boot sector
 call disk_read
 

@@ -17,7 +17,6 @@ class Emulator:
 
         self.cache = Cache()
         self.ram = Ram()
-        self.ram.allocate_page(0x00000)
         self.ram.allocate_page(0xFFFF0)
 
         self.counter = 0
