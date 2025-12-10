@@ -1,5 +1,16 @@
 # ASSEMBLY DOCS
 
+## The Command
+```
+assembler.py [source] [-o output] [-O offset] [-v | --verbose]
+```
+
+`source` defaults to `main.asm` if not given
+
+use `-o [name]` or `--output [name]` if you want the output binary to have a different name from the original assembly
+
+use `-O [offset]` or `--offset [offset]` if your binary wont be loaded to memory at address x00000000
+
 ## Syntax
 
 ### Format

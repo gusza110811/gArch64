@@ -87,6 +87,7 @@ disk_read:
     popr
 ret
 
+; trailing newline not included
 input:
     pushr
     mov *counter, $a        ; save target buffer pointer
