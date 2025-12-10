@@ -5,6 +5,7 @@ import argparse
 import os
 import executor
 import time
+import re
 from color import *
 
 class Emulator:
@@ -36,13 +37,13 @@ class Emulator:
     # Ensure register A is within bounds
     def correct_register(self):
         max_value = (1 << (self.blocksize * 16)) - 1
-        self.carry = True
-        if self.registers[0] < 0:
-            self.registers[0] = max_value + self.registers[0] + 1
-        elif self.registers[0] > max_value:
-            self.registers[0] = self.registers[0] % max_value
+        new_value = self.registers[0] & max_value
+        if new_value != self.registers[0]:
+            self.carry = True
+            self.registers[0] = new_value
         else:
             self.carry = False
+
     def main(self, disk:str):
 
         # Flash Bios
@@ -56,6 +57,7 @@ class Emulator:
         self.counter = 0xFFFF_0000
 
         tracing = False
+        prev_addr = self.counter
 
         recursion_table = {}
 
@@ -90,14 +92,34 @@ class Emulator:
                     value += fetch() << (self.blocksize * 2 * 8)-8
                 params.append(value)
             
+            prev_addr = self.counter
             self.correct_register()
 
             self.executor.execute(name,params)
             self.time.append(time.perf_counter_ns()-prev_time)
             
             if self.do_trace and tracing:
-                self.trace.append((self.counter, opcode, name, params.copy() + [0]*(2-len(params)), self.registers.copy()))
-            if self.do_trace and self.counter == 0: # being tracing on the true start of the program
+                # counter,
+                # opcode value,
+                # opcode name,
+                # parameters,
+                # registers,
+                # (relavent cache address, relavent cache value)
+                # (relavent ram address, relavent ram value)
+                # was a jump done
+                cache_revalence = r"ST(A|X|Y)|LD(A|X|Y)|MOV|STV"
+                ram_revalence = r"ST(A|X|Y)R|LD(A|X|Y)R|MOVR|STVR"
+                jumped = self.counter != prev_addr
+                self.trace.append((
+                    self.counter,
+                    opcode, name,
+                    params.copy() + [0]*(2-len(params)),
+                    self.registers.copy(),
+                    (params[0], self.cache.load(params[0])) if re.match(cache_revalence, name) else (self.registers[1], self.cache.load(self.registers[1])) if (name == "LDV") else None,
+                    (params[0], self.ram.load(params[0])) if re.match(ram_revalence, name) else (self.registers[1], self.cache.load(self.registers[1])) if (name == "LDVR") else None,
+                    jumped
+                ))
+            if self.do_trace and self.counter == 0: # begin tracing on the true start of the program
                 tracing = True
             
             if self.block_recursion:
@@ -183,11 +205,11 @@ if __name__ == "__main__":
 
     parser.add_argument("source", help="path to disk image", default="main.bin", nargs="?")
     parser.add_argument("-d", "--debug", help="print max/mid/min/median execution time, value of registers, cache and ram on halt", action="store_true")
-    parser.add_argument("-D", "--trace", help="trace program counter and dump to file", action="store_true")
-    parser.add_argument("-r", "--block-small-recursion", help="halt execution when a certain instruction is executed 1,000 times", action="store_true")
-    parser.add_argument("-R", "--block-recursion", help="halt execution when a certain instruction is executed 10,000 times", action="store_true")
-    parser.add_argument("--block-large-recursion", help="halt execution when a certain instruction is executed 1,000,000 times", action="store_true")
+    parser.add_argument("-D", "--trace", help="trace execution and dump to .trace in the current directory", action="store_true")
     parser.add_argument("-g", "--graph", help="shows graph of execution time on halt", action="store_true")
+    parser.add_argument("-r", "--block-small-recursion", help="halt execution when a certain address is executed 1,000 times", action="store_true")
+    parser.add_argument("-R", "--block-recursion", help="halt execution when a certain address is executed 10,000 times", action="store_true")
+    parser.add_argument("--block-large-recursion", help="halt execution when a certain address is executed 1,000,000 times", action="store_true")
 
     args = parser.parse_args()
     source = args.source
@@ -236,9 +258,15 @@ if __name__ == "__main__":
         if bool(args.trace):
             with open(".trace","w") as tracefile:
                 for idx, entry in enumerate(emulator.trace):
-                    if (emulator.trace[idx-1][2].startswith("J") or emulator.trace[idx-1][2].startswith("B") or emulator.trace[idx-1][2] == "CALL") and idx != 0:
+                    if emulator.trace[idx-1][7]:
                         tracefile.write(f"> ")
                     else:
                         tracefile.write(f"  ")
 
-                    tracefile.write(f"{entry[0]:08X}: [{entry[1]:02X}] {entry[2].ljust(4)} {', '.join([f"{param:10}" for param in entry[3]])}   //   A: {entry[4][0]:08X}  X: {entry[4][1]:08X}  Y: {entry[4][2]:08X}\n")
+                    tracefile.write(f"{entry[0]:08X}: [{entry[1]:02X}] {entry[2].ljust(4)} {', '.join([f"{param:10}" for param in entry[3]])}   //   A: {entry[4][0]:8X} , X: {entry[4][1]:8X} , Y: {entry[4][2]:8X}   //")
+                    if entry[5] is not None:
+                        tracefile.write(f"   *x{entry[5][0]:04X}     = {entry[5][1]:8X}")
+                    if entry[6] is not None:
+                        tracefile.write(f"    x{entry[6][0]:08X} =       {entry[6][1]:2X}")
+
+                    tracefile.write(f"\n")
