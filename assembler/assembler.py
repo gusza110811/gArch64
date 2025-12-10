@@ -183,7 +183,10 @@ class Assembler:
             return bytes([self.decode(word) for word in line[8:].split()])
 
         if command == ".zero":
-            return bytes(int(line[6:].strip()))
+            try:
+                return bytes(int(line[6:].strip()))
+            except ValueError:
+                return bytes(1)
         
         if command == ".org":
             target = int(line[5:].strip())

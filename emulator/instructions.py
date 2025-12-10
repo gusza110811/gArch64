@@ -57,7 +57,7 @@ class Opcodes:
         self.define('SHRB', 0x2B, 0, [], 'A = X >> 8')
 
         # --- Extended Arithmetic ---
-        self.define("MOD", 0x28, 0, [], 'A = X % Y')
+        self.define("MOD", 0x2C, 0, [], 'A = X % Y')
 
         # --- Control Flow ---
         self.define('JMP', 0x30, 1, ['addr'], 'Jump to address')
@@ -79,9 +79,9 @@ class Opcodes:
         self.define('BNE',  0x3E, 1, ['addr'], 'Call if X != Y')
 
         # --- Load immediate ---
-        self.define("LDYI", 0x49, 1, ["imm8"], "Load immediate value into Y")
         self.define("LDAI", 0x47, 1, ["imm8"], "Load immediate value into A")
         self.define("LDXI", 0x48, 1, ["imm8"], "Load immediate value into X")
+        self.define("LDYI", 0x49, 1, ["imm8"], "Load immediate value into Y")
 
         # --- Register-register ---
         self.define("MVAX", 0x50, 0, [], "Copy Register A to X")

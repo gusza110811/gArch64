@@ -24,12 +24,17 @@ class Device:
 
 class SerialConsole(Device):
     "Serial Console"
-    def __init__(self):
-        listener = threading.Thread(target=self.keyboard, daemon=True)
-        listener.start()
+    def __init__(self, stdin:str=None):
         self.writemode = False
         self.listen = False
         self.buffer:deque[int] = deque()
+        if not stdin:
+            listener = threading.Thread(target=self.keyboard, daemon=True)
+            listener.start()
+            self.false = False
+        else:
+            self.buffer = deque(stdin.encode(encoding="ascii"))
+            self.false = True
         super().__init__()
 
     def set_port(self, register_port):
@@ -51,10 +56,15 @@ class SerialConsole(Device):
         print(chr(data),end="",flush=True)
 
     def read(self):
+        if self.false:
+            print(chr(self.buffer[0]),end="",flush=True)
         try:
             return self.buffer.popleft()
         except IndexError:
-            return 0
+            if not self.false:
+                return 0
+            else:
+                raise KeyboardInterrupt
 
 class DiskIO(Device):
     "Disk controller"

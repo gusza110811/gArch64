@@ -7,6 +7,7 @@ import executor
 import time
 import re
 from color import *
+from collections import OrderedDict
 
 class Emulator:
     def __init__(self):
@@ -37,13 +38,13 @@ class Emulator:
     def correct_register(self):
         max_value = (1 << (self.blocksize * 16)) - 1
         new_value = self.registers[0] & max_value
+        self.carry = True
         if new_value != self.registers[0]:
-            self.carry = True
             self.registers[0] = new_value
         else:
             self.carry = False
 
-    def main(self, disk:str):
+    def main(self, disk:str, stdin):
 
         # Flash Bios
         bios = bytes()
@@ -61,7 +62,7 @@ class Emulator:
         recursion_table = {}
 
         # register console
-        console = SerialConsole()
+        console = SerialConsole(stdin)
         self.ram.register_device(console)
 
         # register disk controller
@@ -76,6 +77,7 @@ class Emulator:
         while self.running:
             prev_time = time.perf_counter_ns()
 
+            firstaddr = self.counter
             opcode = fetch()
             opcode = opcode + (fetch() << 8)
             info = self.opcodes.OPCODES[opcode]
@@ -92,7 +94,6 @@ class Emulator:
                 params.append(value)
             
             prev_addr = self.counter
-            self.correct_register()
 
             self.executor.execute(name,params)
             self.time.append(time.perf_counter_ns()-prev_time)
@@ -106,18 +107,22 @@ class Emulator:
                 # (relavent cache address, relavent cache value)
                 # (relavent ram address, relavent ram value)
                 # was a jump done
-                cache_revalence = r"LD(A|X|Y)?!R|MOV?!R"
-                ram_revalence = r"LD(A|X|Y)R|MOVR"
+                cache_revalence = r"ST[A|X|Y]?!R|LD[A|X|Y]?!R|MOV?!R"
+                ram_revalence = r"STLD[A|X|Y]R|LD[A|X|Y]R|MOVR"
                 jumped = self.counter != prev_addr
-                self.trace.append((
-                    self.counter,
-                    opcode, name,
-                    params.copy() + [0]*(2-len(params)),
-                    self.registers.copy(),
-                    (params[0], self.cache.load(params[0])) if re.match(cache_revalence, name) else (self.registers[1], self.cache.load(self.registers[1])) if (name == "LDV" or name == "STV") else None,
-                    (params[0], self.ram.load_bypass_dev(params[0])) if re.match(ram_revalence, name) else (self.registers[1], self.ram.load_bypass_dev(self.registers[1])) if (name == "LDVR" or name == "STVR") else None,
-                    jumped
-                ))
+                try:
+                    self.trace.append((
+                        firstaddr,
+                        opcode, name,
+                        params.copy() + [0]*(2-len(params)),
+                        self.registers.copy(),
+                        (params[0], self.cache.load(params[0])) if re.match(cache_revalence, name) else (self.registers[1], self.cache.load(self.registers[1])) if (name == "LDV" or name == "STV") else None,
+                        (params[0], self.ram.load_bypass_dev(params[0])) if re.match(ram_revalence, name) else (self.registers[1], self.ram.load_bypass_dev(self.registers[1])) if (name == "LDVR" or name == "STVR") else None,
+                        jumped
+                    ))
+                except IndexError:
+                    print(f"{opcode:X} {name} {params} {prev_addr:X}")
+                    raise IndexError
             if self.do_trace and self.counter == 0: # begin tracing on the true start of the program
                 tracing = True
             
@@ -148,14 +153,17 @@ class Emulator:
             self.dump_ram(True)
 
     def dump_ram(self, long=False):
-        self.ram.data = dict(sorted(self.ram.data.items()))
+        pages = dict(sorted(self.ram.page_to_frame.items()))
+        del pages[0xFE000]
+        data = self.ram.data
         print("\n<--- RAM DUMP --->")
-        for idf,frame in enumerate(self.ram.data.values()):
-            frame = dict(sorted(frame.items()))
+        for page, frame in pages.items():
+            frame = dict(sorted(data[frame].items()))
+
             for idx, (key, value) in enumerate(frame.items()):
                 if not long:
                     char = ascii(chr(value))
-                    print(f"{idf:05X}{key:03X}: {value:02X} : {char}{' '*(8-len(char))}{'\n' if (idx % 4) == 3 else ''}",end="")
+                    print(f"{page:05X}{key:03X}: {value:02X} : {char}{' '*(8-len(char))}{'\n' if (idx % 4) == 3 else ''}",end="")
                 else:
                     print(f"{key:016X}: {value:02X}")
             print("\n")
@@ -204,15 +212,25 @@ if __name__ == "__main__":
 
     parser.add_argument("source", help="path to disk image", default="main.bin", nargs="?")
     parser.add_argument("-t", "--time", help="print max/mid/min/median execution time on halt", action="store_true")
-    parser.add_argument("-d", "--trace", help="trace execution and dump to .trace in the current directory", action="store_true")
+    parser.add_argument("-d", "--trace", help="trace execution and dump to .trace in the current directory (not recommended without --stdin)", action="store_true")
     parser.add_argument("-m", "--dump", help="dump memory to console", action="store_true")
     parser.add_argument("-M", "--dump-file", help="dump memory to .dump in the current directory", action="store_true")
     parser.add_argument("-g", "--graph", help="shows graph of execution time on halt", action="store_true")
+    parser.add_argument("-s", "--stdin", help="the stdin exposed to the system, prompt for one if empty. use \\ as newline", default=None, const="", action="store", nargs="?")
+    
     parser.add_argument("-r", "--block-small-recursion", help="halt execution when a certain address is executed 1,000 times", action="store_true")
     parser.add_argument("-R", "--block-recursion", help="halt execution when a certain address is executed 10,000 times", action="store_true")
     parser.add_argument("--block-large-recursion", help="halt execution when a certain address is executed 1,000,000 times", action="store_true")
     args = parser.parse_args()
     source = args.source
+    
+    stdin = args.stdin
+
+    if stdin == "":
+        stdin = input("stdin> ")
+    
+    if stdin:
+        stdin = (stdin+"\\").replace("\\", "\n")
 
     emulator.do_trace = bool(args.trace)
     emulator.block_recursion = bool(args.block_recursion)
@@ -227,10 +245,10 @@ if __name__ == "__main__":
         sys.exit("Cannot use multiple recursion block flags at once")
 
     try:
-        emulator.main(source)
+        emulator.main(source,stdin)
     except KeyboardInterrupt:
         print(color.fg.YELLOW+"INT"+color.RESET)
-    
+
     finally:
         if bool(args.dump):
             emulator.core_dump()
@@ -273,7 +291,7 @@ if __name__ == "__main__":
                     else:
                         tracefile.write(f"  ")
 
-                    tracefile.write(f"{entry[0]:08X}: [{entry[1]:02X}] {entry[2].ljust(5)} {', '.join([f"{param:10}" for param in entry[3]])}   //   A: {entry[4][0]:8X} , X: {entry[4][1]:8X} , Y: {entry[4][2]:8X}   //")
+                    tracefile.write(f"{entry[0]:08X}: [{entry[1]:02X}] {entry[2].ljust(5)} {', '.join([f"{param:8X}" for param in entry[3]])}   //   A: {entry[4][0]:8X} , X: {entry[4][1]:8X} , Y: {entry[4][2]:8X}   //")
                     if entry[5]:
                         tracefile.write(f"   *x{entry[5][0]:04X}     = {entry[5][1]:8X}")
                     try:

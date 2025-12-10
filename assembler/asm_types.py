@@ -94,7 +94,7 @@ class Div(Command):
 
 class Mod(Command):
     def get_value(self, params=None, size=4):
-        return (0x28).to_bytes(2, "little")
+        return (0x2C).to_bytes(2, "little")
 
 # Bitwise logic
 class And(Command):
