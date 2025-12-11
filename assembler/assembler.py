@@ -189,7 +189,7 @@ class Assembler:
                 return bytes(1)
         
         if command == ".org":
-            target = int(line[5:].strip())
+            target = self.decode(line[5:].strip())
             size = len(pre)+self.offset
             if size > target:
                 raise SyntaxError(f"Target origin too low, target: {target}, size of binary preceding: {size}")

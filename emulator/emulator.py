@@ -7,7 +7,8 @@ import executor
 import time
 import re
 from color import *
-from collections import OrderedDict
+
+VERSION = ".dev"
 
 class Emulator:
     def __init__(self):
@@ -204,33 +205,49 @@ class Emulator:
 
     pass
 
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
 
 if __name__ == "__main__":
+
     emulator = Emulator()
 
     parser = argparse.ArgumentParser(description="gArch64 emulator")
 
     parser.add_argument("source", help="path to disk image", default="main.bin", nargs="?")
+    parser.add_argument("-v", "--verbose", help="print extra info before and after execution", action="store_true")
     parser.add_argument("-t", "--time", help="print max/mid/min/median execution time on halt", action="store_true")
     parser.add_argument("-d", "--trace", help="trace execution and dump to .trace in the current directory (not recommended without --stdin)", action="store_true")
     parser.add_argument("-m", "--dump", help="dump memory to console", action="store_true")
     parser.add_argument("-M", "--dump-file", help="dump memory to .dump in the current directory", action="store_true")
+    parser.add_argument("-r", "--dump-raw", help="dump first contiguous pages in ram as a raw binary file", action="store_true")
     parser.add_argument("-g", "--graph", help="shows graph of execution time on halt", action="store_true")
     parser.add_argument("-s", "--stdin", help="the stdin exposed to the system, prompt for one if empty. use \\ as newline", default=None, const="", action="store", nargs="?")
     
-    parser.add_argument("-r", "--block-small-recursion", help="halt execution when a certain address is executed 1,000 times", action="store_true")
+    parser.add_argument("--block-small-recursion", help="halt execution when a certain address is executed 1,000 times", action="store_true")
     parser.add_argument("-R", "--block-recursion", help="halt execution when a certain address is executed 10,000 times", action="store_true")
     parser.add_argument("--block-large-recursion", help="halt execution when a certain address is executed 1,000,000 times", action="store_true")
     args = parser.parse_args()
     source = args.source
     
+    eprint(color.fg.GRAY,end="")
     stdin = args.stdin
+
+    dumpr = bool(args.dump_raw)
+    verbose = bool(args.verbose)
+    if verbose:
+        eprint(f"v{VERSION}")
+        eprint(f"python v{".".join([str(item) for item in sys.version_info[:3]])}")
+        eprint(f"{os.cpu_count()} threads available")
 
     if stdin == "":
         stdin = input("stdin> ")
-    
     if stdin:
         stdin = (stdin+"\\").replace("\\", "\n")
+    
+    if verbose or stdin:
+        eprint("")
+    print(color.RESET,end="")
 
     emulator.do_trace = bool(args.trace)
     emulator.block_recursion = bool(args.block_recursion)
@@ -250,9 +267,14 @@ if __name__ == "__main__":
         print(color.fg.YELLOW+"INT"+color.RESET)
 
     finally:
+        if verbose:
+            eprint(color.fg.GRAY)
+
         if bool(args.dump):
             emulator.core_dump()
         if bool(args.dump_file):
+            if verbose:
+                eprint("Writing dump log")
             oldstdout = sys.stdout
             sys.stdout = open(".dump","w")
             emulator.core_dump()
@@ -281,9 +303,13 @@ if __name__ == "__main__":
             print(f"{fg.BLUE}Min :{RESET} {min_time:,.0f}ns")
             print(f"{fg.GRAY}Mean:{RESET} {average_time:,.0f}ns")
         if bool(args.graph):
+            if verbose:
+                eprint("Graphing")
             import plot_time
             plot_time.main()
         if bool(args.trace):
+            if verbose:
+                eprint("Writing traceback")
             with open(".trace","w") as tracefile:
                 for idx, entry in enumerate(emulator.trace):
                     if emulator.trace[idx-1][7]:
@@ -300,3 +326,23 @@ if __name__ == "__main__":
                     except:
                         print(entry)
                     tracefile.write(f"\n")
+        if dumpr:
+            if verbose:
+                eprint("Writing raw dump")
+            def get_contiguous_pages():
+                pages = 0
+                for p in range(len(emulator.ram.page_to_frame)):
+                    try:
+                        emulator.ram.page_to_frame[p]
+                        pages += 1
+                    except KeyError:
+                        break
+                return pages
+            with open(".ram","wb") as rawdump:
+                buffer = bytearray()
+                for idx in range(get_contiguous_pages()*0x1000):
+                    buffer.append(emulator.ram.load(idx))
+                rawdump.write(buffer)
+
+        if verbose:
+            eprint(color.RESET,end="")

@@ -4,7 +4,7 @@ import color
 class Cache:
     def __init__(self):
         self.data = [0] * (2**16)
-        self.stackstart = 0xFEFF # grows downward to 0xF000 , but no hard limit, it can certainly go beyond 0xF000, but please do not make it happen
+        self.stackstart = 0xFEFF # stack irl totally doesnt actually grow downward yes
         self.stackaddr = 0
 
         self.INTstart=0xFF00

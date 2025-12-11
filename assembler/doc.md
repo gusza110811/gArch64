@@ -87,7 +87,7 @@ allocate more by using `page [page-id]` where `page-id` is a new page
 | --- | --- |
 | `0000` - `EFFB` | General use memory |
 | `EFFC` - `EFFF` | BIOS reserved |
-| `F000` - `FEFF` | Data + Call Stack |
+| `F000` - `FEFF` | Stack |
 | `FF00` - `FFFF` | Software interrupt targets |
 
 #### Ram Layout (x32 system)

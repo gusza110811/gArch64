@@ -3,16 +3,40 @@ const hexconv_output xAA11
 const tmp xAA12
 const print x10
 const input x12
-const input_buf x0000_1000
-
-page 1 ; allocate 0000_1000-0000_1FFF
 
 main:
+    mov $a, %prompt
+    int print
+
     mov $a, %input_buf
     int input
+    mov $x, input_buf
+    mov $y, %'r
+    jeq read
+    mov $y, %'w
+    jeq write
+
+jmp main
+
+read:
+    mov $a, %input_buf1
     call hexconv
-    bnz show_err
-    halt
+
+    mov $a, *hexconv_output
+    int print
+    mov $a, %newline
+    int print
+jmp main
+
+write:
+    mov $a, %input_buf1
+    call hexconv
+
+    mov $a, %data_prompt
+    int print
+
+    mov $a, *hexconv_output
+    int input
 jmp main
 
 show_err:
@@ -25,6 +49,8 @@ ret
 hexconv:
     pushr
     mov *hexconv_counter, $a
+    mov $x, %0
+    mov *hexconv_output, $x
 
 hexconv_loop:
     mov $x, *hexconv_counter
@@ -97,6 +123,22 @@ hex_target:
     .ascii Fa
     .zero
 
+prompt:
+    .ascii >
+    .zero
+
+data_prompt:
+    .ascii text>
+    .zero
+
+newline:
+    .ascii \n
+    .zero
+
 error_message:
     .ascii Bad Hex
     .zero
+
+input_buf:
+.zero
+input_buf1:
