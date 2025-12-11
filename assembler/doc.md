@@ -20,17 +20,16 @@ parameters separated by comma(`,`), which ends up looking like `OPCODE param1, p
 ### Prefix
 | Prefix | Usage |
 | --- | --- |
-| `$` | Register |
-| `%` | Immediate value |
+| `$` | Register; A, X, and Y |
+| `%` | Immediate value; Constant value or a pointer to a memory address |
 | `*` | Cache Address |
-| None | Ram Address
+| None | Ram Address |
 
 #### Register
 For registers (`$[register]`) you use `a`, `x`, or `y` as register name, so `$a`, `$x`, or `$y` (case insensitive) coorespond to each registers respectively
 
 #### Value prefixes
-For every paramters, you can use another prefix just after the type prefix (`$`,`%`,`*`), this correspond
-to the format of the value
+For every parameters, you can use another prefix just after the type prefix (`$`,`%`,`*`), this correspond to the format of the value
 | Prefix | Format|
 | --- | --- |
 | `x` | Hexadecimal |
@@ -43,16 +42,15 @@ to the format of the value
 Use `const` keyword followed by the name, then its value (`const [name] [value]`)
 
 #### Label Definition
-Add `:` to the label's name (`[name]:`), it is recommended (but not required) to use indentation for the part that should
-be inside
+Add `:` to the label's name (`[name]:`), it is recommended (but not required) to use indentation for the part that should be inside
 
 ### Special Directives
-These are helper commands that you more control over the output binary (case-insensitive)
+These are helper commands that give you more control over the output binary (case-insensitive)
 | Command | Usage |
 | --- | --- |
 | `.literal [values]` | Add literal values |
 | `.ascii [text]` | Add ASCII text |
-| `.zero [n]` | Add [n] zeroes |
+| `.zero [n]` | Add [n] number of zeroes |
 
 #### .ascii Escape Codes
 Used within `.ascii` directive to add a normally non-printable and unusable characters within the string
@@ -62,7 +60,7 @@ Used within `.ascii` directive to add a normally non-printable and unusable char
 | `\r` | Carriage Return
 | `\t` | Tab |
 | `\0` | Null |
-| `\\` | Backspace |
+| `\\` | Backslash |
 
 ### Comment
 Use `;`, can be anywhere
@@ -81,14 +79,28 @@ You set the A register to its parameter
 | `disk_write` (`21`) | Write a 512 byte chunk stored in memory starting at address stored in A |
 
 ### Memory Management
-By default, 2 pages are allocated, 0x00000 and 0xFE000 for 4kib of memory and 4096 devices mappable
+By default, only page 0x00000 is allocated.
 allocate more by using `page [page-id]` where `page-id` is a new page
+
+#### Cache Layout
+| range | purpose |
+| --- | --- |
+| `0000` - `EFFB` | General use memory |
+| `EFFC` - `EFFF` | BIOS reserved |
+| `F000` - `FEFF` | Data + Call Stack |
+| `FF00` - `FFFF` | Software interrupt targets |
+
+#### Ram Layout (x32 system)
+| size | range (hexadecimal) | purpose |
+| --- | --- | --- |
+| 4064M | `0000_0000`-`FDFF_FFFF` | General use memory |
+|    4K | `FE00_0000`-`FE00_0FFF` | Memory Mapped IO |
+|    8K | `FE00_1000`-`FFFE_FFFF` | General use memory |
+|   64K | `FFFF_0000`-`FFFF_FFFF` | BIOS Reserved |
 
 ## Opcodes
 | OPCODE | Meaning/Usage |
 | --- | --- |
-| **HALT** |
-| `halt` | End execution immediately |
 | **Arithmetic** |
 | `add` | Add X by Y and save to A |
 | `sub` | Subtract X by Y and save to A |
@@ -112,7 +124,8 @@ allocate more by using `page [page-id]` where `page-id` is a new page
 | `jnc [address/label]` | Jump to [address/label] if previous operation resulted in overflow |
 | `jeq [address/label]` | Jump to [address/label] if X = Y |
 | `jne [address/label]` | Jump to [address/label] if X = Y |
-| **Function/Subroutine Control** |
+| **Flow Control** |
+| `halt` | Halt execution immediately |
 | `ret` | Return from function |
 | `call [address/label]` | Call function at [address/label] |
 | `bz [address/label]` | Call function at [address/label] if A = 0 |
