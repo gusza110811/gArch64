@@ -27,6 +27,7 @@ class Emulator:
         self.carry = False
 
         self.running = True
+        self.crash_on_unknown = False
 
         self.time = []
 
@@ -81,7 +82,13 @@ class Emulator:
             firstaddr = self.counter
             opcode = fetch()
             opcode = opcode + (fetch() << 8)
-            info = self.opcodes.OPCODES[opcode]
+            try:
+                info = self.opcodes.OPCODES[opcode]
+            except KeyError:
+                if self.crash_on_unknown:
+                    raise ValueError("Unknown OPCODE")
+                else:
+                    continue
             name = info["mnemonic"]
             size = info["size"]
 
