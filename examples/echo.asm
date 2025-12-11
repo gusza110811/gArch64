@@ -8,8 +8,13 @@ main:
     mov $a, %buffer_address
     int input
     int print
-halt
+    mov $a, %newline
+    int print
+jmp main
 
 prompt:
     .ascii >
-    .zero 1
+    .zero
+newline:
+    .ascii \n
+    .zero

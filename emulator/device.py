@@ -57,14 +57,14 @@ class SerialConsole(Device):
 
     def read(self):
         if self.false:
-            print(chr(self.buffer[0]),end="",flush=True)
+            try:
+                print(chr(self.buffer[0]),end="",flush=True)
+            except IndexError:
+                raise KeyboardInterrupt
         try:
             return self.buffer.popleft()
         except IndexError:
-            if not self.false:
-                return 0
-            else:
-                raise KeyboardInterrupt
+            return 0
 
 class DiskIO(Device):
     "Disk controller"

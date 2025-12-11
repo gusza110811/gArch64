@@ -155,7 +155,5 @@ printloop:
 ret
 
 bad_sector_error:
-    .literal x1b
-    .ascii [31mBAD SECTOR
-    .literal x1b
-    .ascii [0m\0
+    .ascii BAD SECTOR
+    .zero
