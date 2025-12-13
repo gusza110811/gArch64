@@ -60,7 +60,7 @@ disk_write:
     mov $y, %1
 
     writeloop:
-        ldvr
+        ldv
         mov disk_data, $a
         add
         mov $x, $a
@@ -79,7 +79,7 @@ disk_read:
 
     readloop:
         mov $a, disk_data
-        stvr
+        stv
         add
         mov $x, $a
         mov $a, disk_stat
@@ -108,7 +108,7 @@ listen_loop:
     jz listen_loop          ; ignore zero
     movd $x, counter
     mov $y, %1
-    stvr
+    stv
     add
     movd counter, $a
     jmp listen_loop
@@ -126,7 +126,7 @@ handle_backspace:
 end_loop:
     movd $x, counter
     mov $a, %0
-    stvr
+    stv
     popr
 ret
 
@@ -142,14 +142,14 @@ ret
 
 printloop:
     movd $x, counter
-    ldvr
+    ldv
     mov console, $a         ; print character
 
     mov $y, %1
     add
     movd counter, $a
 
-    ldvr
+    ldv
     jnz printloop
     mov console, $a
 ret

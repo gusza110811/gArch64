@@ -1,6 +1,6 @@
-const hexconv_counter x210
-const hexconv_output x214
-const tmp x218
+const hexconv_counter x1F0
+const hexconv_output x1F4
+const tmp x1F8
 const print x10
 const input x12
 
@@ -32,6 +32,14 @@ write:
     mov $a, %input_buf1
     call hexconv
 
+    mov $x, hexconv_output
+    mov $y, %x1FF
+    sub
+    jc show_protected
+    mov $y, %x10000
+    add
+    jc show_protected
+
     mov $a, %data_prompt
     int print
 
@@ -43,6 +51,11 @@ show_err:
     mov $a, %error_message
     int print
 ret
+
+show_protected:
+    mov $a, %protected_error_message
+    int print
+jmp main
 
 ; A is the address to the beginning of the hexadecimal string
 ; return 0 if successful, return 1 if invalid character is detected
@@ -136,7 +149,11 @@ newline:
     .zero
 
 error_message:
-    .ascii Bad Hex
+    .ascii Bad Hex\n
+    .zero
+
+protected_error_message:
+    .ascii Protected memory range\n
     .zero
 
 input_buf:

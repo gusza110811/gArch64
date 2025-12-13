@@ -16,16 +16,6 @@ class Executor:
 
         if instruction == "HALT": emulator.running = False
 
-        elif instruction == "LDAC": registers[0] = cache.load(params[0])
-        elif instruction == "LDXC": registers[1] = cache.load(params[0])
-        elif instruction == "LDYC": registers[2] = cache.load(params[0])
-
-        elif instruction == "STAC": cache.store(params[0],registers[0])
-        elif instruction == "STXC": cache.store(params[0],registers[1])
-        elif instruction == "STYC": cache.store(params[0],registers[2])
-
-        elif instruction == "MOVC": cache.store(params[0],cache.load(params[1]))
-
         elif instruction == "LDAI": registers[0] = params[0]
         elif instruction == "LDXI": registers[1] = params[0]
         elif instruction == "LDYI": registers[2] = params[0]

@@ -20,19 +20,6 @@ class Opcodes:
         }
 
     def definitions(self):
-        # --- Cache ---
-        self.define('LDAC', 0x10, 1, ['addr'], 'Load from address into A')
-        self.define('LDXC', 0x11, 1, ['addr'], 'Load from address into X')
-        self.define('LDYC', 0x12, 1, ['addr'], 'Load from address into Y')
-
-        self.define('STAC', 0x13, 1, ['addr'], 'Store A into address')
-        self.define('STXC', 0x14, 1, ['addr'], 'Store X into address')
-        self.define('STYC', 0x15, 1, ['addr'], 'Store Y into address')
-
-        self.define('MOVC', 0x16, 2, ['addr_dst', 'addr_src'], 'Copy from addr_src to addr_dst')
-        self.define('LDVC', 0x17, 0, [], 'Load value from cache into register A, using X as address')
-        self.define('STVC', 0x18, 0, [], 'Load value from cache into register A, using X as address')
-
         # --- Arithmetic ---
         self.define('ADD', 0x20, 0, [], 'A = X + Y')
         self.define('SUB', 0x21, 0, [], 'A = X - Y')

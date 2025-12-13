@@ -87,9 +87,7 @@ class Assembler:
 
             # Variable load/store
             "ldv": Ldv,
-            "ldvc": Ldvc,
             "stv": Stv,
-            "stvc": Stvc,
 
             # Interrupts
             "int": Int,
@@ -163,8 +161,6 @@ class Assembler:
                 value = self.decode(parameter)
                 if prefix == "%":
                     result.append(Immediate(value))
-                elif prefix == "*":
-                    result.append(CacheAddr(value))
                 else:
                     result.append(RamAddr(value))
 

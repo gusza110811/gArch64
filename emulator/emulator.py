@@ -33,7 +33,7 @@ class Emulator:
         self.carry = False
 
         self.running = True
-        self.crash_on_unknown = False
+        self.crash_on_unknown = True
 
         self.time = []
 

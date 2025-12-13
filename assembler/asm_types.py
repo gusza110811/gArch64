@@ -29,23 +29,16 @@ class Mov(Command):
         if isinstance(destination,Immediate):
             raise ValueError("Can't store value to an immediate value")
         
-        if isinstance(source,CacheAddr) and isinstance(destination,RamAddr):
-            return 0x8A.to_bytes(2,"little") + self.encode_immediate([destination,source],size,params_count=2)
-        if isinstance(source,RamAddr) and isinstance(destination,CacheAddr):
-            return 0x8B.to_bytes(2,"little") + self.encode_immediate([destination,source],size,params_count=2)
-        
         if isinstance(source,Immediate) and isinstance(destination,RamAddr):
             raise ValueError("Can't directly store immediate value to ram")
-        if isinstance(source,Immediate) and isinstance(destination,CacheAddr):
-            raise ValueError("Can't directly store immediate value to cache")
 
         # MOV
         elif isinstance(destination,RamAddr) and isinstance(source,RamAddr):
             return 0x89.to_bytes(2,"little") + self.encode_immediate([destination,source],size,params_count=2)
-        # Load ram
+        # Load
         if isinstance(destination,Register) and isinstance(source,RamAddr):
             return (0x81 + destination.value).to_bytes(2,"little") + source.value.to_bytes(size,byteorder="little")
-        # Store ram
+        # Store
         elif isinstance(destination,RamAddr) and isinstance(source,Register):
             return (0x84 + source.value).to_bytes(2,"little") + destination.value.to_bytes(size,byteorder="little")
         
@@ -355,21 +348,22 @@ class Popr(Command):
         return bytes([0x67,0x00])
 
 # Variable Load/Store
-class Ldvc(Command):
-    def get_value(self, params, size=4, position=0):
-        return 0x17.to_bytes(2,byteorder="little")
 
 class Ldv(Command):
     def get_value(self, params, size=4, position=0):
         return 0x87.to_bytes(2,byteorder="little")
 
-class Stvc(Command):
-    def get_value(self, params, size=4, position=0):
-        return 0x18.to_bytes(2,byteorder="little")
-
 class Stv(Command):
     def get_value(self, params, size=4, position=0):
         return 0x88.to_bytes(2,byteorder="little")
+
+class Ldvd(Command):
+    def get_value(self, params, size=4, position=0):
+        return 0xB7.to_bytes(2,byteorder="little")
+
+class Stvd(Command):
+    def get_value(self, params, size=4, position=0):
+        return 0xB8.to_bytes(2,byteorder="little")
 
 # x32
 class Int(Command):
@@ -409,10 +403,6 @@ class Immediate(Parameter): # prefix %
         super().__init__(value)
 
 class Register(Parameter): # prefix $
-    def __init__(self, value):
-        super().__init__(value)
-
-class CacheAddr(Parameter): # prefix *
     def __init__(self, value):
         super().__init__(value)
 
