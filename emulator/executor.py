@@ -1,9 +1,9 @@
+from __future__ import annotations
 from typing import Literal, TYPE_CHECKING
-import __future__
 import math
 
 class Executor:
-    def __init__(self,emulator:"emulator.Emulator"):
+    def __init__(self,emulator:emulator.Emulator):
         self.emulator = emulator
         pass
 
@@ -81,6 +81,9 @@ class Executor:
         elif instruction == "BEQ" and registers[1]==registers[2]: cache.push(emulator.counter); emulator.counter = emulator.begininst + params[0]
         elif instruction == "BNE" and registers[1]==registers[2]: cache.push(emulator.counter); emulator.counter = emulator.begininst + params[0]
 
+        elif instruction == "JMPV": emulator.counter = registers[0]
+        elif instruction == "CALLV": cache.push(emulator.counter); emulator.counter = registers[0]
+
         elif instruction == "MVAX": registers[1] = registers[0]
         elif instruction == "MVAY": registers[2] = registers[0]
         elif instruction == "MVXA": registers[0] = registers[1]
@@ -121,6 +124,9 @@ class Executor:
         elif instruction == "STVR": ram.store(registers[1],registers[0])
 
         elif instruction == "MOVR": ram.store(params[0],ram.load(params[1]))
+
+        elif instruction == "MVCR": ram.store(params[0],cache.load(params[1]))
+        elif instruction == "MVRC": cache.store(params[0],ram.load(params[1]))
 
         elif instruction == "INTR": cache.register_int(params[0],emulator.begininst+params[1])
 

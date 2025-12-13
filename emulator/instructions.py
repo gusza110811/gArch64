@@ -20,9 +20,6 @@ class Opcodes:
         }
 
     def definitions(self):
-        # --- System ---
-        self.define('HALT', 0x00, 0, [], 'Stop execution')
-
         # --- Register Loads ---
         self.define('LDA', 0x10, 1, ['addr'], 'Load from address into A')
         self.define('LDX', 0x11, 1, ['addr'], 'Load from address into X')
@@ -77,7 +74,12 @@ class Opcodes:
         self.define('ABEQ',  0x3D, 1, ['addr'], 'Call if X == Y')
         self.define('ABNE',  0x3E, 1, ['addr'], 'Call if X != Y')
 
-        # RET
+        # Indirect Flow Control
+        self.define('JMPV', 0x3F, 0, [], 'Jump to address stored in register A')
+        self.define('CALLV', 0x40, 0, [], 'CALL function at address stored in register A')
+
+        # Other Flow Control
+        self.define('HALT', 0x00, 0, [], 'Stop execution')
         self.define("RET",  0x37, 0, [], "Pop from stack, and jump to that address")
 
         # --- Register-register ---
@@ -136,8 +138,11 @@ class Opcodes:
         self.define('STYR', 0x86, 1, ['addr'], 'Store Y into address(ram)')
 
         self.define('LDVR', 0x87, 0, [], 'Load value from ram into register A, using X as address')
-        self.define('STVR', 0x88, 0, [], 'Load value from ram into register A, using X as address')
+        self.define('STVR', 0x88, 0, [], 'Store value in register A to ram, using X as address')
         self.define('MOVR', 0x89, 2, ['addr_dst', 'addr_src'], 'Copy from addr_src to addr_dst (ram)')
+
+        self.define('MVCR', 0x8A, 2, ['addr_dst', 'addr_src'], 'Copy from addr_src (cache) to addr_dst (ram)')
+        self.define('MVRC', 0x8B, 2, ['addr_dst', 'addr_src'], 'Copy from addr_src (ram) to addr_dst (cache)')
 
         # --- Page allocation ---
         self.define('PAGE', 0x9A, 1, ['page'], 'Allocate page to the first available frame')

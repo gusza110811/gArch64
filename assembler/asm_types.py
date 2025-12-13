@@ -7,9 +7,12 @@ class Command:
     def get_value(self, params:list["Parameter"]=None, size=4, position=0) -> bytes:
         return
 
-    def encode_immediate(self, params:list[Parameter], size=4,signed=False) -> bytes:
+    def encode_immediate(self, params:list[Parameter], size=4, signed=False, params_count=1) -> bytes:
         """Encode all params as little-endian byte values."""
-        return b''.join(p.value.to_bytes(size, "little",signed=signed) for p in params)
+        result = b''.join(p.value.to_bytes(size, "little",signed=signed) for p in params)
+        if len(result) < (params_count*size):
+            raise SyntaxError("Not Enough paramters")
+        return result
 
 class Halt(Command):
     def get_value(self, params=None, size=4, position=0):
@@ -25,10 +28,12 @@ class Mov(Command):
         source = params[-1]
         if isinstance(destination,Immediate):
             raise ValueError("Can't store value to an immediate value")
+        
         if isinstance(source,CacheAddr) and isinstance(destination,RamAddr):
-            raise ValueError("Can't directly copy from cache to ram")
+            return 0x8A.to_bytes(2,"little") + self.encode_immediate([destination,source],size,params_count=2)
         if isinstance(source,RamAddr) and isinstance(destination,CacheAddr):
-            raise ValueError("Can't directly copy from ram to cache")
+            return 0x8B.to_bytes(2,"little") + self.encode_immediate([destination,source],size,params_count=2)
+        
         if isinstance(source,Immediate) and isinstance(destination,RamAddr):
             raise ValueError("Can't directly store immediate value to ram")
         if isinstance(source,Immediate) and isinstance(destination,CacheAddr):
@@ -42,7 +47,7 @@ class Mov(Command):
             return (0x13 + source.value).to_bytes(2,"little") + destination.value.to_bytes(size,byteorder="little")
         # MOV
         elif isinstance(destination,CacheAddr) and isinstance(source,CacheAddr):
-            return 0x16.to_bytes(2,"little") + self.encode_immediate([destination,source],size)
+            return 0x16.to_bytes(2,"little") + self.encode_immediate([destination,source],size,params_count=2)
         # Load ram
         if isinstance(destination,Register) and isinstance(source,RamAddr):
             return (0x81 + destination.value).to_bytes(2,"little") + source.value.to_bytes(size,byteorder="little")
@@ -188,40 +193,70 @@ class Abne(Command):
     def get_value(self, params, size=4, position=0):
         return bytes([0x3E,0x00]) + self.encode_immediate(params,size)
 
+class Jmpv(Command):
+    def get_value(self, params, size=4, position=0):
+        return bytes([0x3F,0x00])
+
+class Callv(Command):
+    def get_value(self, params, size=4, position=0):
+        return bytes([0x40,0x00])
+
+
 # Control flow
 class Jmp(Command):
     def get_value(self, params, size=4, position=0):
-        params[0].value = params[0].value - position
+        try:
+            params[0].value = params[0].value - position
+        except IndexError:
+            raise SyntaxError("Not Enough Paramter")
         return bytes([0x70,0x00]) + self.encode_immediate(params,size,True)
 
 class Jz(Command):
     def get_value(self, params, size=4, position=0):
-        params[0].value = params[0].value - position
+        try:
+            params[0].value = params[0].value - position
+        except IndexError:
+            raise SyntaxError("Not Enough Paramter")
         return bytes([0x71,0x00]) + self.encode_immediate(params,size,True)
 
 class Jnz(Command):
     def get_value(self, params, size=4, position=0):
-        params[0].value = params[0].value - position
+        try:
+            params[0].value = params[0].value - position
+        except IndexError:
+            raise SyntaxError("Not Enough Paramter")
         return bytes([0x72,0x00]) + self.encode_immediate(params,size,True)
 
 class Jc(Command):
     def get_value(self, params, size=4, position=0):
-        params[0].value = params[0].value - position
+        try:
+            params[0].value = params[0].value - position
+        except IndexError:
+            raise SyntaxError("Not Enough Paramter")
         return bytes([0x73,0x00]) + self.encode_immediate(params,size,True)
 
 class Jnc(Command):
     def get_value(self, params, size=4, position=0):
-        params[0].value = params[0].value - position
+        try:
+            params[0].value = params[0].value - position
+        except IndexError:
+            raise SyntaxError("Not Enough Paramter")
         return bytes([0x74,0x00]) + self.encode_immediate(params,size,True)
 
 class Jeq(Command):
     def get_value(self, params, size=4, position=0):
-        params[0].value = params[0].value - position
+        try:
+            params[0].value = params[0].value - position
+        except IndexError:
+            raise SyntaxError("Not Enough Paramter")
         return bytes([0x75,0x00]) + self.encode_immediate(params,size,True)
 
 class Jne(Command):
     def get_value(self, params, size=4, position=0):
-        params[0].value = params[0].value - position
+        try:
+            params[0].value = params[0].value - position
+        except IndexError:
+            raise SyntaxError("Not Enough Paramter")
         return bytes([0x76,0x00]) + self.encode_immediate(params,size,True)
 
 # Function flow
@@ -231,37 +266,58 @@ class Ret(Command):
 
 class Call(Command):
     def get_value(self, params, size=4, position=0):
-        params[0].value = params[0].value - position
+        try:
+            params[0].value = params[0].value - position
+        except IndexError:
+            raise SyntaxError("Not Enough Paramter")
         return bytes([0x78,0x00]) + self.encode_immediate(params,size,True)
 
 class Bz(Command):
     def get_value(self, params, size=4, position=0):
-        params[0].value = params[0].value - position
+        try:
+            params[0].value = params[0].value - position
+        except IndexError:
+            raise SyntaxError("Not Enough Paramter")
         return bytes([0x79,0x00]) + self.encode_immediate(params,size,True)
 
 class Bnz(Command):
     def get_value(self, params, size=4, position=0):
-        params[0].value = params[0].value - position
+        try:
+            params[0].value = params[0].value - position
+        except IndexError:
+            raise SyntaxError("Not Enough Paramter")
         return bytes([0x7A,0x00]) + self.encode_immediate(params,size,True)
 
 class Bc(Command):
     def get_value(self, params, size=4, position=0):
-        params[0].value = params[0].value - position
+        try:
+            params[0].value = params[0].value - position
+        except IndexError:
+            raise SyntaxError("Not Enough Paramter")
         return bytes([0x7B,0x00]) + self.encode_immediate(params,size,True)
 
 class Bnc(Command):
     def get_value(self, params, size=4, position=0):
-        params[0].value = params[0].value - position
+        try:
+            params[0].value = params[0].value - position
+        except IndexError:
+            raise SyntaxError("Not Enough Paramter")
         return bytes([0x7C,0x00]) + self.encode_immediate(params,size,True)
 
 class Beq(Command):
     def get_value(self, params, size=4, position=0):
-        params[0].value = params[0].value - position
+        try:
+            params[0].value = params[0].value - position
+        except IndexError:
+            raise SyntaxError("Not Enough Paramter")
         return bytes([0x7D,0x00]) + self.encode_immediate(params,size,True)
 
 class Bne(Command):
     def get_value(self, params, size=4, position=0):
-        params[0].value = params[0].value - position
+        try:
+            params[0].value = params[0].value - position
+        except IndexError:
+            raise SyntaxError("Not Enough Paramter")
         return bytes([0x7E,0x00]) + self.encode_immediate(params,size,True)
 
 # Stack

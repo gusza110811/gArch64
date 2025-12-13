@@ -105,7 +105,7 @@ class Emulator:
             prev_addr = self.counter
 
             # convert first parameter to signed for certain instructions
-            if name.startswith("J") or name.startswith("B") or (name == "CALL"):
+            if (name.startswith("J") or name.startswith("B") or (name == "CALL")) and not name.endswith("V"):
                 param = params[0]
                 sign_bit = 1 << (self.blocksize * 16 - 1)
                 if param & sign_bit:

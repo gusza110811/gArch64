@@ -62,6 +62,7 @@ class Assembler:
             "jnc": Jnc,
             "jeq": Jeq,
             "jne": Jne,
+            "jmpv": Jmpv,
 
             # Function flow
             "ret": Ret,
@@ -72,6 +73,7 @@ class Assembler:
             "bnc": Bnc,
             "beq": Beq,
             "bne": Bne,
+            "callv": Callv,
 
             # Move
             "mov": Mov,
