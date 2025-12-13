@@ -32,7 +32,7 @@ write:
     mov $a, %input_buf1
     call hexconv
 
-    mov $x, hexconv_output
+    movd $x, hexconv_output
     mov $y, %x1FF
     sub
     jc show_protected

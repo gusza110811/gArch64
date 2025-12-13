@@ -30,6 +30,10 @@ call disk_read
 
 ajmp x0
 
+;-----------------------;
+; End of the BIOS's job ;
+;-----------------------;
+
 ; A is the sector number
 disk_set_sector:
     pushr

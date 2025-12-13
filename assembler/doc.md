@@ -80,21 +80,15 @@ You set the A register to its parameter
 By default, only page 0x00000 is allocated.
 allocate more by using `page [page-id]` where `page-id` is a new page
 
-#### Cache Layout
-| range | purpose |
-| --- | --- |
-| `0000` - `EFFB` | General use memory |
-| `EFFC` - `EFFF` | BIOS reserved |
-| `F000` - `FEFF` | Stack |
-| `FF00` - `FFFF` | Software interrupt targets |
-
 #### Ram Layout/Code Segment (x32 system)
 | size | range (hexadecimal) | purpose |
-| --- | --- | --- |
-| 4064M | `0000_0000`-`FDFF_FFFF` | General use memory |
-|    4K | `FE00_0000`-`FE00_0FFF` | Memory Mapped IO |
-|    8K | `FE00_1000`-`FFFE_FFFF` | General use memory |
-|   64K | `FFFF_0000`-`FFFF_FFFF` | BIOS Reserved |
+| ---: | --- | --- |
+|  4064M | `0000_0000`-`FDFF_FFFF` | General use memory |
+|     4K | `FE00_0000`-`FE00_0FFF` | Memory Mapped IO |
+| 32764K | `FE00_1000`-`FFFE_FFFF` | General use memory |
+|    56K | `FFFF_0000`-`FFFF_DFFF` | BIOS Reserved |
+|     4K | `FFFF_E000`-`FFFF_EFFF` | IVT Memory |
+|     4K | `FFFF_F000`-`FFFF_FFFF` | Stack |
 
 ## Opcodes
 | OPCODE | Meaning/Usage |
