@@ -17,7 +17,10 @@ page 0
 ; load the program in boot sector
 call disk_read
 
-jmp x0
+ajmp x0
+
+test:
+    .ascii ???\n\0
 
 ; A is the sector number
 disk_set_sector:

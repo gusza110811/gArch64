@@ -116,24 +116,40 @@ allocate more by using `page [page-id]` where `page-id` is a new page
 | `shl` | Shift X by Y to the left then save to A |
 | `shrb` | Shift X by 8 bit to the right then save to A |
 | `shlb` | Shift X by 8 to bit the left then save to A |
-| **Control Flow** |
-| `jmp [address/label]` | Jump to [address/label] |
-| `jz [address/label]` | Jump to [address/label] if A = 0 |
-| `jnz [address/label]` | Jump to [address/label] if A != 0 |
-| `jc [address/label]` | Jump to [address/label] if previous operation resulted in overflow |
-| `jnc [address/label]` | Jump to [address/label] if previous operation resulted in overflow |
-| `jeq [address/label]` | Jump to [address/label] if X = Y |
-| `jne [address/label]` | Jump to [address/label] if X = Y |
-| **Flow Control** |
+| **Control Flow (Relative Address)** |
+| `jmp [label]` | Jump to [label] |
+| `jz [label]` | Jump to [label] if A = 0 |
+| `jnz [label]` | Jump to [label] if A != 0 |
+| `jc [label]` | Jump to [label] if previous operation resulted in overflow |
+| `jnc [label]` | Jump to [label] if previous operation resulted in overflow |
+| `jeq [label]` | Jump to [label] if X = Y |
+| `jne [label]` | Jump to [label] if X = Y |
+| **Flow Control (Relative Address)** |
 | `halt` | Halt execution immediately |
 | `ret` | Return from function |
-| `call [address/label]` | Call function at [address/label] |
-| `bz [address/label]` | Call function at [address/label] if A = 0 |
-| `bnz [address/label]` | Call function at [address/label] if A != 0 |
-| `bc [address/label]` | Call function at [address/label] if previous operation resulted in overflow |
-| `bnc [address/label]` | Call function at [address/label] if previous operation resulted in overflow |
-| `beq [address/label]` | Call function at [address/label] if X = Y |
-| `bne [address/label]` | Call function at [address/label] if X = Y |
+| `call [label]` | Call function at [label] |
+| `bz [label]` | Call function at [label] if A = 0 |
+| `bnz [label]` | Call function at [label] if A != 0 |
+| `bc [label]` | Call function at [label] if previous operation resulted in overflow |
+| `bnc [label]` | Call function at [label] if previous operation resulted in overflow |
+| `beq [label]` | Call function at [label] if X = Y |
+| `bne [label]` | Call function at [label] if X = Y |
+| **Control Flow (Absolute Address)** |
+| `ajmp [address]` | Jump to [address] |
+| `ajz [address]` | Jump to [address] if A = 0 |
+| `ajnz [address]` | Jump to [address] if A != 0 |
+| `ajc [address]` | Jump to [address] if previous operation resulted in overflow |
+| `ajnc [address]` | Jump to [address] if previous operation resulted in overflow |
+| `ajeq [address]` | Jump to [address] if X = Y |
+| `ajne [address]` | Jump to [address] if X = Y |
+| **Flow Control (Absolute Address)** |
+| `acall [address]` | Call function at [address] |
+| `abz [address]` | Call function at [address] if A = 0 |
+| `abnz [address]` | Call function at [address] if A != 0 |
+| `abc [address]` | Call function at [address] if previous operation resulted in overflow |
+| `abnc [address]` | Call function at [address] if previous operation resulted in overflow |
+| `abeq [address]` | Call function at [address] if X = Y |
+| `abne [address]` | Call function at [address] if X = Y |
 | **Move** |
 | `mov [destination], [source]` | Copy from [source] to [destination]. Does not support direct cache/ram to ram/cache copy, only cache-cache and ram-ram. and does not support direct immediate store to ram/cache |
 | **Variable Move/Store** |

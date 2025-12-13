@@ -22,6 +22,7 @@ class Emulator:
         self.ram.allocate_page(0xFFFF0)
 
         self.counter = 0
+        self.begininst = 0
         self.blocksize = 2
 
         self.carry = False
@@ -58,8 +59,8 @@ class Emulator:
 
         self.counter = 0xFFFF_0000
 
+        # Set to true if debugging the BIOS
         tracing = False
-        prev_addr = self.counter
 
         recursion_table = {}
 
@@ -79,7 +80,7 @@ class Emulator:
         while self.running:
             prev_time = time.perf_counter_ns()
 
-            firstaddr = self.counter
+            self.begininst = self.counter
             opcode = fetch()
             opcode = opcode + (fetch() << 8)
             try:
@@ -89,7 +90,7 @@ class Emulator:
                     raise ValueError("Unknown OPCODE")
                 else:
                     continue
-            name = info["mnemonic"]
+            name:str = info["mnemonic"]
             size = info["size"]
 
             params = []
@@ -102,6 +103,20 @@ class Emulator:
                 params.append(value)
             
             prev_addr = self.counter
+
+            # convert first parameter to signed for certain instructions
+            if name.startswith("J") or name.startswith("B") or (name == "CALL"):
+                param = params[0]
+                sign_bit = 1 << (self.blocksize * 16 - 1)
+                if param & sign_bit:
+                    param = param - (1 << (self.blocksize * 16))
+                params[0] = param
+            if name == "INTR":
+                param = params[1]
+                sign_bit = 1 << (self.blocksize * 16 - 1)
+                if param & sign_bit:
+                    param = param - (1 << (self.blocksize * 16))
+                params[1] = param
 
             self.executor.execute(name,params)
             self.time.append(time.perf_counter_ns()-prev_time)
@@ -120,7 +135,7 @@ class Emulator:
                 jumped = self.counter != prev_addr
                 try:
                     self.trace.append((
-                        firstaddr,
+                        self.begininst,
                         opcode, name,
                         params.copy() + [0]*(2-len(params)),
                         self.registers.copy(),
@@ -166,7 +181,7 @@ class Emulator:
         data = self.ram.data
         print("\n<--- RAM DUMP --->")
         for page, frame in pages.items():
-            frame = dict(sorted(data[frame].items()))
+            frame = dict(sorted(self.ram.get_frame(frame).items()))
 
             for idx, (key, value) in enumerate(frame.items()):
                 if not long:
@@ -270,6 +285,7 @@ if __name__ == "__main__":
 
     try:
         emulator.main(source,stdin)
+        print(emulator.ram.page_to_frame)
     except KeyboardInterrupt:
         print(color.fg.YELLOW+"INT"+color.RESET)
 

@@ -10,8 +10,7 @@ class parsingError(Exception):
         super().__init__(*args)
 
 class Assembler:
-    def __init__(self, name:str=None, offset=0, verbose=False):
-        self.offset = offset
+    def __init__(self, name:str=None, verbose=False):
         self.verbose = verbose
         self.name = os.path.abspath(name) if name else "main"
         self.const = {}
@@ -35,6 +34,25 @@ class Assembler:
             "shr":Shr,
             "shlb":Shlb,
             "shrb":Shrb,
+
+            # Control flow
+            "ajmp": Ajmp,
+            "ajz": Ajz,
+            "ajnz": Ajnz,
+            "ajc": Ajc,
+            "ajnc": Ajnc,
+            "ajeq": Ajeq,
+            "ajne": Ajne,
+
+            # Function flow
+            "ret": Ret,
+            "acall": Acall,
+            "abz": Abz,
+            "abnz": Abnz,
+            "abc": Abc,
+            "abnc": Abnc,
+            "abeq": Abeq,
+            "abne": Abne,
 
             # Control flow
             "jmp": Jmp,
@@ -190,7 +208,7 @@ class Assembler:
         
         if command == ".org":
             target = self.decode(line[5:].strip())
-            size = len(pre)+self.offset
+            size = len(pre)
             if size > target:
                 raise SyntaxError(f"Target origin too low, target: {target}, size of binary preceding: {size}")
             return bytes(target-size)
@@ -220,11 +238,11 @@ class Assembler:
             raise parsingError(f"SyntaxError: `{words[0]}` is not a valid instruction")
         try:
             parameters = self.parse_parameters(" ".join(words[1:]))
-            result = command.get_value(parameters)
+            result = command.get_value(parameters,4,len(pre))
         except SyntaxError as e:
             raise parsingError(f"SyntaxError: {e}")
-        except ValueError as e:
-            raise parsingError(f"ValueError: {e}")
+        #except ValueError as e:
+        #    raise parsingError(f"ValueError: {e}")
 
         if self.verbose:
             print(f"`{line.strip()}` => `{result.hex(sep=" ")}`")
@@ -235,7 +253,7 @@ class Assembler:
         result = bytes()
         for idx, line in enumerate(lines):
             try:
-                result += self.parse_line(line,lines)
+                result += self.parse_line(line,result)
             except parsingError as e:
                 def find_first_non_whitespace(s):
                     for i, char in enumerate(s):
@@ -268,7 +286,7 @@ class Assembler:
             words = line.split()
             if words[0].endswith(":") and len(words) == 1:
                 name = words[0][:-1]
-                value = len(self.parse_lines(lines[:idx]))+self.offset
+                value = len(self.parse_lines(lines[:idx]))
                 self.const[name] = value
 
     def main(self,source:str):
@@ -291,14 +309,13 @@ if __name__ == "__main__":
 
     parser.add_argument("source", help="path to source asm", default="main.asm", nargs="?")
     parser.add_argument("-o","--output", help="path to output binary", default="\\/:*?\"<>|")
-    parser.add_argument("-O", "--offset", help="offset to labels", default=0, type=int)
     parser.add_argument("-v", "--verbose", help="send assembling info", action="store_true")
 
     args = parser.parse_args()
 
     source:str = args.source
     dest = args.output
-    assembler = Assembler(source, int(args.offset), args.verbose)
+    assembler = Assembler(source, args.verbose)
 
     if dest == "\\/:*?\"<>|":
         dest = ".".join(source.split(".")[:-1]) + ".bin"

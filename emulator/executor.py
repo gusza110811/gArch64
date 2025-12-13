@@ -47,24 +47,39 @@ class Executor:
         elif instruction == "SHR": registers[0] = registers[1] >> registers[2]; emulator.correct_register()
         elif instruction == "SHLB": registers[0] = registers[1] << 8
         elif instruction == "SHRB": registers[0] = registers[1] >> 8
-        
 
-        elif instruction == "JMP": emulator.counter = params[0]
-        elif instruction == "JZ" and registers[0] == 0: emulator.counter = params[0]
-        elif instruction == "JNZ" and registers[0] != 0: emulator.counter = params[0]
-        elif instruction == "JC" and carry: emulator.counter = params[0]
-        elif instruction == "JNC" and (not carry): emulator.counter = params[0]
-        elif instruction == "JEQ" and registers[1]==registers[2]: emulator.counter = params[0]
-        elif instruction == "JNE" and registers[1]==registers[2]: emulator.counter = params[0]
+        elif instruction == "AJMP": emulator.counter = params[0]
+        elif instruction == "AJZ" and registers[0] == 0: emulator.counter = params[0]
+        elif instruction == "AJNZ" and registers[0] != 0: emulator.counter = params[0]
+        elif instruction == "AJC" and carry: emulator.counter = params[0]
+        elif instruction == "AJNC" and (not carry): emulator.counter = params[0]
+        elif instruction == "AJEQ" and registers[1]==registers[2]: emulator.counter = params[0]
+        elif instruction == "AJNE" and registers[1]==registers[2]: emulator.counter = params[0]
 
         elif instruction == "RET": emulator.counter = cache.pop()
-        elif instruction == "CALL": cache.push(emulator.counter); emulator.counter = params[0]
-        elif instruction == "BZ" and registers[0] == 0: cache.push(emulator.counter); emulator.counter = params[0]
-        elif instruction == "BNZ" and registers[0] != 0: cache.push(emulator.counter); emulator.counter = params[0]
-        elif instruction == "BC" and carry: cache.push(emulator.counter); emulator.counter = params[0]
-        elif instruction == "BNC" and (not carry): cache.push(emulator.counter); emulator.counter = params[0]
-        elif instruction == "BEQ" and registers[1]==registers[2]: cache.push(emulator.counter); emulator.counter = params[0]
-        elif instruction == "BNE" and registers[1]==registers[2]: cache.push(emulator.counter); emulator.counter = params[0]
+        elif instruction == "ACALL": cache.push(emulator.counter); emulator.counter = params[0]
+        elif instruction == "ABZ" and registers[0] == 0: cache.push(emulator.counter); emulator.counter = params[0]
+        elif instruction == "ABNZ" and registers[0] != 0: cache.push(emulator.counter); emulator.counter = params[0]
+        elif instruction == "ABC" and carry: cache.push(emulator.counter); emulator.counter = params[0]
+        elif instruction == "ABNC" and (not carry): cache.push(emulator.counter); emulator.counter = params[0]
+        elif instruction == "ABEQ" and registers[1]==registers[2]: cache.push(emulator.counter); emulator.counter = params[0]
+        elif instruction == "ABNE" and registers[1]==registers[2]: cache.push(emulator.counter); emulator.counter = params[0]
+
+        elif instruction == "JMP": emulator.counter = emulator.begininst + params[0]
+        elif instruction == "JZ" and registers[0] == 0: emulator.counter = emulator.begininst + params[0]
+        elif instruction == "JNZ" and registers[0] != 0: emulator.counter = emulator.begininst + params[0]
+        elif instruction == "JC" and carry: emulator.counter = emulator.begininst + params[0]
+        elif instruction == "JNC" and (not carry): emulator.counter = emulator.begininst + params[0]
+        elif instruction == "JEQ" and registers[1]==registers[2]: emulator.counter = emulator.begininst + params[0]
+        elif instruction == "JNE" and registers[1]==registers[2]: emulator.counter = emulator.begininst + params[0]
+
+        elif instruction == "CALL": cache.push(emulator.counter); emulator.counter = emulator.begininst + params[0]
+        elif instruction == "BZ" and registers[0] == 0: cache.push(emulator.counter); emulator.counter = emulator.begininst + params[0]
+        elif instruction == "BNZ" and registers[0] != 0: cache.push(emulator.counter); emulator.counter = emulator.begininst + params[0]
+        elif instruction == "BC" and carry: cache.push(emulator.counter); emulator.counter = emulator.begininst + params[0]
+        elif instruction == "BNC" and (not carry): cache.push(emulator.counter); emulator.counter = emulator.begininst + params[0]
+        elif instruction == "BEQ" and registers[1]==registers[2]: cache.push(emulator.counter); emulator.counter = emulator.begininst + params[0]
+        elif instruction == "BNE" and registers[1]==registers[2]: cache.push(emulator.counter); emulator.counter = emulator.begininst + params[0]
 
         elif instruction == "MVAX": registers[1] = registers[0]
         elif instruction == "MVAY": registers[2] = registers[0]
@@ -107,7 +122,7 @@ class Executor:
 
         elif instruction == "MOVR": ram.store(params[0],ram.load(params[1]))
 
-        elif instruction == "INTR": cache.register_int(params[0],params[1])
+        elif instruction == "INTR": cache.register_int(params[0],emulator.begininst+params[1])
 
         elif instruction == "PAGE": ram.allocate_page(params[0])
         elif instruction == "FREE": ram.free_page(params[0])

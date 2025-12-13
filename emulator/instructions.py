@@ -59,29 +59,44 @@ class Opcodes:
         # --- Extended Arithmetic ---
         self.define("MOD", 0x2C, 0, [], 'A = X % Y')
 
-        # --- Control Flow ---
-        self.define('JMP', 0x30, 1, ['addr'], 'Jump to address')
-        self.define('JZ',  0x31, 1, ['addr'], 'Jump if A == 0')
-        self.define('JNZ', 0x32, 1, ['addr'], 'Jump if A != 0')
-        self.define('JC',  0x33, 1, ['addr'], 'Jump if Carry')
-        self.define('JNC', 0x34, 1, ['addr'], 'Jump if not Carry')
-        self.define('JEQ', 0x35, 1, ['addr'], 'Jump if X == Y')
-        self.define('JNE', 0x36, 1, ['addr'], 'Jump if X != Y')
+        # --- Absolute Control Flow ---
+        self.define('AJMP', 0x30, 1, ['addr'], 'Jump to address')
+        self.define('AJZ',  0x31, 1, ['addr'], 'Jump if A == 0')
+        self.define('AJNZ', 0x32, 1, ['addr'], 'Jump if A != 0')
+        self.define('AJC',  0x33, 1, ['addr'], 'Jump if Carry')
+        self.define('AJNC', 0x34, 1, ['addr'], 'Jump if not Carry')
+        self.define('AJEQ', 0x35, 1, ['addr'], 'Jump if X == Y')
+        self.define('AJNE', 0x36, 1, ['addr'], 'Jump if X != Y')
 
-        # --- Function Flow ---
+        # --- Absolute Function Flow ---
+        self.define("ACALL", 0x38, 1, ['addr'], "Jump to address, pushing current line to stack")
+        self.define('ABZ',   0x39, 1, ['addr'], 'Call if A == 0')
+        self.define('ABNZ',  0x3A, 1, ['addr'], 'Call if A != 0')
+        self.define('ABC',   0x3B, 1, ['addr'], 'Call if Carry')
+        self.define('ABNC',  0x3C, 1, ['addr'], 'Call if not Carry')
+        self.define('ABEQ',  0x3D, 1, ['addr'], 'Call if X == Y')
+        self.define('ABNE',  0x3E, 1, ['addr'], 'Call if X != Y')
+
+        # --- Relative Control Flow ---
+        self.define('JMP', 0x40, 1, ['addr'], 'Jump to address')
+        self.define('JZ',  0x41, 1, ['addr'], 'Jump if A == 0')
+        self.define('JNZ', 0x42, 1, ['addr'], 'Jump if A != 0')
+        self.define('JC',  0x43, 1, ['addr'], 'Jump if Carry')
+        self.define('JNC', 0x44, 1, ['addr'], 'Jump if not Carry')
+        self.define('JEQ', 0x45, 1, ['addr'], 'Jump if X == Y')
+        self.define('JNE', 0x46, 1, ['addr'], 'Jump if X != Y')
+
+        # --- Relative Function Flow ---
+        self.define("CALL", 0x48, 1, ['addr'], "Jump to address, pushing current line to stack")
+        self.define('BZ',   0x49, 1, ['addr'], 'Call if A == 0')
+        self.define('BNZ',  0x4A, 1, ['addr'], 'Call if A != 0')
+        self.define('BC',   0x4B, 1, ['addr'], 'Call if Carry')
+        self.define('BNC',  0x4C, 1, ['addr'], 'Call if not Carry')
+        self.define('BEQ',  0x4D, 1, ['addr'], 'Call if X == Y')
+        self.define('BNE',  0x4E, 1, ['addr'], 'Call if X != Y')
+
+        # RET
         self.define("RET",  0x37, 0, [], "Pop from stack, and jump to that address")
-        self.define("CALL", 0x38, 1, ['addr'], "Jump to address, pushing current line to stack")
-        self.define('BZ',   0x39, 1, ['addr'], 'Call if A == 0')
-        self.define('BNZ',  0x3A, 1, ['addr'], 'Call if A != 0')
-        self.define('BC',   0x3B, 1, ['addr'], 'Call if Carry')
-        self.define('BNC',  0x3C, 1, ['addr'], 'Call if not Carry')
-        self.define('BEQ',  0x3D, 1, ['addr'], 'Call if X == Y')
-        self.define('BNE',  0x3E, 1, ['addr'], 'Call if X != Y')
-
-        # --- Load immediate ---
-        self.define("LDAI", 0x47, 1, ["immB"], "Load immediate value into A")
-        self.define("LDXI", 0x48, 1, ["immB"], "Load immediate value into X")
-        self.define("LDYI", 0x49, 1, ["immB"], "Load immediate value into Y")
 
         # --- Register-register ---
         self.define("MVAX", 0x50, 0, [], "Copy Register A to X")
@@ -90,6 +105,11 @@ class Opcodes:
         self.define("MVXA", 0x53, 0, [], "Copy Register X to A")
         self.define("MVYX", 0x54, 0, [], "Copy Register Y to X")
         self.define("MVYA", 0x55, 0, [], "Copy Register Y to A")
+
+        # --- Load immediate ---
+        self.define("LDAI", 0x57, 1, ["immB"], "Load immediate value into A")
+        self.define("LDXI", 0x58, 1, ["immB"], "Load immediate value into X")
+        self.define("LDYI", 0x59, 1, ["immB"], "Load immediate value into Y")
 
         # --- Stack ---
         self.define("PUSHA", 0x60, 0, [], "Push Register A to stack")
