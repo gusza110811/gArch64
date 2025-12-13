@@ -16,22 +16,22 @@ class Executor:
 
         if instruction == "HALT": emulator.running = False
 
-        elif instruction == "LDA": registers[0] = cache.load(params[0])
-        elif instruction == "LDX": registers[1] = cache.load(params[0])
-        elif instruction == "LDY": registers[2] = cache.load(params[0])
+        elif instruction == "LDAC": registers[0] = cache.load(params[0])
+        elif instruction == "LDXC": registers[1] = cache.load(params[0])
+        elif instruction == "LDYC": registers[2] = cache.load(params[0])
 
-        elif instruction == "STA": cache.store(params[0],registers[0])
-        elif instruction == "STX": cache.store(params[0],registers[1])
-        elif instruction == "STY": cache.store(params[0],registers[2])
+        elif instruction == "STAC": cache.store(params[0],registers[0])
+        elif instruction == "STXC": cache.store(params[0],registers[1])
+        elif instruction == "STYC": cache.store(params[0],registers[2])
 
-        elif instruction == "MOV": cache.store(params[0],cache.load(params[1]))
+        elif instruction == "MOVC": cache.store(params[0],cache.load(params[1]))
 
         elif instruction == "LDAI": registers[0] = params[0]
         elif instruction == "LDXI": registers[1] = params[0]
         elif instruction == "LDYI": registers[2] = params[0]
 
-        elif instruction == "LDV":registers[0] = cache.load(registers[1])
-        elif instruction == "STV": cache.store(registers[1], registers[0])
+        elif instruction == "LDVC":registers[0] = cache.load(registers[1])
+        elif instruction == "STVC": cache.store(registers[1], registers[0])
 
         elif instruction == "ADD": registers[0] = registers[1] + registers[2] ; emulator.correct_register()
         elif instruction == "SUB": registers[0] = registers[1] - registers[2] ; emulator.correct_register()
@@ -112,18 +112,29 @@ class Executor:
             cache.push(emulator.counter)
             emulator.counter = address
 
-        elif instruction == "LDAR": registers[0] = ram.load(params[0])
-        elif instruction == "LDXR": registers[1] = ram.load(params[0])
-        elif instruction == "LDYR": registers[2] = ram.load(params[0])
+        elif instruction == "LDA": registers[0] = ram.load(params[0])
+        elif instruction == "LDX": registers[1] = ram.load(params[0])
+        elif instruction == "LDY": registers[2] = ram.load(params[0])
 
-        elif instruction == "STAR": ram.store(params[0],registers[0])
-        elif instruction == "STXR": ram.store(params[0],registers[1])
-        elif instruction == "STYR": ram.store(params[0],registers[2])
+        elif instruction == "STA": ram.store(params[0],registers[0])
+        elif instruction == "STX": ram.store(params[0],registers[1])
+        elif instruction == "STY": ram.store(params[0],registers[2])
 
-        elif instruction == "LDVR": registers[0] = ram.load(registers[1])
-        elif instruction == "STVR": ram.store(registers[1],registers[0])
+        elif instruction == "LDV": registers[0] = ram.load(registers[1])
+        elif instruction == "STV": ram.store(registers[1],registers[0])
 
-        elif instruction == "MOVR": ram.store(params[0],ram.load(params[1]))
+        elif instruction == "LDAD": registers[0] = ram.load_double(params[0])
+        elif instruction == "LDXD": registers[1] = ram.load_double(params[0])
+        elif instruction == "LDYD": registers[2] = ram.load_double(params[0])
+
+        elif instruction == "STAD": ram.store_double(params[0],registers[0])
+        elif instruction == "STXD": ram.store_double(params[0],registers[1])
+        elif instruction == "STYD": ram.store_double(params[0],registers[2])
+
+        elif instruction == "LDVD": registers[0] = ram.load_double(registers[1])
+        elif instruction == "STVD": ram.store_double(registers[1],registers[0])
+
+        elif instruction == "MOV": ram.store(params[0],ram.load(params[1]))
 
         elif instruction == "MVCR": ram.store(params[0],cache.load(params[1]))
         elif instruction == "MVRC": cache.store(params[0],ram.load(params[1]))

@@ -94,6 +94,15 @@ class Ram:
         except KeyError:
             return 0
     
+    def load_double(self, address:int, absolute=False):
+        return self.load(address+3,absolute) << 24 | self.load(address+2,absolute) << 16 | self.load(address+1,absolute) << 8 | self.load(address,absolute)
+    
+    def store_double(self, address:int, value:int, absolute=False):
+        self.store(address,value, absolute)
+        self.store(address+1,value >> 8, absolute)
+        self.store(address+2,value >> 16, absolute)
+        self.store(address+3,value >> 24, absolute)
+
     def get_frame(self, frame_id:int):
         try:
             return self.data[frame_id]

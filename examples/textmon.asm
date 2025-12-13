@@ -1,6 +1,6 @@
-const hexconv_counter xAA10
-const hexconv_output xAA11
-const tmp xAA12
+const hexconv_counter x210
+const hexconv_output x214
+const tmp x218
 const print x10
 const input x12
 
@@ -22,7 +22,7 @@ read:
     mov $a, %input_buf1
     call hexconv
 
-    mov $a, *hexconv_output
+    movd $a, hexconv_output
     int print
     mov $a, %newline
     int print
@@ -35,7 +35,7 @@ write:
     mov $a, %data_prompt
     int print
 
-    mov $a, *hexconv_output
+    movd $a, hexconv_output
     int input
 jmp main
 
@@ -48,13 +48,13 @@ ret
 ; return 0 if successful, return 1 if invalid character is detected
 hexconv:
     pushr
-    mov *hexconv_counter, $a
+    movd hexconv_counter, $a
     mov $x, %0
-    mov *hexconv_output, $x
+    movd hexconv_output, $x
 
 hexconv_loop:
-    mov $x, *hexconv_counter
-    ldvr
+    movd $x, hexconv_counter
+    ldv
     jz hexconv_end
     mov $x, $a
 
@@ -73,39 +73,39 @@ hexconv_loop:
     jmp hexconv_err
 
 hexconv_inc:
-    mov $x, *hexconv_counter
+    movd $x, hexconv_counter
     mov $y, %1
     add
-    mov *hexconv_counter, $a
+    movd hexconv_counter, $a
 
     jmp hexconv_loop
 
 hexconv_num:
     mov $y, %x30
     sub
-    mov *tmp, $a
+    movd tmp, $a
 
-    mov $x, *hexconv_output
+    movd $x, hexconv_output
     mov $y, %4
     shl
     mov $x, $a
-    mov $y, *tmp
+    movd $y, tmp
     or
-    mov *hexconv_output, $a
+    movd hexconv_output, $a
 jmp hexconv_inc
 
 hexconv_upper:
     mov $y, %x37
     sub
-    mov *tmp, $a
+    movd tmp, $a
 
-    mov $x, *hexconv_output
+    movd $x, hexconv_output
     mov $y, %4
     shl
     mov $x, $a
-    mov $y, *tmp
+    movd $y, tmp
     or
-    mov *hexconv_output, $a
+    movd hexconv_output, $a
 jmp hexconv_inc
 
 hexconv_err:

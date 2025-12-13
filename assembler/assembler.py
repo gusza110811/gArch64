@@ -77,6 +77,7 @@ class Assembler:
 
             # Move
             "mov": Mov,
+            "movd": Movd,
 
             # Stack
             "push": Push,
@@ -86,9 +87,9 @@ class Assembler:
 
             # Variable load/store
             "ldv": Ldv,
-            "ldvr": Ldvr,
+            "ldvc": Ldvc,
             "stv": Stv,
-            "stvr": Stvr,
+            "stvc": Stvc,
 
             # Interrupts
             "int": Int,

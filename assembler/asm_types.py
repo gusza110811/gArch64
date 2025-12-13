@@ -39,16 +39,7 @@ class Mov(Command):
         if isinstance(source,Immediate) and isinstance(destination,CacheAddr):
             raise ValueError("Can't directly store immediate value to cache")
 
-        # Load
-        if isinstance(destination,Register) and isinstance(source,CacheAddr):
-            return (0x10 + destination.value).to_bytes(2,"little") + source.value.to_bytes(size,byteorder="little")
-        # Store
-        elif isinstance(destination,CacheAddr) and isinstance(source,Register):
-            return (0x13 + source.value).to_bytes(2,"little") + destination.value.to_bytes(size,byteorder="little")
         # MOV
-        elif isinstance(destination,CacheAddr) and isinstance(source,CacheAddr):
-            return 0x16.to_bytes(2,"little") + self.encode_immediate([destination,source],size,params_count=2)
-        # MOVR
         elif isinstance(destination,RamAddr) and isinstance(source,RamAddr):
             return 0x89.to_bytes(2,"little") + self.encode_immediate([destination,source],size,params_count=2)
         # Load ram
@@ -82,6 +73,23 @@ class Mov(Command):
         # immediate value
         elif isinstance(destination,Register) and isinstance(source,Immediate):
             return (0x47+destination.value).to_bytes(2,byteorder="little") + source.value.to_bytes(size,byteorder="little")
+
+class Movd(Command):
+    def get_value(self, params = None, size=4, position=0) -> bytes:
+        destination = params[0]
+        source = params[-1]
+        # Load ram
+        if isinstance(destination,Register) and isinstance(source,RamAddr):
+            return (0xB1 + destination.value).to_bytes(2,"little") + source.value.to_bytes(size,byteorder="little")
+        # Store ram
+        elif isinstance(destination,RamAddr) and isinstance(source,Register):
+            return (0xB4 + source.value).to_bytes(2,"little") + destination.value.to_bytes(size,byteorder="little")
+        # MOV
+        elif isinstance(destination,RamAddr) and isinstance(source,RamAddr):
+            return 0xB9.to_bytes(2,"little") + self.encode_immediate([destination,source],size,params_count=2)
+        else:
+            raise SyntaxError("Movd is only for register-memory and memory-memory operations, for other operations, use Mov")
+
 
 # Arithmetic
 class Add(Command):
@@ -347,19 +355,19 @@ class Popr(Command):
         return bytes([0x67,0x00])
 
 # Variable Load/Store
-class Ldv(Command):
+class Ldvc(Command):
     def get_value(self, params, size=4, position=0):
         return 0x17.to_bytes(2,byteorder="little")
 
-class Ldvr(Command):
+class Ldv(Command):
     def get_value(self, params, size=4, position=0):
         return 0x87.to_bytes(2,byteorder="little")
 
-class Stv(Command):
+class Stvc(Command):
     def get_value(self, params, size=4, position=0):
         return 0x18.to_bytes(2,byteorder="little")
 
-class Stvr(Command):
+class Stv(Command):
     def get_value(self, params, size=4, position=0):
         return 0x88.to_bytes(2,byteorder="little")
 

@@ -20,22 +20,18 @@ class Opcodes:
         }
 
     def definitions(self):
-        # --- Register Loads ---
-        self.define('LDA', 0x10, 1, ['addr'], 'Load from address into A')
-        self.define('LDX', 0x11, 1, ['addr'], 'Load from address into X')
-        self.define('LDY', 0x12, 1, ['addr'], 'Load from address into Y')
+        # --- Cache ---
+        self.define('LDAC', 0x10, 1, ['addr'], 'Load from address into A')
+        self.define('LDXC', 0x11, 1, ['addr'], 'Load from address into X')
+        self.define('LDYC', 0x12, 1, ['addr'], 'Load from address into Y')
 
-        # --- Register Stores ---
-        self.define('STA', 0x13, 1, ['addr'], 'Store A into address')
-        self.define('STX', 0x14, 1, ['addr'], 'Store X into address')
-        self.define('STY', 0x15, 1, ['addr'], 'Store Y into address')
+        self.define('STAC', 0x13, 1, ['addr'], 'Store A into address')
+        self.define('STXC', 0x14, 1, ['addr'], 'Store X into address')
+        self.define('STYC', 0x15, 1, ['addr'], 'Store Y into address')
 
-        # --- Cache to Cache ---
-        self.define('MOV', 0x16, 2, ['addr_dst', 'addr_src'], 'Copy from addr_src to addr_dst')
-
-        # --- Variable Load/store ---
-        self.define('LDV', 0x17, 0, [], 'Load value from cache into register A, using X as address')
-        self.define('STV', 0x18, 0, [], 'Load value from cache into register A, using X as address')
+        self.define('MOVC', 0x16, 2, ['addr_dst', 'addr_src'], 'Copy from addr_src to addr_dst')
+        self.define('LDVC', 0x17, 0, [], 'Load value from cache into register A, using X as address')
+        self.define('STVC', 0x18, 0, [], 'Load value from cache into register A, using X as address')
 
         # --- Arithmetic ---
         self.define('ADD', 0x20, 0, [], 'A = X + Y')
@@ -129,17 +125,17 @@ class Opcodes:
         self.define('INTR', 0x90, 2, ['int_id','subroutine_address'], 'Map [int_id] to [subroutine_address]')
 
         # --- RAM ---
-        self.define('LDAR', 0x81, 1, ['addr'], 'Load from address(ram) into A')
-        self.define('LDXR', 0x82, 1, ['addr'], 'Load from address(ram) into X')
-        self.define('LDYR', 0x83, 1, ['addr'], 'Load from address(ram) into Y')
+        self.define('LDA', 0x81, 1, ['addr'], 'Load from address(ram) into A')
+        self.define('LDX', 0x82, 1, ['addr'], 'Load from address(ram) into X')
+        self.define('LDY', 0x83, 1, ['addr'], 'Load from address(ram) into Y')
 
-        self.define('STAR', 0x84, 1, ['addr'], 'Store A into address(ram)')
-        self.define('STXR', 0x85, 1, ['addr'], 'Store X into address(ram)')
-        self.define('STYR', 0x86, 1, ['addr'], 'Store Y into address(ram)')
+        self.define('STA', 0x84, 1, ['addr'], 'Store A into address(ram)')
+        self.define('STX', 0x85, 1, ['addr'], 'Store X into address(ram)')
+        self.define('STY', 0x86, 1, ['addr'], 'Store Y into address(ram)')
 
-        self.define('LDVR', 0x87, 0, [], 'Load value from ram into register A, using X as address')
-        self.define('STVR', 0x88, 0, [], 'Store value in register A to ram, using X as address')
-        self.define('MOVR', 0x89, 2, ['addr_dst', 'addr_src'], 'Copy from addr_src to addr_dst (ram)')
+        self.define('LDV', 0x87, 0, [], 'Load value from ram into register A, using X as address')
+        self.define('STV', 0x88, 0, [], 'Store value in register A to ram, using X as address')
+        self.define('MOV', 0x89, 2, ['addr_dst', 'addr_src'], 'Copy from addr_src to addr_dst (ram)')
 
         self.define('MVCR', 0x8A, 2, ['addr_dst', 'addr_src'], 'Copy from addr_src (cache) to addr_dst (ram)')
         self.define('MVRC', 0x8B, 2, ['addr_dst', 'addr_src'], 'Copy from addr_src (ram) to addr_dst (cache)')
@@ -151,6 +147,20 @@ class Opcodes:
         # --- Block size ---
         self.define('REDUCE', 0xA0, 0, [], 'Halves the block size (do nothing if blocksize is 1 word)')
         self.define('EXTEND', 0xA1, 0, [], 'Doubles the block size')
+
+        # --- Double-word RAM load/store ---
+        self.define('LDAD', 0xB1, 1, ['addr'], 'Load from address(ram) into A')
+        self.define('LDXD', 0xB2, 1, ['addr'], 'Load from address(ram) into X')
+        self.define('LDYD', 0xB3, 1, ['addr'], 'Load from address(ram) into Y')
+
+        self.define('STAD', 0xB4, 1, ['addr'], 'Store A into address(ram)')
+        self.define('STXD', 0xB5, 1, ['addr'], 'Store X into address(ram)')
+        self.define('STYD', 0xB6, 1, ['addr'], 'Store Y into address(ram)')
+
+        self.define('LDVD', 0xB7, 0, [], 'Load value from ram into register A, using X as address')
+        self.define('STVD', 0xB8, 0, [], 'Store value in register A to ram, using X as address')
+        self.define('MOVD', 0xB9, 2, ['addr_dst', 'addr_src'], 'Copy from addr_src to addr_dst (ram)')
+
         return
 
 

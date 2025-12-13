@@ -98,7 +98,7 @@ class Emulator:
                 info = self.opcodes.OPCODES[opcode]
             except KeyError:
                 if self.crash_on_unknown:
-                    raise executionError("Unknown OPCODE")
+                    raise executionError(f"Unknown OPCODE {opcode} at {self.begininst}")
                 else:
                     continue
             name:str = info["mnemonic"]
@@ -141,8 +141,8 @@ class Emulator:
                 # (relavent cache address, relavent cache value)
                 # (relavent ram address, relavent ram value)
                 # was a jump done
-                cache_revalence = r"ST[A|X|Y]?!R|LD[A|X|Y]?!R|MOV?!R"
-                ram_revalence = r"STLD[A|X|Y]R|LD[A|X|Y]R|MOVR"
+                cache_revalence = r"^(?:ST|LD)(?:A|X|Y)C$|^MOV"
+                ram_revalence = r"^(?:ST|LD)(?:A|X|Y)D?$|^MOVD?$"
                 jumped = self.counter != prev_addr
                 try:
                     self.trace.append((
@@ -150,8 +150,8 @@ class Emulator:
                         opcode, name,
                         params.copy() + [0]*(2-len(params)),
                         self.registers.copy(),
-                        (params[0], self.cache.load(params[0])) if re.match(cache_revalence, name) else (self.registers[1], self.cache.load(self.registers[1])) if (name == "LDV" or name == "STV") else None,
-                        (params[0], self.ram.load_bypass_dev(params[0])) if re.match(ram_revalence, name) else (self.registers[1], self.ram.load_bypass_dev(self.registers[1])) if (name == "LDVR" or name == "STVR") else None,
+                        (params[0], self.cache.load(params[0])) if re.match(cache_revalence, name) else (self.registers[1], self.cache.load(self.registers[1])) if (name == "LDVC" or name == "STVC") else None,
+                        (params[0], self.ram.load_bypass_dev(params[0])) if re.match(ram_revalence, name) else (self.registers[1], self.ram.load_bypass_dev(self.registers[1])) if (name == "LDV" or name == "STV") else None,
                         jumped
                     ))
                 except IndexError:
