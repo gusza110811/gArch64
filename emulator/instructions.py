@@ -77,24 +77,6 @@ class Opcodes:
         self.define('ABEQ',  0x3D, 1, ['addr'], 'Call if X == Y')
         self.define('ABNE',  0x3E, 1, ['addr'], 'Call if X != Y')
 
-        # --- Relative Control Flow ---
-        self.define('JMP', 0x40, 1, ['addr'], 'Jump to address')
-        self.define('JZ',  0x41, 1, ['addr'], 'Jump if A == 0')
-        self.define('JNZ', 0x42, 1, ['addr'], 'Jump if A != 0')
-        self.define('JC',  0x43, 1, ['addr'], 'Jump if Carry')
-        self.define('JNC', 0x44, 1, ['addr'], 'Jump if not Carry')
-        self.define('JEQ', 0x45, 1, ['addr'], 'Jump if X == Y')
-        self.define('JNE', 0x46, 1, ['addr'], 'Jump if X != Y')
-
-        # --- Relative Function Flow ---
-        self.define("CALL", 0x48, 1, ['addr'], "Jump to address, pushing current line to stack")
-        self.define('BZ',   0x49, 1, ['addr'], 'Call if A == 0')
-        self.define('BNZ',  0x4A, 1, ['addr'], 'Call if A != 0')
-        self.define('BC',   0x4B, 1, ['addr'], 'Call if Carry')
-        self.define('BNC',  0x4C, 1, ['addr'], 'Call if not Carry')
-        self.define('BEQ',  0x4D, 1, ['addr'], 'Call if X == Y')
-        self.define('BNE',  0x4E, 1, ['addr'], 'Call if X != Y')
-
         # RET
         self.define("RET",  0x37, 0, [], "Pop from stack, and jump to that address")
 
@@ -107,9 +89,9 @@ class Opcodes:
         self.define("MVYA", 0x55, 0, [], "Copy Register Y to A")
 
         # --- Load immediate ---
-        self.define("LDAI", 0x57, 1, ["immB"], "Load immediate value into A")
-        self.define("LDXI", 0x58, 1, ["immB"], "Load immediate value into X")
-        self.define("LDYI", 0x59, 1, ["immB"], "Load immediate value into Y")
+        self.define("LDAI", 0x47, 1, ["immB"], "Load immediate value into A")
+        self.define("LDXI", 0x48, 1, ["immB"], "Load immediate value into X")
+        self.define("LDYI", 0x49, 1, ["immB"], "Load immediate value into Y")
 
         # --- Stack ---
         self.define("PUSHA", 0x60, 0, [], "Push Register A to stack")
@@ -120,6 +102,24 @@ class Opcodes:
         self.define("POPY",  0x65, 0, [], "Pop from stack to Register Y")
         self.define("PUSHR", 0x66, 0, [], "Push every Register to stack")
         self.define("POPR",  0x67, 0, [], "Pop from stack to every Register")
+
+        # --- Relative Control Flow ---
+        self.define('JMP', 0x70, 1, ['addr'], 'Jump to address')
+        self.define('JZ',  0x71, 1, ['addr'], 'Jump if A == 0')
+        self.define('JNZ', 0x72, 1, ['addr'], 'Jump if A != 0')
+        self.define('JC',  0x73, 1, ['addr'], 'Jump if Carry')
+        self.define('JNC', 0x74, 1, ['addr'], 'Jump if not Carry')
+        self.define('JEQ', 0x75, 1, ['addr'], 'Jump if X == Y')
+        self.define('JNE', 0x76, 1, ['addr'], 'Jump if X != Y')
+
+        # --- Relative Function Flow ---
+        self.define("CALL", 0x78, 1, ['addr'], "Jump to address, pushing current line to stack")
+        self.define('BZ',   0x79, 1, ['addr'], 'Call if A == 0')
+        self.define('BNZ',  0x7A, 1, ['addr'], 'Call if A != 0')
+        self.define('BC',   0x7B, 1, ['addr'], 'Call if Carry')
+        self.define('BNC',  0x7C, 1, ['addr'], 'Call if not Carry')
+        self.define('BEQ',  0x7D, 1, ['addr'], 'Call if X == Y')
+        self.define('BNE',  0x7E, 1, ['addr'], 'Call if X != Y')
 
 
         # --- --- Extended Instructions --- ---

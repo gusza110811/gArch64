@@ -285,7 +285,6 @@ if __name__ == "__main__":
 
     try:
         emulator.main(source,stdin)
-        print(emulator.ram.page_to_frame)
     except KeyboardInterrupt:
         print(color.fg.YELLOW+"INT"+color.RESET)
 

@@ -121,7 +121,7 @@ allocate more by using `page [page-id]` where `page-id` is a new page
 | `jz [label]` | Jump to [label] if A = 0 |
 | `jnz [label]` | Jump to [label] if A != 0 |
 | `jc [label]` | Jump to [label] if previous operation resulted in overflow |
-| `jnc [label]` | Jump to [label] if previous operation resulted in overflow |
+| `jnc [label]` | Jump to [label] if previous operation did not result in overflow |
 | `jeq [label]` | Jump to [label] if X = Y |
 | `jne [label]` | Jump to [label] if X = Y |
 | **Flow Control (Relative Address)** |
@@ -131,7 +131,7 @@ allocate more by using `page [page-id]` where `page-id` is a new page
 | `bz [label]` | Call function at [label] if A = 0 |
 | `bnz [label]` | Call function at [label] if A != 0 |
 | `bc [label]` | Call function at [label] if previous operation resulted in overflow |
-| `bnc [label]` | Call function at [label] if previous operation resulted in overflow |
+| `bnc [label]` | Call function at [label] if previous operation did not result in overflow |
 | `beq [label]` | Call function at [label] if X = Y |
 | `bne [label]` | Call function at [label] if X = Y |
 | **Control Flow (Absolute Address)** |
@@ -139,7 +139,7 @@ allocate more by using `page [page-id]` where `page-id` is a new page
 | `ajz [address]` | Jump to [address] if A = 0 |
 | `ajnz [address]` | Jump to [address] if A != 0 |
 | `ajc [address]` | Jump to [address] if previous operation resulted in overflow |
-| `ajnc [address]` | Jump to [address] if previous operation resulted in overflow |
+| `ajnc [address]` | Jump to [address] if previous operation did not result in overflow |
 | `ajeq [address]` | Jump to [address] if X = Y |
 | `ajne [address]` | Jump to [address] if X = Y |
 | **Flow Control (Absolute Address)** |
@@ -147,7 +147,7 @@ allocate more by using `page [page-id]` where `page-id` is a new page
 | `abz [address]` | Call function at [address] if A = 0 |
 | `abnz [address]` | Call function at [address] if A != 0 |
 | `abc [address]` | Call function at [address] if previous operation resulted in overflow |
-| `abnc [address]` | Call function at [address] if previous operation resulted in overflow |
+| `abnc [address]` | Call function at [address] if previous operation did not result in overflow |
 | `abeq [address]` | Call function at [address] if X = Y |
 | `abne [address]` | Call function at [address] if X = Y |
 | **Move** |

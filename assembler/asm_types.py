@@ -73,7 +73,7 @@ class Mov(Command):
         
         # immediate value
         elif isinstance(destination,Register) and isinstance(source,Immediate):
-            return (0x57+destination.value).to_bytes(2,byteorder="little") + source.value.to_bytes(size,byteorder="little")
+            return (0x47+destination.value).to_bytes(2,byteorder="little") + source.value.to_bytes(size,byteorder="little")
 
 # Arithmetic
 class Add(Command):
@@ -192,37 +192,37 @@ class Abne(Command):
 class Jmp(Command):
     def get_value(self, params, size=4, position=0):
         params[0].value = params[0].value - position
-        return bytes([0x40,0x00]) + self.encode_immediate(params,size,True)
+        return bytes([0x70,0x00]) + self.encode_immediate(params,size,True)
 
 class Jz(Command):
     def get_value(self, params, size=4, position=0):
         params[0].value = params[0].value - position
-        return bytes([0x41,0x00]) + self.encode_immediate(params,size,True)
+        return bytes([0x71,0x00]) + self.encode_immediate(params,size,True)
 
 class Jnz(Command):
     def get_value(self, params, size=4, position=0):
         params[0].value = params[0].value - position
-        return bytes([0x42,0x00]) + self.encode_immediate(params,size,True)
+        return bytes([0x72,0x00]) + self.encode_immediate(params,size,True)
 
 class Jc(Command):
     def get_value(self, params, size=4, position=0):
         params[0].value = params[0].value - position
-        return bytes([0x43,0x00]) + self.encode_immediate(params,size,True)
+        return bytes([0x73,0x00]) + self.encode_immediate(params,size,True)
 
 class Jnc(Command):
     def get_value(self, params, size=4, position=0):
         params[0].value = params[0].value - position
-        return bytes([0x44,0x00]) + self.encode_immediate(params,size,True)
+        return bytes([0x74,0x00]) + self.encode_immediate(params,size,True)
 
 class Jeq(Command):
     def get_value(self, params, size=4, position=0):
         params[0].value = params[0].value - position
-        return bytes([0x45,0x00]) + self.encode_immediate(params,size,True)
+        return bytes([0x75,0x00]) + self.encode_immediate(params,size,True)
 
 class Jne(Command):
     def get_value(self, params, size=4, position=0):
         params[0].value = params[0].value - position
-        return bytes([0x46,0x00]) + self.encode_immediate(params,size,True)
+        return bytes([0x76,0x00]) + self.encode_immediate(params,size,True)
 
 # Function flow
 class Ret(Command):
@@ -232,37 +232,37 @@ class Ret(Command):
 class Call(Command):
     def get_value(self, params, size=4, position=0):
         params[0].value = params[0].value - position
-        return bytes([0x48,0x00]) + self.encode_immediate(params,size,True)
+        return bytes([0x78,0x00]) + self.encode_immediate(params,size,True)
 
 class Bz(Command):
     def get_value(self, params, size=4, position=0):
         params[0].value = params[0].value - position
-        return bytes([0x49,0x00]) + self.encode_immediate(params,size,True)
+        return bytes([0x79,0x00]) + self.encode_immediate(params,size,True)
 
 class Bnz(Command):
     def get_value(self, params, size=4, position=0):
         params[0].value = params[0].value - position
-        return bytes([0x4A,0x00]) + self.encode_immediate(params,size,True)
+        return bytes([0x7A,0x00]) + self.encode_immediate(params,size,True)
 
 class Bc(Command):
     def get_value(self, params, size=4, position=0):
         params[0].value = params[0].value - position
-        return bytes([0x4B,0x00]) + self.encode_immediate(params,size,True)
+        return bytes([0x7B,0x00]) + self.encode_immediate(params,size,True)
 
 class Bnc(Command):
     def get_value(self, params, size=4, position=0):
         params[0].value = params[0].value - position
-        return bytes([0x4C,0x00]) + self.encode_immediate(params,size,True)
+        return bytes([0x7C,0x00]) + self.encode_immediate(params,size,True)
 
 class Beq(Command):
     def get_value(self, params, size=4, position=0):
         params[0].value = params[0].value - position
-        return bytes([0x4D,0x00]) + self.encode_immediate(params,size,True)
+        return bytes([0x7D,0x00]) + self.encode_immediate(params,size,True)
 
 class Bne(Command):
     def get_value(self, params, size=4, position=0):
         params[0].value = params[0].value - position
-        return bytes([0x4E,0x00]) + self.encode_immediate(params,size,True)
+        return bytes([0x7E,0x00]) + self.encode_immediate(params,size,True)
 
 # Stack
 class Push(Command):
