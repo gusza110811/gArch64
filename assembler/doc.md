@@ -2,20 +2,17 @@
 
 ## The Command
 ```
-assembler.py [source] [-o output] [-O offset] [-v | --verbose]
+assembler.py [source] [-o output]
 ```
 
 `source` defaults to `main.asm` if not given
 
 use `-o [name]` or `--output [name]` if you want the output binary to have a different name from the original assembly
 
-use `-O [offset]` or `--offset [offset]` if your binary wont be loaded to memory at address x00000000
-
 ## Syntax
 
 ### Format
-Each line is an instruction with its parameters. starts with the instruction's opcode, followed by
-parameters separated by comma(`,`), which ends up looking like `OPCODE param1, param2`
+Each line is an instruction with its parameters. starts with the instruction (case insensitive), followed by parameters separated by comma(`,`), which ends up looking like `INST param1, param2`
 
 ### Prefix
 | Prefix | Usage |
@@ -42,7 +39,7 @@ For every parameters, you can use another prefix just after the type prefix (`$`
 Use `const` keyword followed by the name, then its value (`const [name] [value]`)
 
 #### Label Definition
-Add `:` to the label's name (`[name]:`), it is recommended (but not required) to use indentation for the part that should be inside
+Add `:` to the label's name (`[name]:`)
 
 ### Special Directives
 These are helper commands that give you more control over the output binary (case-insensitive)
@@ -51,6 +48,7 @@ These are helper commands that give you more control over the output binary (cas
 | `.literal [values]` | Add literal values |
 | `.ascii [text]` | Add ASCII text |
 | `.zero [n]` | Add [n] number of zeroes |
+| `.org [addr]` | add zeroes until the next instruction starts at [addr] |
 
 #### .ascii Escape Codes
 Used within `.ascii` directive to add a normally non-printable and unusable characters within the string
@@ -63,12 +61,12 @@ Used within `.ascii` directive to add a normally non-printable and unusable char
 | `\\` | Backslash |
 
 ### Comment
-Use `;`, can be anywhere
+Use `;` followed by the comment
 
 ## System and Hardware specification
-There is a BIOS program that runs on every execution. it sets up useful commands
+There is a BIOS system that runs on boot. it sets up useful commands and loads your program
 
-These can be called through `int [id]` instruction with the `id` as the command number in this table below
+These can be called through `int [id]` instruction with the `id` as the command number in this table below,
 You set the A register to its parameter
 | Command | Usage |
 | --- | --- |
@@ -90,7 +88,7 @@ allocate more by using `page [page-id]` where `page-id` is a new page
 | `F000` - `FEFF` | Stack |
 | `FF00` - `FFFF` | Software interrupt targets |
 
-#### Ram Layout (x32 system)
+#### Ram Layout/Code Segment (x32 system)
 | size | range (hexadecimal) | purpose |
 | --- | --- | --- |
 | 4064M | `0000_0000`-`FDFF_FFFF` | General use memory |
@@ -150,8 +148,11 @@ allocate more by using `page [page-id]` where `page-id` is a new page
 | `abnc [address]` | Call function at [address] if previous operation did not result in overflow |
 | `abeq [address]` | Call function at [address] if X = Y |
 | `abne [address]` | Call function at [address] if X = Y |
+| **Indirect Flow Control** |
+| `jmpv` | Jump to Address stored in register A |
+| `callv` | Call function at Address stored in register A |
 | **Move** |
-| `mov [destination], [source]` | Copy from [source] to [destination]. Does not support direct cache/ram to ram/cache copy, only cache-cache and ram-ram. and does not support direct immediate store to ram/cache |
+| `mov [destination], [source]` | Copy from [source] to [destination]. |
 | **Variable Move/Store** |
 | `ldv` | Load value from cache address stored in X to A |
 | `stv` | Store value from A to cache address stored in X |

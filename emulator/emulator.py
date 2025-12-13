@@ -8,7 +8,8 @@ import time
 import re
 from color import *
 
-VERSION = ".dev"
+# during development, keep this the next unstable or stable version to be released
+VERSION = "snapshot7"
 
 class Emulator:
     def __init__(self):
@@ -51,8 +52,11 @@ class Emulator:
 
         # Flash Bios
         bios = bytes()
-        with open(f"{os.path.dirname(__file__)}/bios.bin","rb") as biosfile:
-            bios = biosfile.read()
+        try:
+            with open(f"{os.path.dirname(__file__)}/bios.bin","rb") as biosfile:
+                bios = biosfile.read()
+        except FileNotFoundError:
+            sys.exit("BIOS binary not found")
         
         for idx, value in enumerate(bios):
             self.ram.store(idx+0xFFFF_0000, value) # offset 4294901760
@@ -258,8 +262,8 @@ if __name__ == "__main__":
     dumpr = bool(args.dump_raw)
     verbose = bool(args.verbose)
     if verbose:
-        eprint(f"v{VERSION}")
-        eprint(f"python v{".".join([str(item) for item in sys.version_info[:3]])}")
+        eprint(f"v.{VERSION}")
+        eprint(f"python v.{".".join([str(item) for item in sys.version_info[:3]])}")
         eprint(f"{os.cpu_count()} threads available")
 
     if stdin == "":
