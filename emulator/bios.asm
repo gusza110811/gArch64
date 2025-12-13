@@ -19,9 +19,6 @@ call disk_read
 
 ajmp x0
 
-test:
-    .ascii ???\n\0
-
 ; A is the sector number
 disk_set_sector:
     pushr
