@@ -11,6 +11,10 @@ from color import *
 # during development, keep this the next unstable or stable version to be released
 VERSION = "1.2"
 
+class executionError(Exception):
+    def __init__(self, *args):
+        super().__init__(*args)
+
 class Emulator:
     def __init__(self):
         self.registers = [0,0,0]
@@ -56,7 +60,7 @@ class Emulator:
             with open(f"{os.path.dirname(__file__)}/bios.bin","rb") as biosfile:
                 bios = biosfile.read()
         except FileNotFoundError:
-            sys.exit("BIOS binary not found")
+            raise executionError("BIOS binary not found")
         
         for idx, value in enumerate(bios):
             self.ram.store(idx+0xFFFF_0000, value) # offset 4294901760
@@ -73,7 +77,10 @@ class Emulator:
         self.ram.register_device(console)
 
         # register disk controller
-        diskio = DiskIO(disk)
+        try:
+            diskio = DiskIO(disk)
+        except FileNotFoundError:
+            raise executionError(f"Disk image \"{disk}\" not found")
         self.ram.register_device(diskio)
 
         def fetch():
@@ -91,7 +98,7 @@ class Emulator:
                 info = self.opcodes.OPCODES[opcode]
             except KeyError:
                 if self.crash_on_unknown:
-                    raise ValueError("Unknown OPCODE")
+                    raise executionError("Unknown OPCODE")
                 else:
                     continue
             name:str = info["mnemonic"]
@@ -158,8 +165,7 @@ class Emulator:
                     recursion_table[self.counter] = 0
                 recursion_table[self.counter] += 1
                 if recursion_table[self.counter] > self.recursion_limit:
-                    print(f"{color.fg.RED}Recursion blocked: instruction at x{self.counter:X} executed too many times{color.RESET}")
-                    break
+                    raise executionError(f"Recursion/Infinite loop blocked: instruction at x{self.counter:X} executed too many times")
 
         return
 
@@ -182,7 +188,6 @@ class Emulator:
     def dump_ram(self, long=False):
         pages = dict(sorted(self.ram.page_to_frame.items()))
         del pages[0xFE000]
-        data = self.ram.data
         print("\n<--- RAM DUMP --->")
         for page, frame in pages.items():
             frame = dict(sorted(self.ram.get_frame(frame).items()))
@@ -291,6 +296,8 @@ if __name__ == "__main__":
         emulator.main(source,stdin)
     except KeyboardInterrupt:
         print(color.fg.YELLOW+"INT"+color.RESET)
+    except executionError as E:
+        eprint(color.fg.RED + str(E) + color.RESET)
 
     finally:
         if verbose:
