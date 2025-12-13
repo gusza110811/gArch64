@@ -48,6 +48,9 @@ class Mov(Command):
         # MOV
         elif isinstance(destination,CacheAddr) and isinstance(source,CacheAddr):
             return 0x16.to_bytes(2,"little") + self.encode_immediate([destination,source],size,params_count=2)
+        # MOVR
+        elif isinstance(destination,RamAddr) and isinstance(source,RamAddr):
+            return 0x89.to_bytes(2,"little") + self.encode_immediate([destination,source],size,params_count=2)
         # Load ram
         if isinstance(destination,Register) and isinstance(source,RamAddr):
             return (0x81 + destination.value).to_bytes(2,"little") + source.value.to_bytes(size,byteorder="little")
