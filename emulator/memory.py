@@ -31,11 +31,11 @@ class Ram:
         self.stack_pos -= 4
         return self.load_double(self.stack_start-self.stack_pos-4)
 
-    def register_int(self, id:int, target:int, addr_size=4):
-        self.store_double((id*addr_size)+self.int_start,target)
+    def register_int(self, id:int, target:int):
+        self.store_double((id*4)+self.int_start,target)
 
-    def find_int(self,id:int,addr_size=4):
-        return self.load_double((id*addr_size)+self.int_start)
+    def find_int(self,id:int):
+        return self.load_double((id*4)+self.int_start)
 
     def allocate_page(self, page:int, frame:int=None):
         def find_lowest_free(numbers):
