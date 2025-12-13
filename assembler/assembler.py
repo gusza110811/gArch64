@@ -241,8 +241,8 @@ class Assembler:
             result = command.get_value(parameters,4,len(pre))
         except SyntaxError as e:
             raise parsingError(f"SyntaxError: {e}")
-        #except ValueError as e:
-        #    raise parsingError(f"ValueError: {e}")
+        except ValueError as e:
+            raise parsingError(f"ValueError: {e}")
 
         if self.verbose:
             print(f"`{line.strip()}` => `{result.hex(sep=" ")}`")
