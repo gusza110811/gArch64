@@ -9,7 +9,7 @@ import re
 from color import *
 
 # during development, keep this the next unstable or stable version to be released
-VERSION = "snapshot7"
+VERSION = "1.2"
 
 class Emulator:
     def __init__(self):
