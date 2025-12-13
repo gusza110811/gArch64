@@ -22,7 +22,6 @@ class Emulator:
         self.opcodes = Opcodes(self)
         self.executor = executor.Executor(self)
 
-        self.cache = Cache()
         self.ram = Ram()
         self.ram.allocate_page(0xFFFF0)
 
@@ -68,7 +67,7 @@ class Emulator:
         self.counter = 0xFFFF_0000
 
         # Set to true if debugging the BIOS
-        tracing = False
+        tracing = True
 
         recursion_table = {}
 
@@ -98,7 +97,7 @@ class Emulator:
                 info = self.opcodes.OPCODES[opcode]
             except KeyError:
                 if self.crash_on_unknown:
-                    raise executionError(f"Unknown OPCODE {opcode} at {self.begininst}")
+                    raise executionError(f"Unknown OPCODE {opcode:4X} at {self.begininst:X}")
                 else:
                     continue
             name:str = info["mnemonic"]
@@ -179,10 +178,8 @@ class Emulator:
         print(f"Y: {self.registers[2]:03}  (x{self.registers[2]:02X})")
 
         if self.blocksize == 2:
-            self.dump_cache()
             self.dump_ram()
         else:
-            self.dump_cache(True)
             self.dump_ram(True)
 
     def dump_ram(self, long=False):
@@ -199,40 +196,6 @@ class Emulator:
                 else:
                     print(f"{key:016X}: {value:02X}")
             print("\n")
-    
-    def dump_cache(self, long=False, start: int = 0, end: int = None):
-        print("\n<--- CACHE DUMP --->")
-        mem = self.cache.data
-        if end is None:
-            end = len(mem)
-
-        prev_value = None
-        repeat_count = 0
-        printed = False
-
-        for i in range(start, end):
-            value = mem[i]
-
-            if value == prev_value:
-                repeat_count += 1
-                printed = False
-            else:
-                if repeat_count > 0:
-                    if not printed:
-                        if repeat_count > 1:
-                            print(f"... {repeat_count} times")
-                        else:
-                            print("... repeated")
-                        printed = True
-                    repeat_count = 0
-                if not long:
-                    print(f"{i:04X}: x{value:08X}")
-                else:
-                    print(f"{i:04X}: x{value:016X}")
-                prev_value = value
-
-        if repeat_count > 0:
-            print(f"... repeated to {(end-1):04X}")
 
     pass
 

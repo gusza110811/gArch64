@@ -154,10 +154,8 @@ allocate more by using `page [page-id]` where `page-id` is a new page
 | **Move** |
 | `mov [destination], [source]` | Copy from [source] to [destination]. |
 | **Variable Move/Store** |
-| `ldv` | Load value from cache address stored in X to A |
-| `stv` | Store value from A to cache address stored in X |
-| `ldvr` | Load value from ram address stored in X to A |
-| `stvr` | Store value from A to ram address stored in X |
+| `ldv` | Load value from memory address stored in X to A |
+| `stv` | Store value from A to memory address stored in X |
 | **Stack** |
 | `push [register]` | Push [register] to stack |
 | `pop [register]` | Pop from stack to [register] |

@@ -1,5 +1,4 @@
 const print x10
-
 main:
     mov $a, %data
     int print

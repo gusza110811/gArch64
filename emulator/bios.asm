@@ -4,6 +4,16 @@ const disk_com xFE00_0001
 const disk_data xFE00_0002
 const disk_stat xFE00_0003
 
+; setup the stack
+page xFFFFF
+mov $a, %xFFFF_FFFF
+setst
+
+; setup the IVT
+page xFFFFE
+mov $a, %xFFFF_E000
+setiv
+
 intr %x10, print
 intr %x12, input
 
@@ -15,6 +25,7 @@ intr %x15, disk_write
 page 0
 
 ; load the program in boot sector
+mov $a, %0
 call disk_read
 
 ajmp x0

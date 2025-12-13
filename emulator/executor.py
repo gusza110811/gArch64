@@ -10,18 +10,17 @@ class Executor:
     def execute(self, instruction:str, params:list[int]):
         emulator = self.emulator
         ram = emulator.ram
-        cache = emulator.cache
         registers = emulator.registers
         carry = emulator.carry
 
         if instruction == "HALT": emulator.running = False
 
+        elif instruction == "SETST": ram.stack_start = registers[0]
+        elif instruction == "SETIV": ram.int_start = registers[0]
+
         elif instruction == "LDAI": registers[0] = params[0]
         elif instruction == "LDXI": registers[1] = params[0]
         elif instruction == "LDYI": registers[2] = params[0]
-
-        elif instruction == "LDVC":registers[0] = cache.load(registers[1])
-        elif instruction == "STVC": cache.store(registers[1], registers[0])
 
         elif instruction == "ADD": registers[0] = registers[1] + registers[2] ; emulator.correct_register()
         elif instruction == "SUB": registers[0] = registers[1] - registers[2] ; emulator.correct_register()
@@ -46,14 +45,14 @@ class Executor:
         elif instruction == "AJEQ" and registers[1]==registers[2]: emulator.counter = params[0]
         elif instruction == "AJNE" and registers[1]==registers[2]: emulator.counter = params[0]
 
-        elif instruction == "RET": emulator.counter = cache.pop()
-        elif instruction == "ACALL": cache.push(emulator.counter); emulator.counter = params[0]
-        elif instruction == "ABZ" and registers[0] == 0: cache.push(emulator.counter); emulator.counter = params[0]
-        elif instruction == "ABNZ" and registers[0] != 0: cache.push(emulator.counter); emulator.counter = params[0]
-        elif instruction == "ABC" and carry: cache.push(emulator.counter); emulator.counter = params[0]
-        elif instruction == "ABNC" and (not carry): cache.push(emulator.counter); emulator.counter = params[0]
-        elif instruction == "ABEQ" and registers[1]==registers[2]: cache.push(emulator.counter); emulator.counter = params[0]
-        elif instruction == "ABNE" and registers[1]==registers[2]: cache.push(emulator.counter); emulator.counter = params[0]
+        elif instruction == "RET": emulator.counter = ram.pop_double()
+        elif instruction == "ACALL": ram.push_double(emulator.counter); emulator.counter = params[0]
+        elif instruction == "ABZ" and registers[0] == 0: ram.push_double(emulator.counter); emulator.counter = params[0]
+        elif instruction == "ABNZ" and registers[0] != 0: ram.push_double(emulator.counter); emulator.counter = params[0]
+        elif instruction == "ABC" and carry: ram.push_double(emulator.counter); emulator.counter = params[0]
+        elif instruction == "ABNC" and (not carry): ram.push_double(emulator.counter); emulator.counter = params[0]
+        elif instruction == "ABEQ" and registers[1]==registers[2]: ram.push_double(emulator.counter); emulator.counter = params[0]
+        elif instruction == "ABNE" and registers[1]==registers[2]: ram.push_double(emulator.counter); emulator.counter = params[0]
 
         elif instruction == "JMP": emulator.counter = emulator.begininst + params[0]
         elif instruction == "JZ" and registers[0] == 0: emulator.counter = emulator.begininst + params[0]
@@ -63,16 +62,16 @@ class Executor:
         elif instruction == "JEQ" and registers[1]==registers[2]: emulator.counter = emulator.begininst + params[0]
         elif instruction == "JNE" and registers[1]==registers[2]: emulator.counter = emulator.begininst + params[0]
 
-        elif instruction == "CALL": cache.push(emulator.counter); emulator.counter = emulator.begininst + params[0]
-        elif instruction == "BZ" and registers[0] == 0: cache.push(emulator.counter); emulator.counter = emulator.begininst + params[0]
-        elif instruction == "BNZ" and registers[0] != 0: cache.push(emulator.counter); emulator.counter = emulator.begininst + params[0]
-        elif instruction == "BC" and carry: cache.push(emulator.counter); emulator.counter = emulator.begininst + params[0]
-        elif instruction == "BNC" and (not carry): cache.push(emulator.counter); emulator.counter = emulator.begininst + params[0]
-        elif instruction == "BEQ" and registers[1]==registers[2]: cache.push(emulator.counter); emulator.counter = emulator.begininst + params[0]
-        elif instruction == "BNE" and registers[1]==registers[2]: cache.push(emulator.counter); emulator.counter = emulator.begininst + params[0]
+        elif instruction == "CALL": ram.push_double(emulator.counter); emulator.counter = emulator.begininst + params[0]
+        elif instruction == "BZ" and registers[0] == 0: ram.push_double(emulator.counter); emulator.counter = emulator.begininst + params[0]
+        elif instruction == "BNZ" and registers[0] != 0: ram.push_double(emulator.counter); emulator.counter = emulator.begininst + params[0]
+        elif instruction == "BC" and carry: ram.push_double(emulator.counter); emulator.counter = emulator.begininst + params[0]
+        elif instruction == "BNC" and (not carry): ram.push_double(emulator.counter); emulator.counter = emulator.begininst + params[0]
+        elif instruction == "BEQ" and registers[1]==registers[2]: ram.push_double(emulator.counter); emulator.counter = emulator.begininst + params[0]
+        elif instruction == "BNE" and registers[1]==registers[2]: ram.push_double(emulator.counter); emulator.counter = emulator.begininst + params[0]
 
         elif instruction == "JMPV": emulator.counter = registers[0]
-        elif instruction == "CALLV": cache.push(emulator.counter); emulator.counter = registers[0]
+        elif instruction == "CALLV": ram.push_double(emulator.counter); emulator.counter = registers[0]
 
         elif instruction == "MVAX": registers[1] = registers[0]
         elif instruction == "MVAY": registers[2] = registers[0]
@@ -81,25 +80,24 @@ class Executor:
         elif instruction == "MVYA": registers[0] = registers[2]
         elif instruction == "MVYX": registers[1] = registers[2]
 
-        elif instruction == "PUSHA": cache.push(registers[0])
-        elif instruction == "POPA": registers[0] = cache.pop()
-        elif instruction == "PUSHX": cache.push(registers[1])
-        elif instruction == "POPX": registers[1] = cache.pop()
-        elif instruction == "PUSHY": cache.push(registers[2])
-        elif instruction == "POPY": registers[2] = cache.pop()
+        elif instruction == "PUSHA": ram.push_double(registers[0])
+        elif instruction == "POPA": registers[0] = ram.pop_double()
+        elif instruction == "PUSHX": ram.push_double(registers[1])
+        elif instruction == "POPX": registers[1] = ram.pop_double()
+        elif instruction == "PUSHY": ram.push_double(registers[2])
+        elif instruction == "POPY": registers[2] = ram.pop_double()
         elif instruction == "PUSHR":
-            cache.push(registers[0])
-            cache.push(registers[1])
-            cache.push(registers[2])
+            ram.push_double(registers[0])
+            ram.push_double(registers[1])
+            ram.push_double(registers[2])
         elif instruction == "POPR":
-            registers[2] = cache.pop()
-            registers[1] = cache.pop()
-            registers[0] = cache.pop()
-
+            registers[2] = ram.pop_double()
+            registers[1] = ram.pop_double()
+            registers[0] = ram.pop_double()
 
         elif instruction == "INT":
-            address = cache.find_int(params[0])
-            cache.push(emulator.counter)
+            address = ram.find_int(params[0])
+            ram.push_double(emulator.counter)
             emulator.counter = address
 
         elif instruction == "LDA": registers[0] = ram.load(params[0])
@@ -126,10 +124,8 @@ class Executor:
 
         elif instruction == "MOV": ram.store(params[0],ram.load(params[1]))
 
-        elif instruction == "MVCR": ram.store(params[0],cache.load(params[1]))
-        elif instruction == "MVRC": cache.store(params[0],ram.load(params[1]))
-
-        elif instruction == "INTR": cache.register_int(params[0],emulator.begininst+params[1])
+        elif instruction == "INTR":
+            ram.register_int(params[0],emulator.begininst+params[1])
 
         elif instruction == "PAGE": ram.allocate_page(params[0])
         elif instruction == "FREE": ram.free_page(params[0])

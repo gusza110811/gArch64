@@ -20,6 +20,10 @@ class Opcodes:
         }
 
     def definitions(self):
+        # --- Special Register ---
+        self.define('SETST', 0x10, 0, [], 'Set/Change top of stack')
+        self.define('SETIV', 0x11, 0, [], 'Set/Change beginning of IVT')
+
         # --- Arithmetic ---
         self.define('ADD', 0x20, 0, [], 'A = X + Y')
         self.define('SUB', 0x21, 0, [], 'A = X - Y')
@@ -107,7 +111,7 @@ class Opcodes:
         self.define('BNE',  0x7E, 1, ['addr'], 'Call if X != Y')
 
 
-        # --- --- Extended Instructions --- ---
+        # --- Interrupt ---
         self.define("INT", 0x80, 1, ["Command"], "Raise interrupt to do a certain task")
         self.define('INTR', 0x90, 2, ['int_id','subroutine_address'], 'Map [int_id] to [subroutine_address]')
 
@@ -130,10 +134,11 @@ class Opcodes:
         # --- Page allocation ---
         self.define('PAGE', 0x9A, 1, ['page'], 'Allocate page to the first available frame')
         self.define('FREE', 0x9B, 1, ['page'], 'Unallocate page')
+        self.define('MOVE', 0x9C, 1, ['page_old','page_new'], 'Change ID of a page')
 
         # --- Block size ---
-        self.define('REDUCE', 0xA0, 0, [], 'Halves the block size (do nothing if blocksize is 1 word)')
-        self.define('EXTEND', 0xA1, 0, [], 'Doubles the block size')
+        self.define('REDC', 0xA0, 0, [], 'Halves the block size (do nothing if blocksize is 1 word)')
+        self.define('EXTN', 0xA1, 0, [], 'Doubles the block size')
 
         # --- Double-word RAM load/store ---
         self.define('LDAD', 0xB1, 1, ['addr'], 'Load from address(ram) into A')

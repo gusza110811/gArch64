@@ -18,6 +18,10 @@ class Assembler:
             # Halt
             "halt": Halt,
 
+            # Special Registers
+            "setst": Setst,
+            "setiv": Setiv,
+
             # Arithmetic
             "add": Add,
             "sub": Sub,

@@ -1,35 +1,6 @@
 import device
 import color
 
-class Cache:
-    def __init__(self):
-        self.data = [0] * (2**16)
-        self.stackstart = 0xFEFF # stack irl totally doesnt actually grow downward yes
-        self.stackaddr = 0
-
-        self.INTstart=0xFF00
-        return
-
-    def load(self,address:int):
-        return self.data[address]
-
-    def store(self,address:int,value:int):
-        self.data[address] = value
-
-    def push(self,value:int):
-        self.data[self.stackstart-self.stackaddr] = value
-        self.stackaddr += 1
-
-    def pop(self):
-        self.stackaddr -= 1
-        return self.data[self.stackstart-self.stackaddr]
-    
-    def register_int(self, id:int, target:int):
-        self.store(id+self.INTstart,target)
-
-    def find_int(self,id:int):
-        return self.load(id+self.INTstart)
-
 class Ram:
     def __init__(self):
         self.data:dict[(int,dict[(int,int)])] = {} # dict of int:frames(dict of int:int)
@@ -38,7 +9,34 @@ class Ram:
         # frame 0xFE000 is reserved for ports
         self.allocate_page(0xFE000,0xFE000)
         self.ports:list[device.Port] = []
+
+        self.stack_start = None
+        self.stack_pos = 0
+
+        self.int_start = None
+
+    def push(self,value:int):
+        self.store(self.stack_start-self.stack_pos,value)
+        self.stack_pos += 1
+
+    def pop(self):
+        self.stack_pos -= 1
+        return self.load(self.stack_start-self.stack_pos)
     
+    def push_double(self,value:int):
+        self.store_double(self.stack_start-self.stack_pos-4,value)
+        self.stack_pos += 4
+
+    def pop_double(self):
+        self.stack_pos -= 4
+        return self.load_double(self.stack_start-self.stack_pos-4)
+
+    def register_int(self, id:int, target:int, addr_size=4):
+        self.store_double((id*addr_size)+self.int_start,target)
+
+    def find_int(self,id:int,addr_size=4):
+        return self.load_double((id*addr_size)+self.int_start)
+
     def allocate_page(self, page:int, frame:int=None):
         def find_lowest_free(numbers):
             number_set = set(numbers)
@@ -53,6 +51,13 @@ class Ram:
 
         self.page_to_frame[page] = frame
     
+    def relocate_page(self, old_page:int, new_page:int):
+        try:
+            self.page_to_frame[new_page] = self.page_to_frame[old_page]
+            del self.page_to_frame[old_page]
+        except KeyError:
+            self.allocate_page(new_page)
+
     def free_page(self,page:int):
         try:
             del self.page_to_frame[page]

@@ -83,6 +83,14 @@ class Movd(Command):
         else:
             raise SyntaxError("Movd is only for register-memory and memory-memory operations, for other operations, use Mov")
 
+# Special Registers
+class Setst(Command):
+    def get_value(self, params = None, size=4, position=0):
+        return 0x10.to_bytes(2,'little')
+
+class Setiv(Command):
+    def get_value(self, params = None, size=4, position=0):
+        return 0x11.to_bytes(2,'little')
 
 # Arithmetic
 class Add(Command):
