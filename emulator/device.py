@@ -96,7 +96,7 @@ class DiskIO(Device):
         original_position = file_object.tell()
         file_object.seek(0, os.SEEK_END)
         size = file_object.tell()
-        file_object.seek(original_position)  # Restore original position
+        file_object.seek(original_position)
         return size
 
     def get_command(self, data:int):

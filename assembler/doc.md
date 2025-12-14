@@ -19,11 +19,10 @@ Each line is an instruction with its parameters. starts with the instruction (ca
 | --- | --- |
 | `$` | Register; A, X, and Y |
 | `%` | Immediate value; Constant value or a pointer to a memory address |
-| `*` | Cache Address |
 | None | Ram Address |
 
 #### Register
-For registers (`$[register]`) you use `a`, `x`, or `y` as register name, so `$a`, `$x`, or `$y` (case insensitive) coorespond to each registers respectively
+For registers (`$[register]`) you use `a`, `x`, or `y` as register name, so `$a`, `$x`, or `$y` (case insensitive) coorespond to each registers.
 
 #### Value prefixes
 For every parameters, you can use another prefix just after the type prefix (`$`,`%`,`*`), this correspond to the format of the value
@@ -39,16 +38,16 @@ For every parameters, you can use another prefix just after the type prefix (`$`
 Use `const` keyword followed by the name, then its value (`const [name] [value]`)
 
 #### Label Definition
-Add `:` to the label's name (`[name]:`)
+Add `:` to the label's name (`[name]:`), this sets a constant with the name of the label to a pointer to the next instruction
 
 ### Special Directives
 These are helper commands that give you more control over the output binary (case-insensitive)
 | Command | Usage |
 | --- | --- |
-| `.literal [values]` | Add literal values |
-| `.ascii [text]` | Add ASCII text |
-| `.zero [n]` | Add [n] number of zeroes |
-| `.org [addr]` | add zeroes until the next instruction starts at [addr] |
+| `.literal [values]` | Insert literal values |
+| `.ascii [text]` | Insert ASCII text |
+| `.zero [n]` | Insert [n] number of zeroes |
+| `.org [addr]` | Insert zeroes until the next instruction starts at [addr] |
 
 #### .ascii Escape Codes
 Used within `.ascii` directive to add a normally non-printable and unusable characters within the string
@@ -64,16 +63,15 @@ Used within `.ascii` directive to add a normally non-printable and unusable char
 Use `;` followed by the comment
 
 ## System and Hardware specification
-There is a BIOS system that runs on boot. it sets up useful commands and loads your program
-
-These can be called through `int [id]` instruction with the `id` as the command number in this table below,
+There is a BIOS system that runs on boot. loads the boot sector of your disk image and run it  
+it also sets up useful functions that can be called through `int [id]` instruction with the `id` as the command number in this table below,
 You set the A register to its parameter
 | Command | Usage |
 | --- | --- |
-| `print` (`16`) | Print string that starts at ram address stored in A |
-| `input` (`18`) | Get user input and save it to ram address stored in A |
+| `print` (`16`) | Print string that starts at address stored in A |
+| `input` (`18`) | Get user input and save it to address stored in A |
 | `disk_set_sector` (`19`) | Change current sector of the hard disk to value in A, set A to 0 if successful, set A to 1 if failed |
-| `disk_read` (`20`) | Read the current 512 bytes sector to memory startimg at address stores in A |
+| `disk_read` (`20`) | Read the current 512 bytes sector to memory starting at address stored in A |
 | `disk_write` (`21`) | Write a 512 byte chunk stored in memory starting at address stored in A |
 
 ### Memory Management
@@ -103,7 +101,7 @@ allocate more by using `page [page-id]` where `page-id` is a new page
 | `and` | Bitwise AND X and Y then save to A |
 | `or` | Bitwise OR X and Y then save to A |
 | `xor` | Bitwise XOR X and Y then save to A |
-| `not` | Bitwise NOT X and Y then save to A |
+| `not` | Bitwise NOT X then save to A |
 | `shr` | Shift X by Y to the right then save to A |
 | `shl` | Shift X by Y to the left then save to A |
 | `shrb` | Shift X by 8 bit to the right then save to A |
@@ -143,11 +141,11 @@ allocate more by using `page [page-id]` where `page-id` is a new page
 | `abeq [address]` | Call function at [address] if X = Y |
 | `abne [address]` | Call function at [address] if X = Y |
 | **Indirect Flow Control** |
-| `jmpv` | Jump to Address stored in register A |
-| `callv` | Call function at Address stored in register A |
+| `jmpv` | Jump to address stored in register A |
+| `callv` | Call function at address stored in register A |
 | **Move** |
 | `mov [destination], [source]` | Copy from [source] to [destination]. Only copy the 8 rightmost bit if copying from a register to memory |
-| `movd [destination], [source]` | Copy 32 bit (4 bytes) of data at [source] to [destination]. |
+| `movd [destination], [source]` | Copy 32 bit (4 bytes) of data at [source] to [destination]. (only register-memory and memory-memory copy) |
 | **Variable Move/Store** |
 | `ldv` | Load value from memory address stored in X to A |
 | `stv` | Store value from A to memory address stored in X |
@@ -161,4 +159,5 @@ allocate more by using `page [page-id]` where `page-id` is a new page
 | `intr [int-id], [label]` | Assign [int-id] to function at [label] |
 | **Page allocation and freeing** |
 | `page [page-id]` | Allocate a page to the first available frame |
+| `move [id-old] [id-new]` | Give a new id to an allocated page |
 | `free [page-id]` | Unallocate a page |

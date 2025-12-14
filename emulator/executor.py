@@ -129,7 +129,7 @@ class Executor:
 
         elif instruction == "PAGE": ram.allocate_page(params[0])
         elif instruction == "FREE": ram.free_page(params[0])
-        elif instruction == "MOVE": ram.relocate_page(params[0])
+        elif instruction == "MOVE": ram.relocate_page(params[0],params[1])
 
         elif instruction == "EXTN": emulator.blocksize = min(4, emulator.blocksize * 2)
 

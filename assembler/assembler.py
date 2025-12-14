@@ -100,6 +100,7 @@ class Assembler:
             # Paging
             "page": Page,
             "free": Free,
+            "move": Move,
 
             # Bitlength operations
             "reduce": Reduce,
@@ -119,17 +120,17 @@ class Assembler:
             try:
                 return (int(word[1:],base=2), True)
             except ValueError:
-                raise ValueError(f"Can't decode `{word}` as binary")
+                raise ValueError(f"Couldn't decode `{word}` as binary")
         elif word.startswith("x"):
             try:
                 return (int(word[1:],base=16),True)
             except ValueError:
-                raise ValueError(f"Can't decode `{word}` as hexadecimal")
+                raise ValueError(f"Couldn't decode `{word}` as hexadecimal")
         elif word.startswith("o"):
             try:
                 return (int(word[1:],base=8),True)
             except ValueError:
-                raise ValueError(f"Can't decode `{word}` as octal")
+                raise ValueError(f"Couldn't decode `{word}` as octal")
         elif word.startswith("'"):
             word = word[1:]
             if len(word) > 1:
@@ -141,7 +142,7 @@ class Assembler:
             except ValueError:
                 if not word:
                     return (0,True)
-                raise ValueError(f"Can't decode {word}")
+                raise ValueError(f"Unable to decode {word}")
 
     def parse_parameters(self,parameters:str):
         if len(parameters) == 0:
@@ -213,12 +214,12 @@ class Assembler:
             target = self.decode(line[5:].strip())[0]
             size = len(pre)
             if size > target:
-                raise SyntaxError(f"Target origin too low, target: {target}, size of binary preceding: {size}")
+                raise SyntaxError(f"Target origin too low. target: {target}, size of binary preceding: {size}")
             return bytes(target-size)
 
 
         else:
-            raise SyntaxError(f"Invalid dot command `{command}`")
+            raise SyntaxError(f"Invalid dot directive `{command}`")
 
     def parse_line(self,line:str,pre:bytes) -> bytes:
         result = bytes()
@@ -258,11 +259,11 @@ class Assembler:
             try:
                 result += self.parse_line(line,result)
             except parsingError as e:
-                def find_first_non_whitespace(s):
+                def find_first_non_whitespace(s:str):
                     for i, char in enumerate(s):
                         if not char.isspace():
                             return i
-                    return -1  # Return -1 if no non-whitespace character is found
+                    return -1
                 print(color.fg.BRIGHT_MAGENTA+f"In file `{self.name}` at line {idx+1}:"+color.RESET)
                 print(color.fg.BRIGHT_RED+f"    {line}")
                 print(color.fg.RED+f"    {" "*find_first_non_whitespace(line)}{"^"*len(line.strip())}")
