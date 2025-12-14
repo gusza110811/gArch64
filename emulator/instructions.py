@@ -137,8 +137,7 @@ class Opcodes:
         self.define('MOVE', 0x9C, 1, ['page_old','page_new'], 'Change ID of a page')
 
         # --- Block size ---
-        self.define('REDC', 0xA0, 0, [], 'Halves the block size (do nothing if blocksize is 1 word)')
-        self.define('EXTN', 0xA1, 0, [], 'Doubles the block size')
+        self.define('EXTN', 0xA1, 0, [], 'Doubles the block size and register width, max at 4 words (8 bytes; 64 bit)')
 
         # --- Double-word RAM load/store ---
         self.define('LDAD', 0xB1, 1, ['addr'], 'Load from address(ram) into A')

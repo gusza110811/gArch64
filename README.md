@@ -1,5 +1,5 @@
 # gArch64
-A hypothetical idea of a (almost)64-bit processor
+A hypothetical idea of a 64-bit processor, Although only the 32-bit baseline is implemented as of now
 
 ### The Emulator
 It emulates the system
