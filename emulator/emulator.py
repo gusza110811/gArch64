@@ -154,12 +154,12 @@ class Emulator:
                 # (relavent cache address, relavent cache value)
                 # (relavent ram address, relavent ram value)
                 # was a jump done
-                ram_revalence = r"^(?:ST|LD)(?:A|X|Y)D?$|^MOVD?$"
+                ram_revalence = r"(^(?:ST|LD)[AXY]|^MOV)?[WDQ]"
                 jumped = self.counter != prev_addr
                 try:
-                    rammed = (params[0], self.ram.load_bypass_dev(params[0])) if re.match(ram_revalence, name) else (self.registers[1], self.ram.load_bypass_dev(self.registers[1])) if (name == "LDV" or name == "STV") else None
+                    rammed = (params[0], self.ram.load_bypass_dev(params[0])) if re.match(ram_revalence, name) else (self.registers[1], self.ram.load_bypass_dev(self.registers[1])) if (name.startswith("LDV") or name.startswith("STV")) else None
                 except pageFault:
-                    rammed = (params[0], 0) if re.match(ram_revalence, name) else (self.registers[1], self.ram.load_bypass_dev(self.registers[1])) if (name == "LDV" or name == "STV") else None
+                    rammed = (params[0], 0) if re.match(ram_revalence, name) else (self.registers[1], self.ram.load_bypass_dev(self.registers[1])) if (name.startswith("LDV") or name.startswith("STV")) else None
                 try:
                     self.trace.append((
                         self.begininst,

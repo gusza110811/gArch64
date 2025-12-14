@@ -183,6 +183,9 @@ Fault interrupts
 | `mul` | Multiply X by Y and save to A |
 | `div` | Divide X by Y and save to A |
 | `mod` | Modulo X by Y and save to A |
+| `sxtw` | Convert signed 8 bit to signed 16 bit in register A |
+| `sxtd` | Convert signed 16 bit to signed 32 bit in register A |
+| `sxtq` | Convert signed 32 bit to signed 64 bit in register A |
 | **Bitwise** |
 | `and` | Bitwise AND X and Y then save to A |
 | `or` | Bitwise OR X and Y then save to A |
@@ -231,7 +234,9 @@ Fault interrupts
 | `callv` | Call function at address stored in register A |
 | **Move** |
 | `mov [destination], [source]` | Copy from [source] to [destination]. Only copy the 8 rightmost bit if copying from a register to memory |
+| `movw [destination], [source]` | Copy 16 bit (2 bytes) of data at [source] to [destination]. (only register-memory and memory-memory copy) |
 | `movd [destination], [source]` | Copy 32 bit (4 bytes) of data at [source] to [destination]. (only register-memory and memory-memory copy) |
+| `movq [destination], [source]` | Copy 64 bit (8 bytes) of data at [source] to [destination]. (only register-memory and memory-memory copy) |
 | **Variable Move/Store** |
 | `ldv` | Load value from memory address stored in X to A |
 | `stv` | Store value from A to memory address stored in X |

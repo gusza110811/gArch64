@@ -83,6 +83,39 @@ class Movd(Command):
         else:
             raise SyntaxError("Movd is only for register-memory and memory-memory operations, for other operations, use Mov")
 
+class Movq(Command):
+    def get_value(self, params = None, size=4, position=0) -> bytes:
+        destination = params[0]
+        source = params[-1]
+        # Load ram
+        if isinstance(destination,Register) and isinstance(source,RamAddr):
+            return (0xC1 + destination.value).to_bytes(2,"little") + source.value.to_bytes(size,byteorder="little")
+        # Store ram
+        elif isinstance(destination,RamAddr) and isinstance(source,Register):
+            return (0xC4 + source.value).to_bytes(2,"little") + destination.value.to_bytes(size,byteorder="little")
+        # MOV
+        elif isinstance(destination,RamAddr) and isinstance(source,RamAddr):
+            return 0xC9.to_bytes(2,"little") + self.encode_immediate([destination,source],size,params_count=2)
+        else:
+            raise SyntaxError("Movq is only for register-memory and memory-memory operations, for other operations, use Mov")
+
+class Movw(Command):
+    def get_value(self, params = None, size=4, position=0) -> bytes:
+        destination = params[0]
+        source = params[-1]
+        # Load ram
+        if isinstance(destination,Register) and isinstance(source,RamAddr):
+            return (0xD1 + destination.value).to_bytes(2,"little") + source.value.to_bytes(size,byteorder="little")
+        # Store ram
+        elif isinstance(destination,RamAddr) and isinstance(source,Register):
+            return (0xD4 + source.value).to_bytes(2,"little") + destination.value.to_bytes(size,byteorder="little")
+        # MOV
+        elif isinstance(destination,RamAddr) and isinstance(source,RamAddr):
+            return 0xD9.to_bytes(2,"little") + self.encode_immediate([destination,source],size,params_count=2)
+        else:
+            raise SyntaxError("Movw is only for register-memory and memory-memory operations, for other operations, use Mov")
+
+
 # Special Registers
 class Setst(Command):
     def get_value(self, params = None, size=4, position=0):
@@ -112,6 +145,18 @@ class Div(Command):
 class Mod(Command):
     def get_value(self, params=None, size=4, position=0):
         return (0x2C).to_bytes(2, "little")
+
+class Sxtw(Command):
+    def get_value(self, params=None, size=4, position=0):
+        return (0x2D).to_bytes(2, "little")
+
+class Sxtd(Command):
+    def get_value(self, params=None, size=4, position=0):
+        return (0x2E).to_bytes(2, "little")
+
+class Sxtq(Command):
+    def get_value(self, params=None, size=4, position=0):
+        return (0x2F).to_bytes(2, "little")
 
 # Bitwise logic
 class And(Command):

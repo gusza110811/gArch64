@@ -28,17 +28,25 @@ class Ram:
         self.store(self.stack_start-self.stack_pos,value)
         self.stack_pos += 1
 
+    def pop_word(self):
+        self.stack_pos -= 2
+        return self.load_word(self.stack_start-self.stack_pos-1)
+
+    def push_word(self,value:int):
+        self.store_word(self.stack_start-self.stack_pos-1,value)
+        self.stack_pos += 2
+
     def pop(self):
         self.stack_pos -= 1
         return self.load(self.stack_start-self.stack_pos)
-    
+
     def push_double(self,value:int):
-        self.store_double(self.stack_start-self.stack_pos-4,value)
+        self.store_double(self.stack_start-self.stack_pos-3,value)
         self.stack_pos += 4
 
     def pop_double(self):
         self.stack_pos -= 4
-        return self.load_double(self.stack_start-self.stack_pos-4)
+        return self.load_double(self.stack_start-self.stack_pos-3)
 
     def register_int(self, id:int, target:int):
         if id > 512:
@@ -121,7 +129,29 @@ class Ram:
             return frame[address]
         except KeyError:
             return 0
+
+    def load_quad(self, address:int, absolute=False):
+        return (
+            self.load(address+7,absolute) << 56 |
+            self.load(address+6,absolute) << 48 |
+            self.load(address+5,absolute) << 40 |
+            self.load(address+4,absolute) << 32 |
+            self.load(address+3,absolute) << 24 |
+            self.load(address+2,absolute) << 16 |
+            self.load(address+1,absolute) << 8 |
+            self.load(address,absolute)
+        )
     
+    def store_quad(self, address:int, value:int, absolute=False):
+        self.store(address,value, absolute)
+        self.store(address+1,value >> 8, absolute)
+        self.store(address+2,value >> 16, absolute)
+        self.store(address+3,value >> 24, absolute)
+        self.store(address+4,value >> 32, absolute)
+        self.store(address+5,value >> 40, absolute)
+        self.store(address+6,value >> 48, absolute)
+        self.store(address+7,value >> 56, absolute)
+
     def load_double(self, address:int, absolute=False):
         return self.load(address+3,absolute) << 24 | self.load(address+2,absolute) << 16 | self.load(address+1,absolute) << 8 | self.load(address,absolute)
     
@@ -130,6 +160,13 @@ class Ram:
         self.store(address+1,value >> 8, absolute)
         self.store(address+2,value >> 16, absolute)
         self.store(address+3,value >> 24, absolute)
+
+    def load_word(self, address:int, absolute=False):
+        return self.load(address+1,absolute) << 8 | self.load(address,absolute)
+    
+    def store_word(self, address:int, value:int, absolute=False):
+        self.store(address,value, absolute)
+        self.store(address+1,value >> 8, absolute)
 
     def get_frame(self, frame_id:int):
         try:

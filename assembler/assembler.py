@@ -28,6 +28,9 @@ class Assembler:
             "mul": Mul,
             "div": Div,
             "mod": Mod,
+            "sxtw": Sxtw,
+            "sxtd": Sxtd,
+            "sxtq": Sxtq,
 
             # Bitwise
             "and": And,
@@ -82,6 +85,8 @@ class Assembler:
             # Move
             "mov": Mov,
             "movd": Movd,
+            "movq": Movq,
+            "movw": Movw,
 
             # Stack
             "push": Push,
@@ -102,7 +107,7 @@ class Assembler:
             "free": Free,
             "move": Move,
 
-            # Bitlength operations
+            # block size operations
             "reduce": Reduce,
             "extend": Extend,
         }
@@ -335,15 +340,21 @@ if __name__ == "__main__":
         code = sourcefile.read()
 
     output = assembler.main(code)
-    constants = assembler.const
+    constants:dict[str,int] = assembler.const
     print("\nConstants used:")
     maxlen = len(str(len(constants)))
+    maxnamelen = max([len(item) for item in constants.keys()])
+    maxlinelen = 0
     for idx, (name,value) in enumerate(constants.items()):
         if is_ascii_printable_byte(value):
-            print(f"{str(idx).zfill(maxlen)}: {name} = {value} (`{chr(value)}` or {value:02X})")
+            line = f"{str(idx).zfill(maxlen)}: {name} = {value} (`{chr(value)}` or {value:02X})"
         else:
-            print(f"{str(idx).zfill(maxlen)}: {name} = {value} ({value:02X})")
-    print("<","="*len(constants)*2,">",sep="=")
+            line = f"{str(idx).zfill(maxlen)}: {name} = {value} ({value:02X})"
+        if len(line) > maxlinelen:
+            maxlinelen = len(line)
+        print(line)
+        
+    print("<"+"="*maxlinelen+">")
 
     with open(dest,"wb") as destfile:
         destfile.write(output)

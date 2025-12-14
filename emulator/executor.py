@@ -12,6 +12,18 @@ class Executor:
         ram = emulator.ram
         registers = emulator.registers
         carry = emulator.carry
+        # extend 8 bit to 16 bit
+        def sign_extend_word(value):
+            value = value & 0xFF
+            return value + (value & 0x80)*0x1FE
+        # extend 16 bit to 32 bit
+        def sign_extend_double(value):
+            value = value & 0xFFFF
+            return value + (value & 0x8000)*0x1FFFE
+        # extend 32 bit to 64 bit
+        def sign_extend_quad(value):
+            value = value & 0xFFFF_FFFF
+            return value + (value & 0x8000_0000)*0x1FFFF_FFFE
 
         if instruction == "HALT": emulator.running = False
 
@@ -27,6 +39,9 @@ class Executor:
         elif instruction == "MUL": registers[0] = registers[1] * registers[2] ; emulator.correct_register()
         elif instruction == "DIV": registers[0] = registers[1] // registers[2] ; emulator.correct_register()
         elif instruction == "MOD": registers[0] = registers[1] % registers[2] ; emulator.correct_register()
+        elif instruction == "SXTW": registers[0] = sign_extend_word(registers[0])
+        elif instruction == "SXTD": registers[0] = sign_extend_double(registers[0])
+        elif instruction == "SXTQ": registers[0] = sign_extend_quad(registers[0])
 
         elif instruction == "AND": registers[0] = registers[1] & registers[2]
         elif instruction == "OR": registers[0] = registers[1] | registers[2]
@@ -110,6 +125,7 @@ class Executor:
 
         elif instruction == "LDV": registers[0] = ram.load(registers[1])
         elif instruction == "STV": ram.store(registers[1],registers[0])
+        elif instruction == "MOV": ram.store(params[0],ram.load(params[1]))
 
         elif instruction == "LDAD": registers[0] = ram.load_double(params[0])
         elif instruction == "LDXD": registers[1] = ram.load_double(params[0])
@@ -121,8 +137,31 @@ class Executor:
 
         elif instruction == "LDVD": registers[0] = ram.load_double(registers[1])
         elif instruction == "STVD": ram.store_double(registers[1],registers[0])
+        elif instruction == "MOVD": ram.store_double(params[0],ram.load_double(params[1]))
 
-        elif instruction == "MOV": ram.store(params[0],ram.load(params[1]))
+        elif instruction == "LDAQ": registers[0] = ram.load_quad(params[0])
+        elif instruction == "LDXQ": registers[1] = ram.load_quad(params[0])
+        elif instruction == "LDYQ": registers[2] = ram.load_quad(params[0])
+
+        elif instruction == "STAQ": ram.store_quad(params[0],registers[0])
+        elif instruction == "STXQ": ram.store_quad(params[0],registers[1])
+        elif instruction == "STYQ": ram.store_quad(params[0],registers[2])
+
+        elif instruction == "LDVQ": registers[0] = ram.load_quad(registers[1])
+        elif instruction == "STVQ": ram.store_quad(registers[1],registers[0])
+        elif instruction == "MOVQ": ram.store_quad(params[0],ram.load_quad(params[1]))
+
+        elif instruction == "LDAW": registers[0] = ram.load_word(params[0])
+        elif instruction == "LDXW": registers[1] = ram.load_word(params[0])
+        elif instruction == "LDYW": registers[2] = ram.load_word(params[0])
+
+        elif instruction == "STAW": ram.store_word(params[0],registers[0])
+        elif instruction == "STXW": ram.store_word(params[0],registers[1])
+        elif instruction == "STYW": ram.store_word(params[0],registers[2])
+
+        elif instruction == "LDVW": registers[0] = ram.load_word(registers[1])
+        elif instruction == "STVW": ram.store_word(registers[1],registers[0])
+        elif instruction == "MOVW": ram.store_word(params[0],ram.load_word(params[1]))
 
         elif instruction == "INTR":
             ram.register_int(params[0],emulator.begininst+params[1])
@@ -131,6 +170,7 @@ class Executor:
         elif instruction == "FREE": ram.free_page(params[0])
         elif instruction == "MOVE": ram.relocate_page(params[0],params[1])
 
+        elif instruction == "REDC": emulator.blocksize = max(1, emulator.blocksize * 2)
         elif instruction == "EXTN": emulator.blocksize = min(4, emulator.blocksize * 2)
 
 if TYPE_CHECKING:
