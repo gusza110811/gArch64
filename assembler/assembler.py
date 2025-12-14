@@ -114,6 +114,13 @@ class Assembler:
         return result
 
     def decode(self,word:str) -> tuple[int,bool]:
+        if "+" in word:
+            parts = word.split("+")
+            return (self.decode(parts[0].strip())[0] + self.decode("+".join(parts[1:]).strip())[0], False)
+        elif "-" in word:
+            parts = word.split("-")
+            return (self.decode(parts[0].strip())[0] - self.decode("-".join(parts[1:]).strip())[0], False)
+
         if word in self.const:
             return (self.const[word], False)
         elif word.startswith("b"):

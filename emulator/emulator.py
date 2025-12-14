@@ -60,7 +60,7 @@ class Emulator:
                 bios = biosfile.read()
         except FileNotFoundError:
             raise executionError("BIOS binary not found")
-        
+
         for idx, value in enumerate(bios):
             self.ram.store(idx+0xFFFF_0000, value) # offset 4294901760
 
@@ -87,6 +87,14 @@ class Emulator:
             self.counter += 1
             return value
 
+        def int_fault(id):
+            target = self.ram.find_int(id)
+            if target:
+                self.ram.push_double(self.counter)
+                self.counter = target
+            elif target != 0x102:
+                int_fault(0x100)
+
         while self.running:
             prev_time = time.perf_counter_ns()
 
@@ -96,10 +104,8 @@ class Emulator:
             try:
                 info = self.opcodes.OPCODES[opcode]
             except KeyError:
-                if self.crash_on_unknown:
-                    raise executionError(f"Unknown OPCODE {opcode:4X} at {self.begininst:X}")
-                else:
-                    continue
+                int_fault(0x101)
+
             name:str = info["mnemonic"]
             size = info["size"]
 
@@ -128,7 +134,15 @@ class Emulator:
                     param = param - (1 << (self.blocksize * 16))
                 params[1] = param
 
-            self.executor.execute(name,params)
+            try:
+                self.executor.execute(name,params)
+            except pageFault:
+                int_fault(0x102)
+            except ivtOverflow:
+                int_fault(0x103)
+            except undefinedInt:
+                int_fault(0x100)
+
             self.time.append(time.perf_counter_ns()-prev_time)
             
             if self.do_trace and tracing:
@@ -140,17 +154,19 @@ class Emulator:
                 # (relavent cache address, relavent cache value)
                 # (relavent ram address, relavent ram value)
                 # was a jump done
-                cache_revalence = r"^(?:ST|LD)(?:A|X|Y)C$|^MOV"
                 ram_revalence = r"^(?:ST|LD)(?:A|X|Y)D?$|^MOVD?$"
                 jumped = self.counter != prev_addr
+                try:
+                    rammed = (params[0], self.ram.load_bypass_dev(params[0])) if re.match(ram_revalence, name) else (self.registers[1], self.ram.load_bypass_dev(self.registers[1])) if (name == "LDV" or name == "STV") else None
+                except pageFault:
+                    rammed = (params[0], 0) if re.match(ram_revalence, name) else (self.registers[1], self.ram.load_bypass_dev(self.registers[1])) if (name == "LDV" or name == "STV") else None
                 try:
                     self.trace.append((
                         self.begininst,
                         opcode, name,
                         params.copy() + [0]*(2-len(params)),
                         self.registers.copy(),
-                        (params[0], self.cache.load(params[0])) if re.match(cache_revalence, name) else (self.registers[1], self.cache.load(self.registers[1])) if (name == "LDVC" or name == "STVC") else None,
-                        (params[0], self.ram.load_bypass_dev(params[0])) if re.match(ram_revalence, name) else (self.registers[1], self.ram.load_bypass_dev(self.registers[1])) if (name == "LDV" or name == "STV") else None,
+                        rammed,
                         jumped
                     ))
                 except IndexError:
@@ -308,19 +324,14 @@ if __name__ == "__main__":
                 eprint("Writing traceback")
             with open(".trace","w") as tracefile:
                 for idx, entry in enumerate(emulator.trace):
-                    if emulator.trace[idx-1][7]:
+                    if emulator.trace[idx-1][6]:
                         tracefile.write(f"> ")
                     else:
                         tracefile.write(f"  ")
 
                     tracefile.write(f"{entry[0]:08X}: [{entry[1]:02X}] {entry[2].ljust(5)} {', '.join([f"{param:8X}" for param in entry[3]])}   //   A: {entry[4][0]:8X} , X: {entry[4][1]:8X} , Y: {entry[4][2]:8X}   //")
                     if entry[5]:
-                        tracefile.write(f"   *x{entry[5][0]:04X}     = {entry[5][1]:8X}")
-                    try:
-                        if entry[6]:
-                            tracefile.write(f"    x{entry[6][0]:08X} =       {entry[6][1]:2X}")
-                    except:
-                        print(entry)
+                        tracefile.write(f"    x{entry[5][0]:08X} =       {entry[5][1]:2X}")
                     tracefile.write(f"\n")
         if dumpr:
             if verbose:

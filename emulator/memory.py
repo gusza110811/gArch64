@@ -1,6 +1,15 @@
 import device
 import color
 
+class pageFault(Exception):
+    pass
+
+class ivtOverflow(Exception):
+    pass
+
+class undefinedInt(Exception):
+    pass
+
 class Ram:
     def __init__(self):
         self.data:dict[(int,dict[(int,int)])] = {} # dict of int:frames(dict of int:int)
@@ -32,10 +41,18 @@ class Ram:
         return self.load_double(self.stack_start-self.stack_pos-4)
 
     def register_int(self, id:int, target:int):
-        self.store_double((id*4)+self.int_start,target)
+        if id > 512:
+            raise ivtOverflow
+
+        self.store_double((id*8)+self.int_start,target)
 
     def find_int(self,id:int):
-        return self.load_double((id*4)+self.int_start)
+        addr = self.load_double((id*8)+self.int_start)
+
+        if (addr == 0) and (id < 0x100):
+            raise undefinedInt
+
+        return addr
 
     def allocate_page(self, page:int, frame:int=None):
         def find_lowest_free(numbers):
@@ -50,6 +67,7 @@ class Ram:
             frame = find_lowest_free(self.page_to_frame.values())
 
         self.page_to_frame[page] = frame
+        self.data[frame] = {}
     
     def relocate_page(self, old_page:int, new_page:int):
         try:
@@ -75,7 +93,7 @@ class Ram:
         try:
             frame = self.page_to_frame[page]
         except KeyError:
-            frame = page
+            raise pageFault
         return frame, address
 
     def register_port(self, port:device.Port):
@@ -93,9 +111,14 @@ class Ram:
                 return device.read()
         except IndexError:
             pass
+        
+        try:
+            frame = self.data[frame]
+        except KeyError:
+            raise pageFault
 
         try:
-            return self.data[frame][address]
+            return frame[address]
         except KeyError:
             return 0
     
@@ -123,6 +146,7 @@ class Ram:
             return 0
 
     def store(self, address:int, value:int, absolute=False):
+
         frame, address = self.getaddr_real(address) if absolute else self.getaddr_virtual(address)
         value = value & 0xFF
         # device
@@ -135,9 +159,11 @@ class Ram:
                 pass
 
         if value != 0:
-            if not self.data.get(frame):
-                self.data[frame] = {}
-            self.data[frame][address] = value
+            try:
+                frame = self.data[frame]
+            except KeyError:
+                raise pageFault
+            frame[address] = value
         else:
             try:
                 del self.data[frame][address]

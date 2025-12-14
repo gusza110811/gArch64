@@ -14,28 +14,97 @@ use `-o [name]` or `--output [name]` if you want the output binary to have a dif
 ### Format
 Each line is an instruction with its parameters. starts with the instruction (case insensitive), followed by parameters separated by comma(`,`), which ends up looking like `INST param1, param2`
 
-### Prefix
-| Prefix | Usage |
-| --- | --- |
-| `$` | Register; A, X, and Y |
-| `%` | Immediate value; Constant value or a pointer to a memory address |
-| None | Ram Address |
+### Literal Values
 
-#### Register
-For registers (`$[register]`) you use `a`, `x`, or `y` as register name, so `$a`, `$x`, or `$y` (case insensitive) coorespond to each registers.
+Literal values are evaluated at assembly time and may refer to constants, labels, or registers.
 
-#### Value prefixes
-For every parameters, you can use another prefix just after the type prefix (`$`,`%`,`*`), this correspond to the format of the value
-| Prefix | Format|
+#### Structure
+```
+[TypePrefix][ValuePrefix]Value ( + Value | - Value )*
+```
+* All additions and subtractions are resolved during assembly.
+* Expressions are evaluated left-to-right.
+* Whitespace is ignore.
+
+Examples
+
+* `%label + 16`
+-> immediate value of label plus 16
+If label = 32, result is **48**
+
+* `label - K`
+-> RAM address label minus constant K
+If label = 32 and K = 3, result is **29**
+
+### Value prefixes
+
+Each value may specify its numeric format using a prefix:
+
+|Prefix | Format |
 | --- | --- |
 | `x` | Hexadecimal |
 | `b` | Binary |
 | `o` | Octal |
-| `'` | Ascii Character |
+| `'` | ASCII character|
+
+Examples:
+* `xFF`
+* `b1010`
+* `'A`
+
+### Type prefix
+
+The type prefix determines how the value is interpreted:
+
+|Prefix | Meaning|
+| --- | --- |
+| `$` | Register reference |
+| `%` | Immediate value (constant or pointer) |
+| *(none)* | RAM address |
+
+Examples:
+* `label` → RAM address of `label`
+* `%label` → pointer to `label`
+* `%x10` → immediate value `16`
+
+#### When to use `%` and when to not use a type prefix
+```
+; Assume label is located at address 30
+
+mov $X, %label ; Loads the address (pointer) of label into register X
+               ; Result: X = 30
+
+mov $Y, label  ; Loads the value stored at memory address label into register Y
+               ; Result: Y = 72 ('H' in ASCII)
+
+label:
+    .ascii Hello!\n
+    .zero
+```
+
+### Registers
+
+Registers are written as:
+```
+$A   $X   $Y
+```
+* Register names are case-insensitive.
+* Only A, X, and Y are valid.
+
+### Literal value addition and subtraction
+
+Literal values may be offset using `+` or `-`:
+* Offsets apply to both immediate values and RAM addresses.
+* Offsets must be resolvable at assembly time.
+
+Examples:
+* `%label + 4`
+* `label - 1`
+* `%x100 + K`
 
 ### Definition
 #### Constants Definition
-Use `const` keyword followed by the name, then its value (`const [name] [value]`)
+Use `const` keyword followed by the name, then its value (`const [name] [literal value]`)
 
 #### Label Definition
 Add `:` to the label's name (`[name]:`), this sets a constant with the name of the label to a pointer to the next instruction
@@ -87,6 +156,23 @@ allocate more by using `page [page-id]` where `page-id` is a new page
 |    56K | `FFFF_0000`-`FFFF_DFFF` | BIOS Reserved |
 |     4K | `FFFF_E000`-`FFFF_EFFF` | IVT Memory |
 |     4K | `FFFF_F000`-`FFFF_FFFF` | Stack |
+
+#### Interrupts
+As mentioned before that BIOS defines software interrupts, you can define other interrupts as well, like for handling faults or hardware interrupts
+
+This is what each interrupt IDs are used for
+| range (hexadecimal) | purpose |
+| --- | --- |
+| `000`-`0FF` | Software interrupts |
+| `100`-`17F` | Fault interrupts |
+| `180`-`1FF` | Hardware interrupts |
+
+Fault interrupts
+| interrupt id (hexadecimal) | Fault |
+| `100` | Interrupt fault: The software or fault interrupt attempted to be called is undefined |
+| `101` | Opcode fault; The CPU decoded an opcode in memory and is unable to execute it |
+| `102` | Page fault; Attempted to access memory in unallocated address |
+| `103` | IVT overflow; The interrupt id attempted to be registerd is above 512 |
 
 ## Opcodes
 | OPCODE | Meaning/Usage |

@@ -14,12 +14,19 @@ page xFFFFE
 mov $a, %xFFFF_E000
 setiv
 
+; define the functions
 intr %x10, print
 intr %x12, input
 
 intr %x13, disk_set_sector
 intr %x14, disk_read
 intr %x15, disk_write
+
+; define the fault handlers
+intr %x100, intfault
+intr %x101, opcodefault
+intr %x102, pagefault
+intr %x103, intoverflow
 
 ; allocate the 0 page
 page 0
@@ -166,3 +173,35 @@ printloop:
     jnz printloop
     mov console, $a
 ret
+
+opcodefault:
+    mov $a, %xFFFF_0000 + opcodefault_text
+    call print
+ret
+
+pagefault:
+    mov $a, %xFFFF_0000 + pagefault_text
+    call print
+ret
+
+intfault:
+    mov $a, %xFFFF_0000 + intfault_text
+    call print
+ret
+
+intoverflow:
+    mov $a, %xFFFF_0000 + intoverflow_text
+    call print
+ret
+
+opcodefault_text:
+    .ascii OPCODEFAULT\0
+
+pagefault_text:
+    .ascii PAGEFAULT\0
+
+intfault_text:
+    .ascii INTFAULT\0
+
+intoverflow_text:
+    .ascii INTOVERFLOW\0
