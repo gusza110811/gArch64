@@ -146,7 +146,8 @@ allocate more by using `page [page-id]` where `page-id` is a new page
 | `jmpv` | Jump to Address stored in register A |
 | `callv` | Call function at Address stored in register A |
 | **Move** |
-| `mov [destination], [source]` | Copy from [source] to [destination]. |
+| `mov [destination], [source]` | Copy from [source] to [destination]. Only copy the 8 rightmost bit if copying from a register to memory |
+| `movd [destination], [source]` | Copy 32 bit (4 bytes) of data at [source] to [destination]. |
 | **Variable Move/Store** |
 | `ldv` | Load value from memory address stored in X to A |
 | `stv` | Store value from A to memory address stored in X |
@@ -157,7 +158,7 @@ allocate more by using `page [page-id]` where `page-id` is a new page
 | `popr` | Pop from stack to every register (Y register first, return to state "saved" by `pushr`) |
 | **Interrupts** |
 | `int [int-id]` | Call interrupt assigned to [int-id] |
-| `intr [int-id], [address]` | Assign [int-id] to function at [address] |
+| `intr [int-id], [label]` | Assign [int-id] to function at [label] |
 | **Page allocation and freeing** |
 | `page [page-id]` | Allocate a page to the first available frame |
 | `free [page-id]` | Unallocate a page |

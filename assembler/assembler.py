@@ -112,35 +112,35 @@ class Assembler:
         result = rawline.split(";")[0].strip()
         return result
 
-    def decode(self,word:str):
+    def decode(self,word:str) -> tuple[int,bool]:
         if word in self.const:
-            return self.const[word]
+            return (self.const[word], False)
         elif word.startswith("b"):
             try:
-                return int(word[1:],base=2)
+                return (int(word[1:],base=2), True)
             except ValueError:
                 raise ValueError(f"Can't decode `{word}` as binary")
         elif word.startswith("x"):
             try:
-                return int(word[1:],base=16)
+                return (int(word[1:],base=16),True)
             except ValueError:
                 raise ValueError(f"Can't decode `{word}` as hexadecimal")
         elif word.startswith("o"):
             try:
-                return int(word[1:],base=8)
+                return (int(word[1:],base=8),True)
             except ValueError:
                 raise ValueError(f"Can't decode `{word}` as octal")
         elif word.startswith("'"):
             word = word[1:]
             if len(word) > 1:
                 raise SyntaxError(f"`'` prefix only accepts one character, {word} is not accepted")
-            return ord(word)
+            return (ord(word),True)
         else:
             try:
-                return int(word)
+                return (int(word),True)
             except ValueError:
                 if not word:
-                    return 0
+                    return (0,True)
                 raise ValueError(f"Can't decode {word}")
 
     def parse_parameters(self,parameters:str):
@@ -162,11 +162,11 @@ class Assembler:
                 elif name == "y": result.append(Register(2))
                 else: raise SyntaxError(f"{name} is not a valid register")
             else:
-                value = self.decode(parameter)
+                value, literal = self.decode(parameter)
                 if prefix == "%":
-                    result.append(Immediate(value))
+                    result.append(Immediate(value,literal))
                 else:
-                    result.append(RamAddr(value))
+                    result.append(RamAddr(value,literal))
 
         return result
 
@@ -201,7 +201,7 @@ class Assembler:
             return decode_ascii(line[7:].strip())
 
         if command == ".literal":
-            return bytes([self.decode(word) for word in line[8:].split()])
+            return bytes([self.decode(word)[0] for word in line[8:].split()])
 
         if command == ".zero":
             try:
@@ -210,7 +210,7 @@ class Assembler:
                 return bytes(1)
         
         if command == ".org":
-            target = self.decode(line[5:].strip())
+            target = self.decode(line[5:].strip())[0]
             size = len(pre)
             if size > target:
                 raise SyntaxError(f"Target origin too low, target: {target}, size of binary preceding: {size}")
@@ -277,7 +277,7 @@ class Assembler:
             if not line: continue
             words = line.split()
             if words[0] == "const":
-                self.const[words[1]] = self.decode(" ".join(words[2:]))
+                self.const[words[1]] = self.decode(" ".join(words[2:]))[0]
             if words[0].endswith(":") and len(words) == 1:
                 name = words[0][:-1]
                 self.const[name] = 0 # initialize

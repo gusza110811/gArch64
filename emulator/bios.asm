@@ -60,8 +60,6 @@ disk_set_sector:
 ret
 
 bad_sector:
-    mov $a, %bad_sector_error
-    int x10
     popr
     mov $a, %1
 ret
@@ -168,7 +166,3 @@ printloop:
     jnz printloop
     mov console, $a
 ret
-
-bad_sector_error:
-    .ascii BAD SECTOR
-    .zero

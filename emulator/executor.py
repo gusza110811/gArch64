@@ -129,6 +129,7 @@ class Executor:
 
         elif instruction == "PAGE": ram.allocate_page(params[0])
         elif instruction == "FREE": ram.free_page(params[0])
+        elif instruction == "MOVE": ram.relocate_page(params[0])
 
         elif instruction == "REDUCE": emulator.blocksize = math.ceil(emulator.blocksize / 2)
         elif instruction == "EXTEND": emulator.blocksize *= 2

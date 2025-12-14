@@ -9,7 +9,7 @@ import re
 from color import *
 
 # during development, keep this the next unstable or stable version to be released
-VERSION = "1.2"
+VERSION = "snapshot7"
 
 class executionError(Exception):
     def __init__(self, *args):
@@ -232,7 +232,7 @@ if __name__ == "__main__":
     if verbose:
         eprint(f"v.{VERSION}")
         eprint(f"python v.{".".join([str(item) for item in sys.version_info[:3]])}")
-        eprint(f"{os.cpu_count()} threads available")
+        eprint(f"{os.cpu_count()} logical processors available")
 
     if stdin == "":
         stdin = input("stdin> ")
