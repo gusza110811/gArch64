@@ -25,7 +25,8 @@ class Executor:
             value = value & 0xFFFF_FFFF
             return value + (value & 0x8000_0000)*0x1FFFF_FFFE
 
-        if instruction == "HALT": emulator.running = False
+        if instruction == "HALT": emulator.running = False; emulator.halt_type = 1
+        if instruction == "HALTZ": emulator.running = False; emulator.halt_type = 2
 
         elif instruction == "SETST": ram.stack_start = registers[0]
         elif instruction == "SETIV": ram.int_start = registers[0]

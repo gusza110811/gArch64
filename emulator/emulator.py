@@ -32,6 +32,7 @@ class Emulator:
         self.carry = False
 
         self.running = True
+        self.halt_type = None
         self.crash_on_unknown = True
 
         self.time = []
@@ -187,16 +188,23 @@ class Emulator:
 
     def core_dump(self):
         print(f"Stopped at x{self.counter:X}")
-        print("\n\n<--- REGISTER DUMP --->")
-        # dump register
-        print(f"A: {self.registers[0]:03}  (x{self.registers[0]:02X})")
-        print(f"X: {self.registers[1]:03}  (x{self.registers[1]:02X})")
-        print(f"Y: {self.registers[2]:03}  (x{self.registers[2]:02X})")
+
+        if self.dump_state() == -1:
+            return
+
+        self.dump_registers()
 
         if self.blocksize == 2:
             self.dump_ram()
         else:
             self.dump_ram(True)
+    
+    def dump_registers(self):
+        print("\n<--- REGISTER DUMP --->")
+        # dump register
+        print(f"A: {self.registers[0]:03}  (x{self.registers[0]:02X})")
+        print(f"X: {self.registers[1]:03}  (x{self.registers[1]:02X})")
+        print(f"Y: {self.registers[2]:03}  (x{self.registers[2]:02X})")
 
     def dump_ram(self, long=False):
         pages = dict(sorted(self.ram.page_to_frame.items()))
@@ -212,6 +220,25 @@ class Emulator:
                 else:
                     print(f"{key:016X}: {value:02X}")
             print("\n")
+    
+    def dump_state(self):
+        print("\n<--- STATE DUMP --->")
+
+        if emulator.halt_type == None:
+            print("Interrupted")
+        elif emulator.halt_type == 1:
+            print("Halted via 0xFF (HALT)")
+        elif emulator.halt_type == 2:
+            print("Halted via 0x00 (HALTZ)")
+        elif emulator.halt_type == -1:
+            print("Internal emulation error")
+            return -1
+        
+        print("")
+
+        print(f"Stack Top     : {emulator.ram.stack_start:8X}")
+        print(f"Stack Position: {emulator.ram.stack_pos:8X}")
+        print(f"IVT zero      : {emulator.ram.int_start:8X}")
 
     pass
 
@@ -277,6 +304,7 @@ if __name__ == "__main__":
         print(color.fg.YELLOW+"INT"+color.RESET)
     except executionError as E:
         eprint(color.fg.RED + str(E) + color.RESET)
+        emulator.halt_type = -1
 
     finally:
         if verbose:

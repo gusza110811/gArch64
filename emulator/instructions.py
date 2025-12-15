@@ -69,7 +69,8 @@ class Opcodes:
         self.define('CALLV', 0x40, 0, [], 'CALL function at address stored in register A')
 
         # Other Flow Control
-        self.define('HALT', 0x00, 0, [], 'Stop execution')
+        self.define('HALT', 0xFF, 0, [], 'Stop execution')
+        self.define('HALTZ', 0x00, 0, [], 'Stop execution')
         self.define("RET",  0x37, 0, [], "Pop from stack, and jump to that address")
 
         # --- Register-register ---
