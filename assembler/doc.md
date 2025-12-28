@@ -20,7 +20,7 @@ Literal values are evaluated at assembly time and may refer to constants, labels
 
 #### Structure
 ```
-[TypePrefix][ValuePrefix]Value ( + Value | - Value )*
+Value ( + Value | - Value )*
 ```
 * All additions and subtractions are resolved during assembly.
 * Expressions are evaluated left-to-right.
@@ -28,11 +28,11 @@ Literal values are evaluated at assembly time and may refer to constants, labels
 
 Examples
 
-* `%label + 16`
+* `label + 16`
 -> immediate value of label plus 16
 If label = 32, result is **48**
 
-* `label - K`
+* `[label - K]`
 -> RAM address label minus constant K
 If label = 32 and K = 3, result is **29**
 
@@ -52,41 +52,21 @@ Examples:
 * `b1010`
 * `'A`
 
-### Type prefix
+### Dereference
 
-The type prefix determines how the value is interpreted:
+Deferencing is a process of getting the value stored at a memory address
 
-|Prefix | Meaning|
-| --- | --- |
-| `$` | Register reference |
-| `%` | Immediate value (constant or pointer) |
-| *(none)* | RAM address |
-
-Examples:
-* `label` → RAM address of `label`
-* `%label` → pointer to `label`
-* `%x10` → immediate value `16`
-
-#### When to use `%` and when to not use a type prefix
+For example
 ```
-; Assume label is located at address 30
-
-mov $X, %label ; Loads the address (pointer) of label into register X
-               ; Result: X = 30
-
-mov $Y, label  ; Loads the value stored at memory address label into register Y
-               ; Result: Y = 72 ('H' in ASCII)
-
-label:
-    .ascii Hello!\n
-    .zero
+[ xE00 ]
 ```
+means "The value stored at ram address `0x0E00` (3584 in decimal)"
 
 ### Registers
 
 Registers are written as:
 ```
-$A   $X   $Y
+A   X   Y
 ```
 * Register names are case-insensitive.
 * Only A, X, and Y are valid.
@@ -98,9 +78,9 @@ Literal values may be offset using `+` or `-`:
 * Offsets must be resolvable at assembly time.
 
 Examples:
-* `%label + 4`
-* `label - 1`
-* `%x100 + K`
+* `label + 4`
+* `[label - 1]`
+* `x100 + K`
 
 ### Definition
 #### Constants Definition

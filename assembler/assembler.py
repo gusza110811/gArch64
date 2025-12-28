@@ -165,21 +165,25 @@ class Assembler:
 
         for parameter in parameters:
             parameter = parameter.strip()
-            prefix = parameter[0]
-            if prefix in list("%$@*"):
-                parameter = parameter[1:]
-            if prefix == "$":
-                name = parameter.lower()
-                if name == "a": result.append(Register(0))
-                elif name == "x": result.append(Register(1))
-                elif name == "y": result.append(Register(2))
-                else: raise SyntaxError(f"{name} is not a valid register")
+
+            if parameter[0] in list("$%"):
+                raise parsingError(
+                    "DeprecationError: old assembly syntax detected\n"
+                    f"  Convert with:\n"
+                    f"    param-old2new < {self.name} > {self.name.rsplit('.', 1)[0]}-new.asm"
+                )
+
+
+            if parameter.lower() == "a":
+                result.append(Register(0))
+            elif parameter.lower() == "x":
+                result.append(Register(1))
+            elif parameter.lower() == "y":
+                result.append(Register(2))
+            elif parameter.startswith("[") and parameter.endswith("]"):
+                result.append(RamAddr(*self.decode(parameter[1:-1])))
             else:
-                value, literal = self.decode(parameter)
-                if prefix == "%":
-                    result.append(Immediate(value,literal))
-                else:
-                    result.append(RamAddr(value,literal))
+                result.append(Immediate(*self.decode(parameter)))
 
         return result
 

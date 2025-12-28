@@ -1,55 +1,58 @@
 const console xFE00_0000
 
 main:
-    mov $a, %prompt
-    int %x10              ; prompt user
+    mov a, prompt
+    int x10 ; prompt user
 
-    mov $a, %buffer
-    int %x12              ; read
 
-    mov $y, buffer
+    mov a, buffer
+    int x12 ; read
+
+
+    mov y, [buffer]
 
     ; check input
-    mov $x, %'r
-    jeq read_mode
-    mov $x, %'w
-    jeq write_mode
+    mov x, 'r
+    jeq [read_mode]
+    mov x, 'w
+    jeq [write_mode]
 
-jmp main
+jmp [main]
 
 read_mode:
-    call get_sector
-    int x13
-    mov $a, %buffer
-    int x14
-    int x10
-jmp main
+    call [get_sector]
+    int [x13]
+    mov a, buffer
+    int [x14]
+    int [x10]
+jmp [main]
 
 write_mode:
-    call get_sector
-    mov $x, $a
-    mov $y, %0
-    jeq write_error
+    call [get_sector]
+    mov x, a
+    mov y, 0
+    jeq [write_error]
 
-    int x13
-    mov $a, %dataprompt ; ask for data
-    int x10
-    mov $a, %buffer
-    int x12
-    int x15
-jmp main
+    int [x13]
+    mov a, dataprompt ; ask for data
+
+    int [x10]
+    mov a, buffer
+    int [x12]
+    int [x15]
+jmp [main]
 
 write_error:
-    mov $a, %writeerror
-    int x10
+    mov a, writeerror
+    int [x10]
 
-jmp main
+jmp [main]
 
 get_sector:
-    mov $x, buffer1
-    mov $y, %x30
-    sub
-ret
+    mov x, [buffer1]
+    mov y, x30
+    sub 
+ret 
 
 prompt:
     .ascii \ncommand>\0
