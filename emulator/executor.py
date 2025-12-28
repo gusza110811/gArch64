@@ -116,53 +116,53 @@ class Executor:
             ram.push_double(emulator.counter)
             emulator.counter = address
 
-        elif instruction == "LDA": registers[0] = ram.load(params[0])
-        elif instruction == "LDX": registers[1] = ram.load(params[0])
-        elif instruction == "LDY": registers[2] = ram.load(params[0])
+        elif instruction == "LDAA": registers[0] = ram.load(params[0])
+        elif instruction == "LDXA": registers[1] = ram.load(params[0])
+        elif instruction == "LDYA": registers[2] = ram.load(params[0])
 
-        elif instruction == "STA": ram.store(params[0],registers[0])
-        elif instruction == "STX": ram.store(params[0],registers[1])
-        elif instruction == "STY": ram.store(params[0],registers[2])
+        elif instruction == "STAA": ram.store(params[0],registers[0])
+        elif instruction == "STXA": ram.store(params[0],registers[1])
+        elif instruction == "STYA": ram.store(params[0],registers[2])
 
         elif instruction == "LDV": registers[0] = ram.load(registers[1])
         elif instruction == "STV": ram.store(registers[1],registers[0])
         elif instruction == "MOV": ram.store(params[0],ram.load(params[1]))
 
-        elif instruction == "LDAD": registers[0] = ram.load_double(params[0])
-        elif instruction == "LDXD": registers[1] = ram.load_double(params[0])
-        elif instruction == "LDYD": registers[2] = ram.load_double(params[0])
+        elif instruction == "LDADA": registers[0] = ram.load_double(params[0])
+        elif instruction == "LDXDA": registers[1] = ram.load_double(params[0])
+        elif instruction == "LDYDA": registers[2] = ram.load_double(params[0])
 
-        elif instruction == "STAD": ram.store_double(params[0],registers[0])
-        elif instruction == "STXD": ram.store_double(params[0],registers[1])
-        elif instruction == "STYD": ram.store_double(params[0],registers[2])
+        elif instruction == "STADA": ram.store_double(params[0],registers[0])
+        elif instruction == "STXDA": ram.store_double(params[0],registers[1])
+        elif instruction == "STYDA": ram.store_double(params[0],registers[2])
 
         elif instruction == "LDVD": registers[0] = ram.load_double(registers[1])
         elif instruction == "STVD": ram.store_double(registers[1],registers[0])
-        elif instruction == "MOVD": ram.store_double(params[0],ram.load_double(params[1]))
+        elif instruction == "MOVDA": ram.store_double(params[0],ram.load_double(params[1]))
 
-        elif instruction == "LDAQ": registers[0] = ram.load_quad(params[0])
-        elif instruction == "LDXQ": registers[1] = ram.load_quad(params[0])
-        elif instruction == "LDYQ": registers[2] = ram.load_quad(params[0])
+        elif instruction == "LDAQA": registers[0] = ram.load_quad(params[0])
+        elif instruction == "LDXQA": registers[1] = ram.load_quad(params[0])
+        elif instruction == "LDYQA": registers[2] = ram.load_quad(params[0])
 
-        elif instruction == "STAQ": ram.store_quad(params[0],registers[0])
-        elif instruction == "STXQ": ram.store_quad(params[0],registers[1])
-        elif instruction == "STYQ": ram.store_quad(params[0],registers[2])
+        elif instruction == "STAQA": ram.store_quad(params[0],registers[0])
+        elif instruction == "STXQA": ram.store_quad(params[0],registers[1])
+        elif instruction == "STYQA": ram.store_quad(params[0],registers[2])
 
         elif instruction == "LDVQ": registers[0] = ram.load_quad(registers[1])
         elif instruction == "STVQ": ram.store_quad(registers[1],registers[0])
-        elif instruction == "MOVQ": ram.store_quad(params[0],ram.load_quad(params[1]))
+        elif instruction == "MOVQA": ram.store_quad(params[0],ram.load_quad(params[1]))
 
-        elif instruction == "LDAW": registers[0] = ram.load_word(params[0])
-        elif instruction == "LDXW": registers[1] = ram.load_word(params[0])
-        elif instruction == "LDYW": registers[2] = ram.load_word(params[0])
+        elif instruction == "LDAWA": registers[0] = ram.load_word(params[0])
+        elif instruction == "LDXWA": registers[1] = ram.load_word(params[0])
+        elif instruction == "LDYWA": registers[2] = ram.load_word(params[0])
 
-        elif instruction == "STAW": ram.store_word(params[0],registers[0])
-        elif instruction == "STXW": ram.store_word(params[0],registers[1])
-        elif instruction == "STYW": ram.store_word(params[0],registers[2])
+        elif instruction == "STAWA": ram.store_word(params[0],registers[0])
+        elif instruction == "STXWA": ram.store_word(params[0],registers[1])
+        elif instruction == "STYWA": ram.store_word(params[0],registers[2])
 
         elif instruction == "LDVW": registers[0] = ram.load_word(registers[1])
         elif instruction == "STVW": ram.store_word(registers[1],registers[0])
-        elif instruction == "MOVW": ram.store_word(params[0],ram.load_word(params[1]))
+        elif instruction == "MOVWA": ram.store_word(params[0],ram.load_word(params[1]))
 
         elif instruction == "INTR":
             ram.register_int(params[0],emulator.begininst+params[1])

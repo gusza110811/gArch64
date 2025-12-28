@@ -120,17 +120,28 @@ class Opcodes:
         self.define('INTR', 0x90, 2, ['int_id','subroutine_address'], 'Map [int_id] to [subroutine_address]')
 
         # --- RAM ---
-        self.define('LDA', 0x81, 1, ['addr'], 'Load from address(ram) into A')
-        self.define('LDX', 0x82, 1, ['addr'], 'Load from address(ram) into X')
-        self.define('LDY', 0x83, 1, ['addr'], 'Load from address(ram) into Y')
+        self.define('LDAA', 0x81, 1, ['addr'], 'Load from address(ram) into A')
+        self.define('LDXA', 0x82, 1, ['addr'], 'Load from address(ram) into X')
+        self.define('LDYA', 0x83, 1, ['addr'], 'Load from address(ram) into Y')
 
-        self.define('STA', 0x84, 1, ['addr'], 'Store A into address(ram)')
-        self.define('STX', 0x85, 1, ['addr'], 'Store X into address(ram)')
-        self.define('STY', 0x86, 1, ['addr'], 'Store Y into address(ram)')
+        self.define('STAA', 0x84, 1, ['addr'], 'Store A into address(ram)')
+        self.define('STXA', 0x85, 1, ['addr'], 'Store X into address(ram)')
+        self.define('STYA', 0x86, 1, ['addr'], 'Store Y into address(ram)')
 
         self.define('LDV', 0x87, 0, [], 'Load value from ram into register A, using X as address')
         self.define('STV', 0x88, 0, [], 'Store value in register A to ram, using X as address')
-        self.define('MOV', 0x89, 2, ['addr_dst', 'addr_src'], 'Copy from addr_src to addr_dst (ram)')
+        self.define('MOVA', 0x89, 2, ['addr_dst', 'addr_src'], 'Copy from addr_src to addr_dst (ram)')
+
+        # --- Relative RAM ---
+        self.define('LDA', 0x8A, 1, ['addr'], 'Load from address(ram) into A')
+        self.define('LDX', 0x8B, 1, ['addr'], 'Load from address(ram) into X')
+        self.define('LDY', 0x8C, 1, ['addr'], 'Load from address(ram) into Y')
+
+        self.define('STA', 0x8D, 1, ['addr'], 'Store A into address(ram)')
+        self.define('STX', 0x8E, 1, ['addr'], 'Store X into address(ram)')
+        self.define('STY', 0x8F, 1, ['addr'], 'Store Y into address(ram)')
+
+        self.define('MOV', 0x9F, 2, ['addr_dst', 'addr_src'], 'Copy from addr_src to addr_dst (ram)')
 
         # --- Page allocation ---
         self.define('PAGE', 0x9A, 1, ['page'], 'Allocate page to the first available frame')
@@ -142,43 +153,73 @@ class Opcodes:
         self.define('EXTN', 0xA1, 0, [], 'Doubles the block size and register width, max at 4 words (8 bytes; 64 bit)')
 
         # --- Double-word RAM load/store ---
-        self.define('LDAD', 0xB1, 1, ['addr'], 'Load from address(ram) into A')
-        self.define('LDXD', 0xB2, 1, ['addr'], 'Load from address(ram) into X')
-        self.define('LDYD', 0xB3, 1, ['addr'], 'Load from address(ram) into Y')
+        self.define('LDADA', 0xB1, 1, ['addr'], 'Load from address(ram) into A')
+        self.define('LDXDA', 0xB2, 1, ['addr'], 'Load from address(ram) into X')
+        self.define('LDYDA', 0xB3, 1, ['addr'], 'Load from address(ram) into Y')
 
-        self.define('STAD', 0xB4, 1, ['addr'], 'Store A into address(ram)')
-        self.define('STXD', 0xB5, 1, ['addr'], 'Store X into address(ram)')
-        self.define('STYD', 0xB6, 1, ['addr'], 'Store Y into address(ram)')
+        self.define('STADA', 0xB4, 1, ['addr'], 'Store A into address(ram)')
+        self.define('STXDA', 0xB5, 1, ['addr'], 'Store X into address(ram)')
+        self.define('STYDA', 0xB6, 1, ['addr'], 'Store Y into address(ram)')
 
         self.define('LDVD', 0xB7, 0, [], 'Load value from ram into register A, using X as address')
         self.define('STVD', 0xB8, 0, [], 'Store value in register A to ram, using X as address')
-        self.define('MOVD', 0xB9, 2, ['addr_dst', 'addr_src'], 'Copy from addr_src to addr_dst (ram)')
+        self.define('MOVDA', 0xB9, 2, ['addr_dst', 'addr_src'], 'Copy from addr_src to addr_dst (ram)')
+        # Relative
+        self.define('LDAD', 0xBA, 1, ['addr'], 'Load from address(ram) into A')
+        self.define('LDXD', 0xBB, 1, ['addr'], 'Load from address(ram) into X')
+        self.define('LDYD', 0xBC, 1, ['addr'], 'Load from address(ram) into Y')
+
+        self.define('STAD', 0xBD, 1, ['addr'], 'Store A into address(ram)')
+        self.define('STXD', 0xBE, 1, ['addr'], 'Store X into address(ram)')
+        self.define('STYD', 0xBF, 1, ['addr'], 'Store Y into address(ram)')
+
+        self.define('MOVD', 0xB0, 2, ['addr_dst', 'addr_src'], 'Copy from addr_src to addr_dst (ram)')
 
         # --- Quad-word RAM load/store ---
-        self.define('LDAQ', 0xC1, 1, ['addr'], 'Load from address(ram) into A')
-        self.define('LDXQ', 0xC2, 1, ['addr'], 'Load from address(ram) into X')
-        self.define('LDYQ', 0xC3, 1, ['addr'], 'Load from address(ram) into Y')
+        self.define('LDAQA', 0xC1, 1, ['addr'], 'Load from address(ram) into A')
+        self.define('LDXQA', 0xC2, 1, ['addr'], 'Load from address(ram) into X')
+        self.define('LDYQA', 0xC3, 1, ['addr'], 'Load from address(ram) into Y')
 
-        self.define('STAQ', 0xC4, 1, ['addr'], 'Store A into address(ram)')
-        self.define('STXQ', 0xC5, 1, ['addr'], 'Store X into address(ram)')
-        self.define('STYQ', 0xC6, 1, ['addr'], 'Store Y into address(ram)')
+        self.define('STAQA', 0xC4, 1, ['addr'], 'Store A into address(ram)')
+        self.define('STXQA', 0xC5, 1, ['addr'], 'Store X into address(ram)')
+        self.define('STYQA', 0xC6, 1, ['addr'], 'Store Y into address(ram)')
 
         self.define('LDVQ', 0xC7, 0, [], 'Load value from ram into register A, using X as address')
         self.define('STVQ', 0xC8, 0, [], 'Store value in register A to ram, using X as address')
-        self.define('MOVQ', 0xC9, 2, ['addr_dst', 'addr_src'], 'Copy from addr_src to addr_dst (ram)')
+        self.define('MOVQA', 0xC9, 2, ['addr_dst', 'addr_src'], 'Copy from addr_src to addr_dst (ram)')
+        # Relative
+        self.define('LDAQ', 0xCA, 1, ['addr'], 'Load from address(ram) into A')
+        self.define('LDXQ', 0xCB, 1, ['addr'], 'Load from address(ram) into X')
+        self.define('LDYQ', 0xCC, 1, ['addr'], 'Load from address(ram) into Y')
+
+        self.define('STAQ', 0xCD, 1, ['addr'], 'Store A into address(ram)')
+        self.define('STXQ', 0xCE, 1, ['addr'], 'Store X into address(ram)')
+        self.define('STYQ', 0xCF, 1, ['addr'], 'Store Y into address(ram)')
+
+        self.define('MOVQ', 0xC0, 2, ['addr_dst', 'addr_src'], 'Copy from addr_src to addr_dst (ram)')
 
         # --- Word RAM load/store ---
-        self.define('LDAW', 0xD1, 1, ['addr'], 'Load from address(ram) into A')
-        self.define('LDXW', 0xD2, 1, ['addr'], 'Load from address(ram) into X')
-        self.define('LDYW', 0xD3, 1, ['addr'], 'Load from address(ram) into Y')
+        self.define('LDAWA', 0xD1, 1, ['addr'], 'Load from address(ram) into A')
+        self.define('LDXWA', 0xD2, 1, ['addr'], 'Load from address(ram) into X')
+        self.define('LDYWA', 0xD3, 1, ['addr'], 'Load from address(ram) into Y')
 
-        self.define('STAW', 0xD4, 1, ['addr'], 'Store A into address(ram)')
-        self.define('STXW', 0xD5, 1, ['addr'], 'Store X into address(ram)')
-        self.define('STYW', 0xD6, 1, ['addr'], 'Store Y into address(ram)')
+        self.define('STAWA', 0xD4, 1, ['addr'], 'Store A into address(ram)')
+        self.define('STXWA', 0xD5, 1, ['addr'], 'Store X into address(ram)')
+        self.define('STYWA', 0xD6, 1, ['addr'], 'Store Y into address(ram)')
 
         self.define('LDVW', 0xD7, 0, [], 'Load value from ram into register A, using X as address')
         self.define('STVW', 0xD8, 0, [], 'Store value in register A to ram, using X as address')
-        self.define('MOVW', 0xD9, 2, ['addr_dst', 'addr_src'], 'Copy from addr_src to addr_dst (ram)')
+        self.define('MOVWA', 0xD9, 2, ['addr_dst', 'addr_src'], 'Copy from addr_src to addr_dst (ram)')
+        # Relative
+        self.define('LDAW', 0xDA, 1, ['addr'], 'Load from address(ram) into A')
+        self.define('LDXW', 0xDB, 1, ['addr'], 'Load from address(ram) into X')
+        self.define('LDYW', 0xDC, 1, ['addr'], 'Load from address(ram) into Y')
+
+        self.define('STAW', 0xDD, 1, ['addr'], 'Store A into address(ram)')
+        self.define('STXW', 0xDE, 1, ['addr'], 'Store X into address(ram)')
+        self.define('STYW', 0xDF, 1, ['addr'], 'Store Y into address(ram)')
+
+        self.define('MOVW', 0xD0, 2, ['addr_dst', 'addr_src'], 'Copy from addr_src to addr_dst (ram)')
 
 
         return
