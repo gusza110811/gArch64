@@ -1,34 +1,34 @@
-const offset xFFFF_0000
+const offset 0xFFFF_0000
 
-const console xFE00_0000
-const counter xFFFF_0FFC
-const disk_com xFE00_0001
-const disk_data xFE00_0002
-const disk_stat xFE00_0003
+const console 0xFE00_0000
+const counter 0xFFFF_0FFC
+const disk_com 0xFE00_0001
+const disk_data 0xFE00_0002
+const disk_stat 0xFE00_0003
 
 ; setup the stack
-page [xFFFFF]
-mov a, xFFFF_FFFF
+page [0xFFFFF]
+mov a, 0xFFFF_FFFF
 setst 
 
 ; setup the IVT
-page [xFFFFE]
-mov a, xFFFF_E000
+page [0xFFFFE]
+mov a, 0xFFFF_E000
 setiv 
 
 ; define the functions
-intr x10, print
-intr x12, input
+intr 0x10, print
+intr 0x12, input
 
-intr x13, disk_set_sector
-intr x14, disk_read
-intr x15, disk_write
+intr 0x13, disk_set_sector
+intr 0x14, disk_read
+intr 0x15, disk_write
 
 ; define the fault handlers
-intr x100, intfault
-intr x101, opcodefault
-intr x102, pagefault
-intr x103, intoverflow
+intr 0x100, intfault
+intr 0x101, opcodefault
+intr 0x102, pagefault
+intr 0x103, intoverflow
 
 ; allocate the 0 page
 page 0
@@ -37,7 +37,7 @@ page 0
 mov a, 0
 call disk_read
 
-ajmp [x0]
+ajmp [0x0]
 
 ;-----------------------;
 ; End of the BIOS's job ;
@@ -60,7 +60,7 @@ disk_set_sector:
     mov x, a
     mov [disk_data], x
     mov x, [disk_stat]
-    mov y, x31
+    mov y, 0x31
     jeq [bad_sector]
     popr 
     mov a, 0
@@ -77,7 +77,7 @@ ret
 disk_write:
     pushr 
     mov x, a
-    mov a, x21
+    mov a, 0x21
     mov [disk_com], a
     mov y, 1
 
@@ -95,7 +95,7 @@ ret
 disk_read:
     pushr 
     mov x, a
-    mov a, x20
+    mov a, 0x20
     mov [disk_com], a
     mov y, 1
 
@@ -120,11 +120,11 @@ listen_loop:
 
 
     ; check for backspace (0x08)
-    mov x, x08
+    mov x, 0x08
     jeq handle_backspace
 
     ; check for newline
-    mov x, x0A
+    mov x, 0x0A
     jeq end_loop
 
     ; store character

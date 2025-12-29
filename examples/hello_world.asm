@@ -1,6 +1,6 @@
 const print x10
 main:
-    mov [a], [data]
+    mov a, [data]
     int [print]
 halt 
 

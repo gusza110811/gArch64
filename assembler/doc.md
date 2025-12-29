@@ -42,9 +42,9 @@ Each value may specify its numeric format using a prefix:
 
 |Prefix | Format |
 | --- | --- |
-| `x` | Hexadecimal |
-| `b` | Binary |
-| `o` | Octal |
+| `0x` | Hexadecimal |
+| `0b` | Binary |
+| `0o` | Octal |
 | `'` | ASCII character|
 
 Examples:
@@ -60,7 +60,7 @@ For example
 ```
 [ xE00 ]
 ```
-means "The value stored at ram address `0x0E00` (3584 in decimal)"
+means "The value stored at ram address `0x0E00`"
 
 ### Registers
 
@@ -80,7 +80,7 @@ Literal values may be offset using `+` or `-`:
 Examples:
 * `label + 4`
 * `[label - 1]`
-* `x100 + K`
+* `0x100 + K`
 
 ### Definition
 #### Constants Definition

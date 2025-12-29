@@ -277,7 +277,7 @@ if __name__ == "__main__":
     source = ""
     code:str
     dest = ""
-    parser = argparse.ArgumentParser(description="gArch64 assembler")
+    parser = argparse.ArgumentParser(description="gArch64 assembler v1")
 
     parser.add_argument("source", help="Path to source asm", default="main.asm", nargs="?")
     parser.add_argument("-o","--output", help="Path to output binary", default="\\/:*?\"<>|")
@@ -309,4 +309,4 @@ if __name__ == "__main__":
     with open(dest, "wb") as destfile:
         destfile.write(result)
     
-    print("\033[33mWARNING: This is an older assembler which is deprecated, not every instruction is included. please do not use it in the future\033[0m")
+    print("\033[33mWARNING: This is an older assembler which is deprecated;\nnot every instruction is included.\nuses big-endian instead of the current little-endian.\nplease do not use it in the future\033[0m")

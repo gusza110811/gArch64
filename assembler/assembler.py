@@ -143,6 +143,21 @@ class Assembler:
                 return (int(word[1:],base=8),True)
             except ValueError:
                 raise ValueError(f"Couldn't decode `{word}` as octal")
+        elif word.startswith("0b"):
+            try:
+                return (int(word[2:],base=2), True)
+            except ValueError:
+                raise ValueError(f"Couldn't decode `{word}` as binary")
+        elif word.startswith("0x"):
+            try:
+                return (int(word[2:],base=16),True)
+            except ValueError:
+                raise ValueError(f"Couldn't decode `{word}` as hexadecimal")
+        elif word.startswith("0o"):
+            try:
+                return (int(word[2:],base=8),True)
+            except ValueError:
+                raise ValueError(f"Couldn't decode `{word}` as octal")
         elif word.startswith("'"):
             word = word[1:]
             if len(word) > 1:
@@ -170,7 +185,7 @@ class Assembler:
                 raise parsingError(
                     "DeprecationError: old assembly syntax detected\n"
                     f"  Convert with:\n"
-                    f"    param-old2new < {self.name} > {self.name.rsplit('.', 1)[0]}-new.asm"
+                    f"    param-old2new {self.name}"
                 )
 
 
@@ -265,7 +280,7 @@ class Assembler:
             raise parsingError(f"ValueError: {e}")
 
         if self.verbose:
-            print(f"`{line.strip()}` => `{result.hex(sep=" ")}`")
+            print(color.fg.GRAY + f"`{line.strip()}`\n    " + color.RESET + result.hex(sep=" "))
 
         return result
 
@@ -289,15 +304,31 @@ class Assembler:
         return result
 
     def get_const(self, lines:list[str]):
-        for line in lines:
+        for idx, line in enumerate(lines):
             line = self.get_line(line)
             if not line: continue
             words = line.split()
-            if words[0] == "const":
-                self.const[words[1]] = self.decode(" ".join(words[2:]))[0]
-            if words[0].endswith(":") and len(words) == 1:
-                name = words[0][:-1]
-                self.const[name] = 0 # initialize
+            def find_first_non_whitespace(s:str):
+                    for i, char in enumerate(s):
+                        if not char.isspace():
+                            return i
+                    return -1
+            try:
+                if words[0] == "const":
+                    if words[1][0] in list("1234567890"):
+                        raise parsingError("SyntaxError: Constant names cannot begin with a number")
+                    self.const[words[1]] = self.decode(" ".join(words[2:]))[0]
+                if words[0].endswith(":") and len(words) == 1:
+                    if words[0][0] in list("1234567890"):
+                        raise parsingError("SyntaxError: Label names cannot begin with a number")
+                    name = words[0][:-1]
+                    self.const[name] = 0 # initialize
+            except parsingError as e:
+                print(color.fg.BRIGHT_MAGENTA+f"In file `{self.name}` at line {idx+1}:"+color.RESET)
+                print(color.fg.BRIGHT_RED+f"    {line}")
+                print(color.fg.RED+f"    {" "*find_first_non_whitespace(line)}{"^"*len(line.strip())}")
+                print(color.fg.BRIGHT_MAGENTA+f"{str(e)}"+color.RESET)
+                sys.exit(1)
 
     def get_labels(self,lines:list[str]):
         for idx, line in enumerate(lines):
@@ -325,7 +356,7 @@ def is_ascii_printable_byte(byte_value):
     return 32 <= byte_value <= 126
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="gArch64 assembler")
+    parser = argparse.ArgumentParser(description="gArch64 assembler v2")
 
     parser.add_argument("source", help="path to source asm", default="main.asm", nargs="?")
     parser.add_argument("-o","--output", help="path to output binary", default="\\/:*?\"<>|")
