@@ -1,0 +1,140 @@
+start: statement+
+
+?statement: code_block
+    | constantdef
+
+code_block: IDENTIFIER "{" code_statement* "}"
+
+?code_statement: constantdef
+    | labeldef
+    | instruction
+
+instruction: INST parameter ("," parameter)?
+
+?parameter: register
+    | immediate
+    | address
+
+register: REGISTERS
+immediate: expr
+address: "[" expr "]"
+
+constantdef: "const" IDENTIFIER "=" expr
+labeldef: ":" IDENTIFIER
+
+?expr: bitwise_or
+
+?bitwise_or: bitwise_and
+    | bitwise_or "|" bitwise_and -> or_op
+
+?bitwise_and: sum
+    | bitwise_and "&" sum -> and_op
+
+?sum: factor
+    | sum "+" factor -> add
+    | sum "-" factor -> sub
+
+?factor: IDENTIFIER
+    | literal
+
+literal: DECIMAL
+    | "0b" BINARY
+    | "0o" OCTAL
+    | "0x" HEX
+    | STRING
+
+// terminals
+IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*/
+COMMENT: ";" /[^\n]*/ NEWLINE
+NEWLINE: "\n"
+
+REGISTERS: /[axyAXY]/
+
+DECIMAL: /[0-9_]+/
+BINARY: /[01_]+/
+OCTAL: /[0-7_]+/
+HEX: /[0-9a-fA-F_]+/
+STRING: ESCAPED_STRING
+
+LINEWS: /[\s\t]+/
+
+INST: "halt"i
+
+    | "setst"i
+    | "setiv"i
+
+    | "add"i
+    | "sub"i
+    | "mul"i
+    | "div"i
+    | "mod"i
+    | "sxtw"i
+    | "sxtd"i
+    | "sxtq"i
+
+    | "and"i
+    | "or"i
+    | "xor"i
+    | "not"i
+    | "shl"i
+    | "shr"i
+    | "shlb"i
+    | "shrb"i
+
+    | "ajmp"i
+    | "ajz"i
+    | "ajnz"i
+    | "ajc"i
+    | "ajnc"i
+    | "ajeq"i
+    | "ajne"i
+    | "ret"i
+    | "acall"i
+    | "abz"i
+    | "abnz"i
+    | "abc"i
+    | "abnc"i
+    | "abeq"i
+    | "abne"i
+
+    | "jmp"i
+    | "jz"i
+    | "jnz"i
+    | "jc"i
+    | "jnc"i
+    | "jeq"i
+    | "jne"i
+    | "jmpv"i
+    | "call"i
+    | "bz"i
+    | "bnz"i
+    | "bc"i
+    | "bnc"i
+    | "beq"i
+    | "bne"i
+    | "callv"i
+
+    | "mov"i
+    | "movd"i
+    | "movq"i
+    | "movw"i
+
+    | "push"i
+    | "pop"i
+    | "pushr"i
+    | "popr"i
+
+    | "ldv"i
+    | "stv"i
+
+    | "int"i
+    | "intr"i
+
+    | "page"i
+    | "free"i
+    | "move"i
+
+%import common.ESCAPED_STRING
+
+%ignore LINEWS
+%ignore COMMENT
