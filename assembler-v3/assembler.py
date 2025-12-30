@@ -1,23 +1,14 @@
-from lark import Lark
-from nodes import Transformer
-import os
+import parser
+import os, sys
 
 __dir__ = os.path.dirname(__file__)
 
 class Assembler:
     def __init__(self):
-        self.grammar = open(os.path.join(__dir__,"grammar.lark")).read()
-        self.parser = Lark(self.grammar)
-        self.transformer = Transformer()
+        self.parser = parser.Parser()
 
     def main(self, code:str, filename="<main>"):
-        transformer = self.transformer
-        parser = self.parser
-
-        parsedTree = parser.parse(code)
-
-        tree = transformer.transform(parsedTree)
-
+        tree = self.parser.parse(code,filename)
         print("\n".join([repr(item) for item in tree.value]))
 
 if __name__ == "__main__":

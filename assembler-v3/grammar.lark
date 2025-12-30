@@ -1,15 +1,18 @@
 start: statement+
 
 ?statement: code_block
+    | data_block
     | constantdef
+    | dot_directive
 
 code_block: IDENTIFIER "{" code_statement* "}"
+    | "func" IDENTIFIER "{" code_statement* "}"
 
 ?code_statement: constantdef
     | labeldef
     | instruction
 
-instruction: INST parameter ("," parameter)?
+instruction: INST parameter ("," parameter)? "\n"
 
 ?parameter: register
     | immediate
@@ -17,24 +20,52 @@ instruction: INST parameter ("," parameter)?
 
 register: REGISTERS
 immediate: expr
-address: "[" expr "]"
+?address: "[" "x" "]" -> indirect_addr
+    | "[" expr "]" -> direct_addr
+
+data_block: "data " [IDENTIFIER] "{" data_statement* "}"
+
+?data_statement: expr ["," expr]*
+    | dot_directive
+    | labeldef
 
 constantdef: "const" IDENTIFIER "=" expr
-labeldef: ":" IDENTIFIER
+labeldef: IDENTIFIER ":"
+
+?dot_directive: ".ascii" STRING -> text
+    | ".asciiz" STRING -> text_nulterm
+    | ".zero" literal -> zero
 
 ?expr: bitwise_or
 
-?bitwise_or: bitwise_and
-    | bitwise_or "|" bitwise_and -> or_op
+?bitwise_or: bitwise_xor
+    | bitwise_or "|" bitwise_xor -> or_op
 
-?bitwise_and: sum
-    | bitwise_and "&" sum -> and_op
+?bitwise_xor: bitwise_and
+    | bitwise_xor "^" bitwise_and -> xor_op
 
-?sum: factor
-    | sum "+" factor -> add
-    | sum "-" factor -> sub
+?bitwise_and: shift
+    | bitwise_and "&" shift -> and_op
 
-?factor: IDENTIFIER
+?shift: sum
+    | shift ">>" sum -> shiftr
+    | shift "<<" sum -> shiftl
+
+?sum: term
+    | sum "+" term -> add
+    | sum "-" term -> sub
+
+?term: unary
+    | term "*" unary -> mul
+    | term "/" unary -> div
+    | term "%" unary -> mod
+
+?unary: factor
+    | "~" unary -> not_op
+    | "-" unary -> unary_sub
+
+?factor: "(" expr ")"
+    | symbol
     | literal
 
 literal: DECIMAL
@@ -43,10 +74,11 @@ literal: DECIMAL
     | "0x" HEX
     | STRING
 
+symbol: IDENTIFIER
+
 // terminals
 IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*/
-COMMENT: ";" /[^\n]*/ NEWLINE
-NEWLINE: "\n"
+COMMENT: ";" /[^\n]*/
 
 REGISTERS: /[axyAXY]/
 
@@ -81,22 +113,6 @@ INST: "halt"i
     | "shlb"i
     | "shrb"i
 
-    | "ajmp"i
-    | "ajz"i
-    | "ajnz"i
-    | "ajc"i
-    | "ajnc"i
-    | "ajeq"i
-    | "ajne"i
-    | "ret"i
-    | "acall"i
-    | "abz"i
-    | "abnz"i
-    | "abc"i
-    | "abnc"i
-    | "abeq"i
-    | "abne"i
-
     | "jmp"i
     | "jz"i
     | "jnz"i
@@ -105,6 +121,7 @@ INST: "halt"i
     | "jeq"i
     | "jne"i
     | "jmpv"i
+
     | "call"i
     | "bz"i
     | "bnz"i
@@ -115,24 +132,17 @@ INST: "halt"i
     | "callv"i
 
     | "mov"i
-    | "movd"i
-    | "movq"i
-    | "movw"i
 
     | "push"i
     | "pop"i
     | "pushr"i
     | "popr"i
 
-    | "ldv"i
-    | "stv"i
-
     | "int"i
     | "intr"i
 
     | "page"i
     | "free"i
-    | "move"i
 
 %import common.ESCAPED_STRING
 

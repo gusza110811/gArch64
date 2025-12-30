@@ -30,6 +30,7 @@ class Emulator:
         self.blocksize = 2
 
         self.carry = False
+        self.zero = False
 
         self.running = True
         self.halt_type = None
@@ -51,6 +52,24 @@ class Emulator:
             self.registers[0] = new_value
         else:
             self.carry = False
+        
+        if self.registers[0] == 0:
+            self.zero = True
+        else:
+            self.zero = False
+    
+    def compare(self, val1:int, val2:int):
+        if val1 >= val2:
+            self.carry = False
+            self.zero = False
+        if val1 == val2:
+            self.carry = False
+            self.zero = True
+        if val1 < val2:
+            self.carry = True
+            self.zero = False
+
+        return
 
     def main(self, disk:str, stdin):
 

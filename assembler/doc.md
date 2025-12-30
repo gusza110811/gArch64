@@ -48,8 +48,8 @@ Each value may specify its numeric format using a prefix:
 | `'` | ASCII character|
 
 Examples:
-* `xFF`
-* `b1010`
+* `0xFF`
+* `0b1010`
 * `'A`
 
 ### Dereference
@@ -58,7 +58,7 @@ Deferencing is a process of getting the value stored at a memory address
 
 For example
 ```
-[ xE00 ]
+[ 0xE00 ]
 ```
 means "The value stored at ram address `0x0E00`"
 
@@ -152,7 +152,7 @@ Fault interrupts
 | `100` | Interrupt fault: The software or fault interrupt attempted to be called is undefined |
 | `101` | Opcode fault; The CPU decoded an opcode in memory and is unable to execute it |
 | `102` | Page fault; Attempted to access memory in unallocated address |
-| `103` | IVT overflow; The interrupt id attempted to be registerd is above 512 |
+| `103` | IVT overflow; The interrupt id attempted to be registered is above 512 |
 
 ## Opcodes
 | OPCODE | Meaning/Usage |

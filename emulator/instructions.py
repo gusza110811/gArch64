@@ -46,23 +46,31 @@ class Opcodes:
         self.define("SXTD", 0x2E, 0, [], 'A (i16) -> A (i32)')
         self.define("SXTQ", 0x2F, 0, [], 'A (i32) -> A (i64)')
 
+        # --- Comparison ---
+        self.define('CMPA', 0x35, 1, ['imm'], 'A ? imm')
+        self.define('CMPX', 0x36, 1, ['imm'], 'X ? imm')
+        self.define('CMPY', 0x3D, 1, ['imm'], 'Y ? imm')
+
+        self.define('CMAX', 0x75, 0, [], 'A ? X')
+        self.define('CMAY', 0x76, 0, [], 'A ? Y')
+        self.define('CMXY', 0x77, 0, [], 'X ? Y')
+        self.define('CMXA', 0x7D, 0, [], 'X ? A')
+        self.define('CMYA', 0x7E, 0, [], 'Y ? A')
+        self.define('CMYX', 0x7F, 0, [], 'Y ? X')
+
         # --- Absolute Control Flow ---
         self.define('AJMP', 0x30, 1, ['addr'], 'Jump to address')
-        self.define('AJZ',  0x31, 1, ['addr'], 'Jump if A == 0')
-        self.define('AJNZ', 0x32, 1, ['addr'], 'Jump if A != 0')
+        self.define('AJZ',  0x31, 1, ['addr'], 'Jump if Z flag set')
+        self.define('AJNZ', 0x32, 1, ['addr'], 'Jump if Z flag set')
         self.define('AJC',  0x33, 1, ['addr'], 'Jump if Carry')
         self.define('AJNC', 0x34, 1, ['addr'], 'Jump if not Carry')
-        self.define('AJEQ', 0x35, 1, ['addr'], 'Jump if X == Y')
-        self.define('AJNE', 0x36, 1, ['addr'], 'Jump if X != Y')
 
         # --- Absolute Function Flow ---
         self.define("ACALL", 0x38, 1, ['addr'], "Jump to address, pushing current line to stack")
-        self.define('ABZ',   0x39, 1, ['addr'], 'Call if A == 0')
-        self.define('ABNZ',  0x3A, 1, ['addr'], 'Call if A != 0')
+        self.define('ABZ',   0x39, 1, ['addr'], 'Call if Z flag set')
+        self.define('ABNZ',  0x3A, 1, ['addr'], 'Call if Z flag set')
         self.define('ABC',   0x3B, 1, ['addr'], 'Call if Carry')
         self.define('ABNC',  0x3C, 1, ['addr'], 'Call if not Carry')
-        self.define('ABEQ',  0x3D, 1, ['addr'], 'Call if X == Y')
-        self.define('ABNE',  0x3E, 1, ['addr'], 'Call if X != Y')
 
         # Indirect Flow Control
         self.define('JMPV', 0x3F, 0, [], 'Jump to address stored in register A')
@@ -82,9 +90,9 @@ class Opcodes:
         self.define("MVYA", 0x55, 0, [], "Copy Register Y to A")
 
         # --- Load immediate ---
-        self.define("LDAI", 0x47, 1, ["immB"], "Load immediate value into A")
-        self.define("LDXI", 0x48, 1, ["immB"], "Load immediate value into X")
-        self.define("LDYI", 0x49, 1, ["immB"], "Load immediate value into Y")
+        self.define("LDAI", 0x47, 1, ["imm"], "Load immediate value into A")
+        self.define("LDXI", 0x48, 1, ["imm"], "Load immediate value into X")
+        self.define("LDYI", 0x49, 1, ["imm"], "Load immediate value into Y")
 
         # --- Stack ---
         self.define("PUSHA", 0x60, 0, [], "Push Register A to stack")
@@ -102,8 +110,6 @@ class Opcodes:
         self.define('JNZ', 0x72, 1, ['addr'], 'Jump if A != 0')
         self.define('JC',  0x73, 1, ['addr'], 'Jump if Carry')
         self.define('JNC', 0x74, 1, ['addr'], 'Jump if not Carry')
-        self.define('JEQ', 0x75, 1, ['addr'], 'Jump if X == Y')
-        self.define('JNE', 0x76, 1, ['addr'], 'Jump if X != Y')
 
         # --- Relative Function Flow ---
         self.define("CALL", 0x78, 1, ['addr'], "Jump to address, pushing current line to stack")
@@ -111,9 +117,6 @@ class Opcodes:
         self.define('BNZ',  0x7A, 1, ['addr'], 'Call if A != 0')
         self.define('BC',   0x7B, 1, ['addr'], 'Call if Carry')
         self.define('BNC',  0x7C, 1, ['addr'], 'Call if not Carry')
-        self.define('BEQ',  0x7D, 1, ['addr'], 'Call if X == Y')
-        self.define('BNE',  0x7E, 1, ['addr'], 'Call if X != Y')
-
 
         # --- Interrupt ---
         self.define("INT", 0x80, 1, ["Command"], "Raise interrupt to do a certain task")

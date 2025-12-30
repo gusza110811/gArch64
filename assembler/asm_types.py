@@ -188,6 +188,25 @@ class Shrb(Command):
     def get_value(self, params=None, size=4, position=0):
         return (0x2B).to_bytes(2, "little")
 
+class Cmp(Command):
+    def get_value(self, params = None, size=4, position=0):
+        if isinstance(params[0], RamAddr) or isinstance(params[1], RamAddr):
+            raise SyntaxError(f"Cannot compare memory")
+        if isinstance(params[0], Immediate):
+            raise SyntaxError(f"Cannot compare immediates to register, try swapping the operands")
+
+        if isinstance(params[1], Immediate):
+            if isinstance(params[0], Immediate):
+                raise SyntaxError(f"Cannot compare immediate to immediate")
+            
+            if params[0].value == 0:
+                return 0x35.to_bytes(2,"little") + params[1].value.to_bytes(2,"little")
+            elif params[0].value == 1:
+                return 0x36.to_bytes(2,"little") + params[1].value.to_bytes(2,"little")
+            elif params[0].value == 2:
+                return 0x3D.to_bytes(2,"little") + params[1].value.to_bytes(2,"little")
+
+
 # Absolute Control flow
 class Ajmp(Command):
     def get_value(self, params, size=4, position=0):
@@ -233,24 +252,6 @@ class Ajnc(Command):
         except IndexError:
             raise SyntaxError("Not enough parameter!")
         return bytes([0x34,0x00]) + self.encode_immediate(params,size)
-
-class Ajeq(Command):
-    def get_value(self, params, size=4, position=0):
-        try:
-            if not params[0].literal:
-                raise SyntaxError("Cannot use constants/label in absolute jumps")
-        except IndexError:
-            raise SyntaxError("Not enough parameter!")
-        return bytes([0x35,0x00]) + self.encode_immediate(params,size)
-
-class Ajne(Command):
-    def get_value(self, params, size=4, position=0):
-        try:
-            if not params[0].literal:
-                raise SyntaxError("Cannot use constants/label in absolute jumps")
-        except IndexError:
-            raise SyntaxError("Not enough parameter!")
-        return bytes([0x36,0x00]) + self.encode_immediate(params,size)
 
 # Absolute Function flow
 class Ret(Command):
@@ -301,24 +302,6 @@ class Abnc(Command):
         except IndexError:
             raise SyntaxError("Not enough parameter!")
         return bytes([0x3C,0x00]) + self.encode_immediate(params,size)
-
-class Abeq(Command):
-    def get_value(self, params, size=4, position=0):
-        try:
-            if (not params[0].literal) and not isinstance(params[0],RamAddr):
-                raise SyntaxError("Cannot use label in absolute branch")
-        except IndexError:
-            raise SyntaxError("Not enough parameter!")
-        return bytes([0x3D,0x00]) + self.encode_immediate(params,size)
-
-class Abne(Command):
-    def get_value(self, params, size=4, position=0):
-        try:
-            if (not params[0].literal) and not isinstance(params[0],RamAddr):
-                raise SyntaxError("Cannot use label in absolute branch")
-        except IndexError:
-            raise SyntaxError("Not enough parameter!")
-        return bytes([0x3E,0x00]) + self.encode_immediate(params,size)
 
 class Jmpv(Command):
     def get_value(self, params, size=4, position=0):
@@ -380,26 +363,6 @@ class Jnc(Command):
             raise SyntaxError("Not Enough Parameter")
         return bytes([0x74,0x00]) + self.encode_immediate(params,size,True)
 
-class Jeq(Command):
-    def get_value(self, params, size=4, position=0):
-        try:
-            params[0].value = params[0].value - position
-            if params[0].literal:
-                raise SyntaxError("Cannot use literal value in relative jump")
-        except IndexError:
-            raise SyntaxError("Not Enough Parameter")
-        return bytes([0x75,0x00]) + self.encode_immediate(params,size,True)
-
-class Jne(Command):
-    def get_value(self, params, size=4, position=0):
-        try:
-            params[0].value = params[0].value - position
-            if params[0].literal:
-                raise SyntaxError("Cannot use literal value in relative jump")
-        except IndexError:
-            raise SyntaxError("Not Enough Parameter")
-        return bytes([0x76,0x00]) + self.encode_immediate(params,size,True)
-
 # Function flow
 class Ret(Command):
     def get_value(self, params=None, size=4, position=0):
@@ -454,26 +417,6 @@ class Bnc(Command):
         except IndexError:
             raise SyntaxError("Not Enough Parameter")
         return bytes([0x7C,0x00]) + self.encode_immediate(params,size,True)
-
-class Beq(Command):
-    def get_value(self, params, size=4, position=0):
-        try:
-            params[0].value = params[0].value - position
-            if params[0].literal:
-                raise SyntaxError("Cannot use literal value in relative branch")
-        except IndexError:
-            raise SyntaxError("Not Enough Parameter")
-        return bytes([0x7D,0x00]) + self.encode_immediate(params,size,True)
-
-class Bne(Command):
-    def get_value(self, params, size=4, position=0):
-        try:
-            params[0].value = params[0].value - position
-            if params[0].literal:
-                raise SyntaxError("Cannot use literal value in relative branch")
-        except IndexError:
-            raise SyntaxError("Not Enough Parameter")
-        return bytes([0x7E,0x00]) + self.encode_immediate(params,size,True)
 
 # Stack
 class Push(Command):

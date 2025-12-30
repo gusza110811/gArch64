@@ -53,13 +53,22 @@ class Executor:
         elif instruction == "SHLB": registers[0] = registers[1] << 8
         elif instruction == "SHRB": registers[0] = registers[1] >> 8
 
+        elif instruction == "CMPA": emulator.compare(registers[0],params[0])
+        elif instruction == "CMPA": emulator.compare(registers[1],params[0])
+        elif instruction == "CMPA": emulator.compare(registers[2],params[0])
+
+        elif instruction == "CPAX": emulator.compare(registers[0],registers[1])
+        elif instruction == "CPAY": emulator.compare(registers[0],registers[2])
+        elif instruction == "CPXY": emulator.compare(registers[1],registers[2])
+        elif instruction == "CPXA": emulator.compare(registers[1],registers[0])
+        elif instruction == "CPYA": emulator.compare(registers[2],registers[0])
+        elif instruction == "CPYX": emulator.compare(registers[2],registers[1])
+
         elif instruction == "AJMP": emulator.counter = params[0]
         elif instruction == "AJZ" and registers[0] == 0: emulator.counter = params[0]
         elif instruction == "AJNZ" and registers[0] != 0: emulator.counter = params[0]
         elif instruction == "AJC" and carry: emulator.counter = params[0]
         elif instruction == "AJNC" and (not carry): emulator.counter = params[0]
-        elif instruction == "AJEQ" and registers[1]==registers[2]: emulator.counter = params[0]
-        elif instruction == "AJNE" and registers[1]==registers[2]: emulator.counter = params[0]
 
         elif instruction == "RET": emulator.counter = ram.pop_double()
         elif instruction == "ACALL": ram.push_double(emulator.counter); emulator.counter = params[0]
@@ -67,24 +76,18 @@ class Executor:
         elif instruction == "ABNZ" and registers[0] != 0: ram.push_double(emulator.counter); emulator.counter = params[0]
         elif instruction == "ABC" and carry: ram.push_double(emulator.counter); emulator.counter = params[0]
         elif instruction == "ABNC" and (not carry): ram.push_double(emulator.counter); emulator.counter = params[0]
-        elif instruction == "ABEQ" and registers[1]==registers[2]: ram.push_double(emulator.counter); emulator.counter = params[0]
-        elif instruction == "ABNE" and registers[1]==registers[2]: ram.push_double(emulator.counter); emulator.counter = params[0]
 
         elif instruction == "JMP": emulator.counter = emulator.begininst + params[0]
         elif instruction == "JZ" and registers[0] == 0: emulator.counter = emulator.begininst + params[0]
         elif instruction == "JNZ" and registers[0] != 0: emulator.counter = emulator.begininst + params[0]
         elif instruction == "JC" and carry: emulator.counter = emulator.begininst + params[0]
         elif instruction == "JNC" and (not carry): emulator.counter = emulator.begininst + params[0]
-        elif instruction == "JEQ" and registers[1]==registers[2]: emulator.counter = emulator.begininst + params[0]
-        elif instruction == "JNE" and registers[1]==registers[2]: emulator.counter = emulator.begininst + params[0]
 
         elif instruction == "CALL": ram.push_double(emulator.counter); emulator.counter = emulator.begininst + params[0]
         elif instruction == "BZ" and registers[0] == 0: ram.push_double(emulator.counter); emulator.counter = emulator.begininst + params[0]
         elif instruction == "BNZ" and registers[0] != 0: ram.push_double(emulator.counter); emulator.counter = emulator.begininst + params[0]
         elif instruction == "BC" and carry: ram.push_double(emulator.counter); emulator.counter = emulator.begininst + params[0]
         elif instruction == "BNC" and (not carry): ram.push_double(emulator.counter); emulator.counter = emulator.begininst + params[0]
-        elif instruction == "BEQ" and registers[1]==registers[2]: ram.push_double(emulator.counter); emulator.counter = emulator.begininst + params[0]
-        elif instruction == "BNE" and registers[1]==registers[2]: ram.push_double(emulator.counter); emulator.counter = emulator.begininst + params[0]
 
         elif instruction == "JMPV": emulator.counter = registers[0]
         elif instruction == "CALLV": ram.push_double(emulator.counter); emulator.counter = registers[0]

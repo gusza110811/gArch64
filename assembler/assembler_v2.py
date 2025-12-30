@@ -42,14 +42,14 @@ class Assembler:
             "shlb":Shlb,
             "shrb":Shrb,
 
+            # Comparison
+
             # Control flow
             "ajmp": Ajmp,
             "ajz": Ajz,
             "ajnz": Ajnz,
             "ajc": Ajc,
             "ajnc": Ajnc,
-            "ajeq": Ajeq,
-            "ajne": Ajne,
 
             # Function flow
             "ret": Ret,
@@ -58,8 +58,6 @@ class Assembler:
             "abnz": Abnz,
             "abc": Abc,
             "abnc": Abnc,
-            "abeq": Abeq,
-            "abne": Abne,
 
             # Control flow
             "jmp": Jmp,
@@ -67,8 +65,6 @@ class Assembler:
             "jnz": Jnz,
             "jc": Jc,
             "jnc": Jnc,
-            "jeq": Jeq,
-            "jne": Jne,
             "jmpv": Jmpv,
 
             # Function flow
@@ -78,8 +74,6 @@ class Assembler:
             "bnz": Bnz,
             "bc": Bc,
             "bnc": Bnc,
-            "beq": Beq,
-            "bne": Bne,
             "callv": Callv,
 
             # Move
