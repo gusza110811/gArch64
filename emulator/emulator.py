@@ -9,7 +9,7 @@ import re
 from color import *
 
 # during development, keep this the next unstable or stable version to be released
-VERSION = "snapshot7"
+VERSION = "snapshot8"
 
 class executionError(Exception):
     def __init__(self, *args):
@@ -59,14 +59,14 @@ class Emulator:
             self.zero = False
     
     def compare(self, val1:int, val2:int):
-        if val1 >= val2:
-            self.carry = False
-            self.zero = False
-        if val1 == val2:
-            self.carry = False
-            self.zero = True
         if val1 < val2:
             self.carry = True
+        else:
+            self.carry = False
+        
+        if val1 == val2:
+            self.zero = True
+        else:
             self.zero = False
 
         return
@@ -124,7 +124,9 @@ class Emulator:
             try:
                 info = self.opcodes.OPCODES[opcode]
             except KeyError:
+                name = "???"
                 int_fault(0x101)
+                continue
 
             name:str = info["mnemonic"]
             size = info["size"]
@@ -158,10 +160,13 @@ class Emulator:
                 self.executor.execute(name,params)
             except pageFault:
                 int_fault(0x102)
+                continue
             except ivtOverflow:
                 int_fault(0x103)
+                continue
             except undefinedInt:
                 int_fault(0x100)
+                continue
 
             self.time.append(time.perf_counter_ns()-prev_time)
             
@@ -171,6 +176,7 @@ class Emulator:
                 # opcode name,
                 # parameters,
                 # registers,
+                # flags,
                 # (relavent cache address, relavent cache value)
                 # (relavent ram address, relavent ram value)
                 # was a jump done
@@ -186,6 +192,7 @@ class Emulator:
                         opcode, name,
                         params.copy() + [0]*(2-len(params)),
                         self.registers.copy(),
+                        (self.carry, self.zero),
                         rammed,
                         jumped
                     ))
@@ -376,9 +383,9 @@ if __name__ == "__main__":
                     else:
                         tracefile.write(f"  ")
 
-                    tracefile.write(f"{entry[0]:08X}: [{entry[1]:02X}] {entry[2].ljust(5)} {', '.join([f"{param:8X}" for param in entry[3]])}   //   A: {entry[4][0]:8X} , X: {entry[4][1]:8X} , Y: {entry[4][2]:8X}   //")
-                    if entry[5]:
-                        tracefile.write(f"    x{entry[5][0]:08X} =       {entry[5][1]:2X}")
+                    tracefile.write(f"{entry[0]:08X}: [{entry[1]:02X}] {entry[2].ljust(5)} {', '.join([f"{param:8X}" for param in entry[3]])}   //   A: {entry[4][0]:8X} , X: {entry[4][1]:8X} , Y: {entry[4][2]:8X}   // {"C" if entry[5][0] else "c"}{"Z" if entry[5][1] else "z"}")
+                    if entry[6]:
+                        tracefile.write(f"    x{entry[6][0]:08X} =       {entry[6][1]:2X}")
                     tracefile.write(f"\n")
         if dumpr:
             if verbose:

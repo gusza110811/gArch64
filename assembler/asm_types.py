@@ -191,20 +191,46 @@ class Shrb(Command):
 class Cmp(Command):
     def get_value(self, params = None, size=4, position=0):
         if isinstance(params[0], RamAddr) or isinstance(params[1], RamAddr):
-            raise SyntaxError(f"Cannot compare memory")
+            raise ValueError(f"Cannot compare memory")
         if isinstance(params[0], Immediate):
-            raise SyntaxError(f"Cannot compare immediates to register, try swapping the operands")
+            raise ValueError(f"Cannot compare immediates to register, try swapping the operands")
 
         if isinstance(params[1], Immediate):
             if isinstance(params[0], Immediate):
-                raise SyntaxError(f"Cannot compare immediate to immediate")
+                raise ValueError(f"Cannot compare immediate to immediate")
             
             if params[0].value == 0:
-                return 0x35.to_bytes(2,"little") + params[1].value.to_bytes(2,"little")
+                return 0x35.to_bytes(2,"little") + params[1].value.to_bytes(size,"little")
             elif params[0].value == 1:
-                return 0x36.to_bytes(2,"little") + params[1].value.to_bytes(2,"little")
+                return 0x36.to_bytes(2,"little") + params[1].value.to_bytes(size,"little")
             elif params[0].value == 2:
-                return 0x3D.to_bytes(2,"little") + params[1].value.to_bytes(2,"little")
+                return 0x3D.to_bytes(2,"little") + params[1].value.to_bytes(size,"little")
+        
+        if isinstance(params[0],Register) and isinstance(params[1],Register):
+            reg1 = params[0].value
+            reg2 = params[1].value
+
+            if reg1 == 0:
+                if reg2 == 1:
+                    return 0x75.to_bytes(2,"little")
+                elif reg2 == 2:
+                    return 0x76.to_bytes(2,"little")
+                else:
+                    raise ValueError("Cannot compare register to itself")
+            elif reg1 == 1:
+                if reg2 == 2:
+                    return 0x77.to_bytes(2,"little")
+                elif reg2 == 0:
+                    return 0x7D.to_bytes(2,"little")
+                else:
+                    raise ValueError("Cannot compare register to itself")
+            elif reg1 == 2:
+                if reg2 == 0:
+                    return 0x7E.to_bytes(2,"little")
+                elif reg2 == 1:
+                    return 0x7F.to_bytes(2,"little")
+                else:
+                    raise ValueError("Cannot compare register to itself")
 
 
 # Absolute Control flow

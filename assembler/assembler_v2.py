@@ -43,6 +43,7 @@ class Assembler:
             "shrb":Shrb,
 
             # Comparison
+            "cmp": Cmp,
 
             # Control flow
             "ajmp": Ajmp,

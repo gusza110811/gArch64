@@ -11,10 +11,10 @@ main:
     mov a, input_buf
     int [input]
     mov x, [input_buf]
-    mov y, 'r
-    jeq [read]
-    mov y, 'w
-    jeq [write]
+    cmp x, 'r
+    jz [read]
+    cmp x, 'w
+    jz [write]
 
 jmp [main]
 
@@ -68,6 +68,7 @@ hexconv:
 hexconv_loop:
     movd x, [hexconv_counter]
     ldv 
+    cmp a, 0
     jz [hexconv_end]
     mov x, a
 

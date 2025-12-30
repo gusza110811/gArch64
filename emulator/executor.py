@@ -54,8 +54,8 @@ class Executor:
         elif instruction == "SHRB": registers[0] = registers[1] >> 8
 
         elif instruction == "CMPA": emulator.compare(registers[0],params[0])
-        elif instruction == "CMPA": emulator.compare(registers[1],params[0])
-        elif instruction == "CMPA": emulator.compare(registers[2],params[0])
+        elif instruction == "CMPX": emulator.compare(registers[1],params[0])
+        elif instruction == "CMPY": emulator.compare(registers[2],params[0])
 
         elif instruction == "CPAX": emulator.compare(registers[0],registers[1])
         elif instruction == "CPAY": emulator.compare(registers[0],registers[2])
@@ -65,27 +65,27 @@ class Executor:
         elif instruction == "CPYX": emulator.compare(registers[2],registers[1])
 
         elif instruction == "AJMP": emulator.counter = params[0]
-        elif instruction == "AJZ" and registers[0] == 0: emulator.counter = params[0]
-        elif instruction == "AJNZ" and registers[0] != 0: emulator.counter = params[0]
+        elif instruction == "AJZ" and emulator.zero: emulator.counter = params[0]
+        elif instruction == "AJNZ" and not emulator.zero: emulator.counter = params[0]
         elif instruction == "AJC" and carry: emulator.counter = params[0]
         elif instruction == "AJNC" and (not carry): emulator.counter = params[0]
 
         elif instruction == "RET": emulator.counter = ram.pop_double()
         elif instruction == "ACALL": ram.push_double(emulator.counter); emulator.counter = params[0]
-        elif instruction == "ABZ" and registers[0] == 0: ram.push_double(emulator.counter); emulator.counter = params[0]
-        elif instruction == "ABNZ" and registers[0] != 0: ram.push_double(emulator.counter); emulator.counter = params[0]
+        elif instruction == "ABZ" and emulator.zero: ram.push_double(emulator.counter); emulator.counter = params[0]
+        elif instruction == "ABNZ" and not emulator.zero: ram.push_double(emulator.counter); emulator.counter = params[0]
         elif instruction == "ABC" and carry: ram.push_double(emulator.counter); emulator.counter = params[0]
         elif instruction == "ABNC" and (not carry): ram.push_double(emulator.counter); emulator.counter = params[0]
 
         elif instruction == "JMP": emulator.counter = emulator.begininst + params[0]
-        elif instruction == "JZ" and registers[0] == 0: emulator.counter = emulator.begininst + params[0]
-        elif instruction == "JNZ" and registers[0] != 0: emulator.counter = emulator.begininst + params[0]
+        elif instruction == "JZ" and emulator.zero: emulator.counter = emulator.begininst + params[0]
+        elif instruction == "JNZ" and not emulator.zero: emulator.counter = emulator.begininst + params[0]
         elif instruction == "JC" and carry: emulator.counter = emulator.begininst + params[0]
         elif instruction == "JNC" and (not carry): emulator.counter = emulator.begininst + params[0]
 
         elif instruction == "CALL": ram.push_double(emulator.counter); emulator.counter = emulator.begininst + params[0]
-        elif instruction == "BZ" and registers[0] == 0: ram.push_double(emulator.counter); emulator.counter = emulator.begininst + params[0]
-        elif instruction == "BNZ" and registers[0] != 0: ram.push_double(emulator.counter); emulator.counter = emulator.begininst + params[0]
+        elif instruction == "BZ" and emulator.zero: ram.push_double(emulator.counter); emulator.counter = emulator.begininst + params[0]
+        elif instruction == "BNZ" and not emulator.zero: ram.push_double(emulator.counter); emulator.counter = emulator.begininst + params[0]
         elif instruction == "BC" and carry: ram.push_double(emulator.counter); emulator.counter = emulator.begininst + params[0]
         elif instruction == "BNC" and (not carry): ram.push_double(emulator.counter); emulator.counter = emulator.begininst + params[0]
 

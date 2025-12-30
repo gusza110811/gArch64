@@ -4,20 +4,18 @@ main:
     mov a, prompt
     int x10 ; prompt user
 
-
     mov a, buffer
     int x12 ; read
 
-
-    mov y, [buffer]
+    mov x, [buffer]
 
     ; check input
-    mov x, 'r
-    jeq [read_mode]
-    mov x, 'w
-    jeq [write_mode]
+    cmp x, 'r
+    jz [read_mode]
+    cmp x, 'w
+    jz [write_mode]
 
-jmp [main]
+jmp main
 
 read_mode:
     call [get_sector]
@@ -28,25 +26,26 @@ read_mode:
 jmp [main]
 
 write_mode:
-    call [get_sector]
+    call get_sector
     mov x, a
     mov y, 0
-    jeq [write_error]
+    cmp x, y
+    jz write_error
 
-    int [x13]
+    int 0x13
     mov a, dataprompt ; ask for data
 
-    int [x10]
+    int 0x10
     mov a, buffer
-    int [x12]
-    int [x15]
-jmp [main]
+    int 0x12
+    int 0x15
+jmp main
 
 write_error:
     mov a, writeerror
     int [x10]
 
-jmp [main]
+jmp main
 
 get_sector:
     mov x, [buffer1]

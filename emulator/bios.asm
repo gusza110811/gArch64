@@ -61,7 +61,8 @@ disk_set_sector:
     mov [disk_data], x
     mov x, [disk_stat]
     mov y, 0x31
-    jeq [bad_sector]
+    cmp x, y
+    jz [bad_sector]
     popr 
     mov a, 0
     ret 
@@ -87,6 +88,7 @@ disk_write:
         add 
         mov x, a
         mov a, [disk_stat]
+        cmp a, 0
         jnz writeloop
     popr 
 ret 
@@ -105,6 +107,7 @@ disk_read:
         add 
         mov x, a
         mov a, [disk_stat]
+        cmp a, 0
         jnz readloop
     popr 
 ret 
@@ -118,22 +121,22 @@ input:
 listen_loop:
     mov y, [console] ; read character into Y
 
-
     ; check for backspace (0x08)
-    mov x, 0x08
-    jeq handle_backspace
+    cmp y, 0x08
+    jz handle_backspace
 
     ; check for newline
-    mov x, 0x0A
-    jeq end_loop
+    cmp y, 0x0A
+    jz end_loop
 
     ; store character
-    mov a, y
+    cmp y, 0
     jz listen_loop ; ignore zero
 
+    mov a, y
     movd x, [counter]
+    stv
     mov y, 1
-    stv 
     add 
     movd [counter], a
     jmp listen_loop
@@ -141,6 +144,7 @@ listen_loop:
 handle_backspace:
     ; only backspace if counter > start
     movd a, [counter]
+    cmp a, 0
     jz listen_loop ; if already at start, skip
 
     mov x, a
@@ -178,6 +182,7 @@ printloop:
     movd [counter], a
 
     ldv 
+    cmp a, 0
     jnz printloop
     mov [console], a
 ret 

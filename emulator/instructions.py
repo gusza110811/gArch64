@@ -61,14 +61,14 @@ class Opcodes:
         # --- Absolute Control Flow ---
         self.define('AJMP', 0x30, 1, ['addr'], 'Jump to address')
         self.define('AJZ',  0x31, 1, ['addr'], 'Jump if Z flag set')
-        self.define('AJNZ', 0x32, 1, ['addr'], 'Jump if Z flag set')
+        self.define('AJNZ', 0x32, 1, ['addr'], 'Jump if Z flag not set')
         self.define('AJC',  0x33, 1, ['addr'], 'Jump if Carry')
         self.define('AJNC', 0x34, 1, ['addr'], 'Jump if not Carry')
 
         # --- Absolute Function Flow ---
         self.define("ACALL", 0x38, 1, ['addr'], "Jump to address, pushing current line to stack")
         self.define('ABZ',   0x39, 1, ['addr'], 'Call if Z flag set')
-        self.define('ABNZ',  0x3A, 1, ['addr'], 'Call if Z flag set')
+        self.define('ABNZ',  0x3A, 1, ['addr'], 'Call if Z flag not set')
         self.define('ABC',   0x3B, 1, ['addr'], 'Call if Carry')
         self.define('ABNC',  0x3C, 1, ['addr'], 'Call if not Carry')
 
@@ -106,15 +106,15 @@ class Opcodes:
 
         # --- Relative Control Flow ---
         self.define('JMP', 0x70, 1, ['addr'], 'Jump to address')
-        self.define('JZ',  0x71, 1, ['addr'], 'Jump if A == 0')
-        self.define('JNZ', 0x72, 1, ['addr'], 'Jump if A != 0')
+        self.define('JZ',  0x71, 1, ['addr'], 'Call if Z flag set')
+        self.define('JNZ', 0x72, 1, ['addr'], 'Call if Z flag not set')
         self.define('JC',  0x73, 1, ['addr'], 'Jump if Carry')
         self.define('JNC', 0x74, 1, ['addr'], 'Jump if not Carry')
 
         # --- Relative Function Flow ---
         self.define("CALL", 0x78, 1, ['addr'], "Jump to address, pushing current line to stack")
-        self.define('BZ',   0x79, 1, ['addr'], 'Call if A == 0')
-        self.define('BNZ',  0x7A, 1, ['addr'], 'Call if A != 0')
+        self.define('BZ',   0x79, 1, ['addr'], 'Call if Z flag set')
+        self.define('BNZ',  0x7A, 1, ['addr'], 'Call if Z flag not set')
         self.define('BC',   0x7B, 1, ['addr'], 'Call if Carry')
         self.define('BNC',  0x7C, 1, ['addr'], 'Call if not Carry')
 
