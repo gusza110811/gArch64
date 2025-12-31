@@ -1,3 +1,4 @@
+from __future__ import annotations
 from lark import Lark, Transformer as t
 import os, sys
 
@@ -5,8 +6,6 @@ __dir__ = os.path.dirname(__file__)
 
 class Transformer(t):
     def __init__(self, visit_tokens = True):
-        self.labels = {}
-        self.constants = {}
         super().__init__(visit_tokens)
     
     def get_const_or_label(self, name):
@@ -18,17 +17,11 @@ class Transformer(t):
             raise NameError(f"`{name}` is not defined")
 
     class Node:
-        def __init__(self, value):
+        def __init__(self, value:Transformer.Node):
             self.value = value
         
         def __repr__(self):
             return f"{self.__class__.__name__}({self.value})"
-
-        def get(self):
-            return self.value
-
-        def eval(self,transformer:"Transformer"):
-            raise NotImplementedError(f"Evaluation routine not set for {self.__class__.__name__}")
 
     class start(Node):
         def __repr__(self):
@@ -90,6 +83,27 @@ class Transformer(t):
     class text_nulterm(Node):
         def __repr__(self):
             return f".asciiz {self.value[0]}"
+    
+    class byte(Node):
+        def __repr__(self):
+            return f".byte {self.value[0]}"
+        def length(self):
+            return 1
+    class word(Node):
+        def __repr__(self):
+            return f".word {self.value[0]}"
+        def length(self):
+            return 2
+    class double(Node):
+        def __repr__(self):
+            return f".double {self.value[0]}"
+        def length(self):
+            return 4
+    class quad(Node):
+        def __repr__(self):
+            return f".quad {self.value[0]}"
+        def length(self):
+            return 8
 
     class or_op(Node):
         def __repr__(self):
@@ -141,26 +155,35 @@ class Transformer(t):
         def __repr__(self):
             return f"identifer {self.value}"
     
-    class INST(Node):
+    class Terminal:
+        def __init__(self,value:str):
+            self.value = value
+    
+    class INST(Terminal):
         def __init__(self, value):
             super().__init__(value.lower())
         def __repr__(self):
             return self.value
-        
-    class STRING(Node):
+
+    class STRING(Terminal):
+        def __repr__(self):
+            return self.value
+        def init(self):
+            self.value = self.value
+    class CHAR(STRING):
         def __repr__(self):
             return self.value
 
-    class DECIMAL(Node):
+    class DECIMAL(Terminal):
         def __repr__(self):
             return f"{self.value}"
-    class BINARY(Node):
+    class BINARY(Terminal):
         def __repr__(self):
             return f"0b{self.value}"
-    class OCTAL(Node):
+    class OCTAL(Terminal):
         def __repr__(self):
             return f"0o{self.value}"
-    class HEX(Node):
+    class HEX(Terminal):
         def __init__(self, value):
             value = value.lower()
             super().__init__(value)

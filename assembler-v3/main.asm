@@ -7,15 +7,13 @@ data text {
 
 ; this is an anonymous data block
 data {
-    text1:
-    .asciiz "Beep "
+    text1:  .asciiz "Beep "
 
-    text2:
-    .asciiz "Boop\n"
+    text2:  .asciiz "Boop\n"
 }
 
 ; main is always put at the top when assembled
-main {
+func main {
     mov a, text ; LDAI text
     int print   ; INT print
 
@@ -24,8 +22,8 @@ main {
     ; implicit HALT (because this function is main)
 }
 
-; code blocks can also be defined with func
-func printing {
+; code blocks can also be defined without func
+printing {
     mov a, text1
     int print
 

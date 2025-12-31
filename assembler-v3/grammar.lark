@@ -25,8 +25,8 @@ immediate: expr
 
 data_block: "data " [IDENTIFIER] "{" data_statement* "}"
 
-?data_statement: expr ["," expr]*
-    | dot_directive
+?data_statement: dot_directive
+    | constantdef
     | labeldef
 
 constantdef: "const" IDENTIFIER "=" expr
@@ -34,7 +34,11 @@ labeldef: IDENTIFIER ":"
 
 ?dot_directive: ".ascii" STRING -> text
     | ".asciiz" STRING -> text_nulterm
-    | ".zero" literal -> zero
+    | ".byte" expr -> byte
+    | ".word" expr -> word
+    | ".double" expr -> double
+    | ".quad" expr -> quad
+    | ".zero" expr -> zero
 
 ?expr: bitwise_or
 
@@ -72,7 +76,7 @@ literal: DECIMAL
     | "0b" BINARY
     | "0o" OCTAL
     | "0x" HEX
-    | STRING
+    | CHAR
 
 symbol: IDENTIFIER
 
@@ -88,7 +92,7 @@ OCTAL: /[0-7_]+/
 HEX: /[0-9a-fA-F_]+/
 STRING: ESCAPED_STRING
 
-LINEWS: /[\s\t]+/
+CHAR: "'" /.+/ /(?<!\\)(\\\\)*?/ "'"
 
 INST: "halt"i
 
@@ -113,13 +117,13 @@ INST: "halt"i
     | "shlb"i
     | "shrb"i
 
+    | "cmp"i
+
     | "jmp"i
     | "jz"i
     | "jnz"i
     | "jc"i
     | "jnc"i
-    | "jeq"i
-    | "jne"i
     | "jmpv"i
 
     | "call"i
@@ -127,8 +131,6 @@ INST: "halt"i
     | "bnz"i
     | "bc"i
     | "bnc"i
-    | "beq"i
-    | "bne"i
     | "callv"i
 
     | "mov"i
@@ -145,6 +147,7 @@ INST: "halt"i
     | "free"i
 
 %import common.ESCAPED_STRING
+%import common.WS
 
-%ignore LINEWS
+%ignore WS
 %ignore COMMENT
