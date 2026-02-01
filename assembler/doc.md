@@ -149,6 +149,7 @@ This is what each interrupt IDs are used for
 
 Fault interrupts
 | interrupt id (hexadecimal) | Fault |
+| --- | --- |
 | `100` | Interrupt fault: The software or fault interrupt attempted to be called is undefined |
 | `101` | Opcode fault; The CPU decoded an opcode in memory and is unable to execute it |
 | `102` | Page fault; Attempted to access memory in unallocated address |
