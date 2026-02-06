@@ -10,14 +10,19 @@ class Assembler:
 
     def main(self, code:str, filename="<main>"):
         tree = self.parser.parse(code,filename)
-        print("\n".join([repr(item) for item in tree.value]))
+        print("\n".join([repr(item) for item in tree.children]))
 
         self.constructor.main(tree,filename)
+        print("\n")
 
-        print("\n\n"+"\n".join([repr(item) for item in tree.value]))
+        for space in self.constructor.locals:
+            print(space.get_all())
 
-if __name__ == "__main__":
-    test= open(os.path.join(__dir__,"main.asm")).read()
+def test():
+    test = open(os.path.join(__dir__,"main.asm")).read()
 
     assembler = Assembler()
     assembler.main(test)
+
+if __name__ == "__main__":
+    test()

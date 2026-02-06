@@ -17,13 +17,23 @@ func main {
     mov a, text ; LDAI text
     int print   ; INT print
 
-    call printing
+    call printd
 
     ; implicit HALT (because this function is main)
 }
 
-; code blocks can also be defined without func
-printing {
+func printd {
+    mov a, text1
+    int print
+
+    mov a, text2
+    int print
+
+    ; implicit RET
+}
+
+; function can also be defined without func
+nprintd {
     mov a, text1
     int print
 
