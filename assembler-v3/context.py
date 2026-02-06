@@ -1,9 +1,25 @@
-class Memory:
-    def __init__(self,parent:"Memory"=None):
+class Context:
+    def __init__(self,parent:"Context"=None):
         self.parent = parent
         self.root = parent is None
+        self.pc = 0
         self.data = {}
     
+    def inc_pc(self, n=1):
+        if self.root:
+            self.pc += n
+        else:
+            self.parent.inc_pc(n)
+    
+    def get_pc(self):
+        if self.root:
+            return self.pc
+        else:
+            self.parent.get_pc
+    
+    def add_label(self, name:str):
+        self.set(name, self.get_pc())
+
     def get(self, key:str):
         try:
             return self.data[key]

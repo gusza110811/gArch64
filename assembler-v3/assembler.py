@@ -12,11 +12,15 @@ class Assembler:
         tree = self.parser.parse(code,filename)
         print("\n".join([repr(item) for item in tree.children]))
 
-        self.constructor.main(tree,filename)
+        out = self.constructor.main(tree,filename)
         print("\n")
 
         for space in self.constructor.locals:
             print(space.get_all())
+        
+        print(self.constructor.globals.pc)
+
+        print(out)
 
 def test():
     test = open(os.path.join(__dir__,"main.asm")).read()

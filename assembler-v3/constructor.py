@@ -1,11 +1,11 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from memory import Memory
+from context import Context
 from parser import Transformer
 
 class Constructor:
     def __init__(self):
-        self.globals = Memory()
+        self.globals = Context()
 
         self.locals = [self.globals]
 
@@ -14,13 +14,8 @@ class Constructor:
     def add_label(self):
         pass
 
-    def make_local(self):
-        local = Memory()
-        self.locals.append(local)
-        return local
-
-    def main(self,ast:Transformer.start,filename="<main>"):
+    def main(self,ast:Transformer.start,filename="<main>") -> bytes:
 
         ast.eval(self.globals)
 
-        return
+        return ast.emit(self.globals)
