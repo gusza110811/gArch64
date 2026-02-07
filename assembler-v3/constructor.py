@@ -7,13 +7,6 @@ class Constructor:
     def __init__(self):
         self.globals = Context()
 
-        self.locals = [self.globals]
-
-        self.ir=[]
-    
-    def add_label(self):
-        pass
-
     def main(self,ast:Transformer.start,filename="<main>") -> bytes:
 
         ast.eval(self.globals)

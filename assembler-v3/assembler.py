@@ -18,8 +18,7 @@ class Assembler:
         out = self.constructor.main(tree,filename)
         print("\n")
 
-        for space in self.constructor.locals:
-            print(space.get_all())
+        print(self.constructor.globals.get_all())
         return out
 
 def test():
@@ -29,6 +28,9 @@ def test():
     out = assembler.main(test)
     if out is not None:
         print("Output bytes:", out.hex(" ", 2))
+    
+    with open("out.bin","wb") as file:
+        file.write(out)
 
 if __name__ == "__main__":
     test()

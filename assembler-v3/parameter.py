@@ -9,8 +9,8 @@ class Immediate(BaseParameter):
     def __repr__(self):
         return f"ImmediateParameter(value={self.value})"
     
-    def get(self,size=4):
-        return self.value.to_bytes(size, byteorder='little')
+    def get(self,size=4,signed=False):
+        return self.value.to_bytes(size, byteorder='little', signed=signed)
 
 class Register(BaseParameter):
     def __init__(self, value):

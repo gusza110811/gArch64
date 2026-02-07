@@ -1,14 +1,10 @@
-const print = 0x10
+const print = 0x10 ; bios-defined software interupt routine
 
 data text {
-    .asciiz "Hello"
+    .asciiz "Hello, World!\n"
 }
 
 func main {
     mov a, text ; LDAI text
     int print   ; INT print
-
-    jmp main
-
-    ; implicit HALT (because this function is main)
 }

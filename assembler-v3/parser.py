@@ -144,6 +144,15 @@ class Transformer(t):
             return b""
 
     class code_block(codegen_block):
+        def eval(self, context):
+            super().eval(context)
+            context.inc_pc(2)
+        
+        def emit(self):
+            if self.name == "main":
+                return super().emit() + b"\xff\0"
+            else:
+                return super().emit() + b"\x37\0"
 
         def __repr__(self):
             return "code " + repr(self.name) + "{" + "; ".join([repr(value) for value in self.children]) + "}"
@@ -160,17 +169,23 @@ class Transformer(t):
             self.args = self.children[1:]
 
         def eval(self, context):
-            context.inc_pc(2+len(self.args)*4)
+            self.command = self.command.eval()
+            tmp_args = []
+            for child in self.args:
+                tmp_args.append(child.dry_eval())
+            dryinst = instruction.Instruction.from_str(self.command,tmp_args)
+            self.position = context.get_pc()
+            context.inc_pc(len(dryinst.get(0)))
 
         def collect(self, context):
             processed_args = []
 
             for child in self.args:
                 processed_args.append(child.eval(context))
-            self.out = instruction.Instruction.from_str(self.command.eval(), processed_args)
+            self.out = instruction.Instruction.from_str(self.command, processed_args).get(self.position)
         
         def emit(self):
-            return self.out.get()
+            return self.out
 
         def __repr__(self):
             return f"{self.command}({", ".join([repr(value) for value in self.args])})"
@@ -242,6 +257,9 @@ class Transformer(t):
             super().__init__(value)
         def __repr__(self):
             return f"register {self.children[0]}"
+        
+        def dry_eval(self):
+            return parameter.Register(0)
 
         def eval(self, context):
             if self.children[0] == "a":
@@ -253,16 +271,22 @@ class Transformer(t):
     class immediate(Branch):
         def __repr__(self):
             return f"immediate {self.children[0]}"
+        def dry_eval(self):
+            return parameter.Immediate(0)
         def eval(self, context):
             return parameter.Immediate(self.children[0].eval(context))
     class direct_addr(Branch):
         def __repr__(self):
             return f"deref {self.children[0]}"
+        def dry_eval(self):
+            return parameter.Dereference(0)
         def eval(self, context):
             return parameter.Dereference(self.children[0].eval(context))
     class indirect_addr(Branch):
         def __repr__(self):
             return f"deref indirect"
+        def dry_eval(self):
+            return parameter.IndirectDereference(0)
         def eval(self, context):
             return parameter.IndirectDereference()
 
@@ -288,45 +312,73 @@ class Transformer(t):
         def eval(self, context):
             context.add_label(self.children[0].eval())
 
-    class expr(Branch):pass
+    class expr(Branch):
+        def __init__(self, value):
+            if len(value) == 2:
+                self.lhs = value[0]
+                self.rhs = value[1]
+            else:
+                self.rhs = value[0]
 
     class or_op(expr):
         def __repr__(self):
-            return f"({self.children[0]} | {self.children[1]})"
+            return f"({self.lhs} | {self.rhs})"
+        def eval(self, context):
+            return self.lhs.eval(context) | self.rhs.eval(context)
     class xor_op(expr):
         def __repr__(self):
-            return f"({self.children[0]} ^ {self.children[1]})"
+            return f"({self.lhs} ^ {self.rhs})"
+        def eval(self, context):
+            return self.lhs.eval(context) ^ self.rhs.eval(context)
     class and_op(expr):
         def __repr__(self):
-            return f"({self.children[0]} & {self.children[1]})"
+            return f"({self.lhs} & {self.rhs})"
+        def eval(self, context):
+            return self.lhs.eval(context) & self.rhs.eval(context)
     class not_op(expr):
         def __repr__(self):
-            return f"(~ {self.children[0]})"
+            return f"(~ {self.rhs})"
+        def eval(self, context):
+            return ~self.rhs.eval(context)
     
     class shiftr(expr):
         def __repr__(self):
-            return f"({self.children[0]} >> {self.children[1]})"
+            return f"({self.lhs} >> {self.rhs})"
+        def eval(self, context):
+            return self.lhs.eval(context) >> self.rhs.eval(context)
     class shiftl(expr):
         def __repr__(self):
-            return f"({self.children[0]} << {self.children[1]})"
+            return f"({self.lhs} << {self.rhs})"
+        def eval(self, context):
+            return self.lhs.eval(context) << self.rhs.eval(context)
     
     class add(expr):
         def __repr__(self):
-            return f"({self.children[0]} + {self.children[1]})"
+            return f"({self.lhs} + {self.rhs})"
+        def eval(self, context):
+            return self.lhs.eval(context) + self.rhs.eval(context)
     class sub(expr):
         def __repr__(self):
-            return f"({self.children[0]} - {self.children[1]})"
+            return f"({self.lhs} - {self.rhs})"
+        def eval(self, context):
+            return self.lhs.eval(context) - self.rhs.eval(context)
     
     class mul(expr):
         def __repr__(self):
-            return f"({self.children[0]} * {self.children[1]})"
+            return f"({self.lhs} * {self.rhs})"
+        def eval(self, context):
+            return self.lhs.eval(context) * self.rhs.eval(context)
     class div(expr):
         def __repr__(self):
-            return f"({self.children[0]} / {self.children[1]})"
+            return f"({self.lhs} / {self.rhs})"
+        def eval(self, context):
+            return self.lhs.eval(context) // self.rhs.eval(context)
     
     class unary_sub(expr):
         def __repr__(self):
-            return f"(- {self.children[0]})"
+            return f"(- {self.rhs})"
+        def eval(self, context):
+            return - self.rhs.eval(context)
 
     class literal(Branch):
         def __init__(self, value:Transformer.Leaf):
@@ -348,21 +400,15 @@ class Transformer(t):
         def __repr__(self):
             return f"identifer {self.value}"
     
-    class INST(Leaf):
-        def __repr__(self):
-            return self.value
+    class INST(Leaf):pass
 
     class STRING(Leaf):
-        def __repr__(self):
-            return self.value
         def __init__(self,value:str):
             self.value = value[1:-1]
         def eval(self):
             self.value = self.value.replace(r"\n","\n").replace(r"\t","\t").replace(r"\\","\\").replace(r"\"","\"")
             return self.value
     class CHAR(STRING):
-        def __repr__(self):
-            return self.value
 
         def eval(self):
             super().eval()
