@@ -23,7 +23,7 @@ class Assembler:
         print(out)
 
 def test():
-    test = open(os.path.join(__dir__,"main.asm")).read()
+    test = open(os.path.join(__dir__,"small_test.asm")).read()
 
     assembler = Assembler()
     assembler.main(test)

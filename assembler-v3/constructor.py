@@ -18,4 +18,6 @@ class Constructor:
 
         ast.eval(self.globals)
 
+        ast.collect(self.globals)
+
         return ast.emit(self.globals)

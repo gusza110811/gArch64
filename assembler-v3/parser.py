@@ -4,6 +4,8 @@ from lark import Lark, Transformer as t
 import lark
 import os, sys
 from context import Context
+import parameter
+import instruction
 
 __dir__ = os.path.dirname(__file__)
 
@@ -61,6 +63,11 @@ class Transformer(t):
             for child in codegens:
                 child.eval(context)
         
+        def collect(self, context:Context):
+            for child in self.children:
+                if isinstance(child,Transformer.codegen_block):
+                    child.collect(context)
+        
         def emit(self,context:Context):
             functions = [child for child in self.children if isinstance(child,Transformer.code_block)]
             data = [child for child in self.children if isinstance(child,Transformer.data_block)]
@@ -75,12 +82,12 @@ class Transformer(t):
             
             out = []
             
-            #out.append(main.emit(context))
+            out.append(main.emit())
 
             #for func in functions:
-            #    out.append(func.emit(context))
+            #    out.append(func.emit())
             for part in data:
-                out.append(part.emit(context))
+                out.append(part.emit())
             
             return b"".join(out)
 
@@ -95,6 +102,7 @@ class Transformer(t):
         def eval(self, context):
             if self.name:
                 self.name = self.name.eval()
+                context.add_label(self.name)
             self.codegens = [child for child in self.children if isinstance(child,Transformer.codegen)]
             self.non_codegens = [child for child in self.children if child not in self.codegens]
 
@@ -104,10 +112,14 @@ class Transformer(t):
             for child in self.codegens:
                 child.eval(context)
         
-        def emit(self, context):
+        def collect(self, context):
+            for item in self.codegens:
+                item.collect(context)
+        
+        def emit(self):
             out = b""
-            for item in self.children:
-                out += item.emit(context)
+            for item in self.codegens:
+                out += item.emit()
             return out
     class codegen(Branch):
         def __init__(self, value):
@@ -116,8 +128,11 @@ class Transformer(t):
 
         def eval(self, context:Context):
             pass
+
+        def collect(self, context:Context):
+            pass
         
-        def emit(self,context):
+        def emit(self):
             return b""
 
     class code_block(codegen_block):
@@ -138,9 +153,16 @@ class Transformer(t):
 
         def eval(self, context):
             context.inc_pc(2+len(self.args)*4)
+
+        def collect(self, context):
+            processed_args = []
+
+            for child in self.args:
+                processed_args.append(child.eval(context))
+            self.out = instruction.Instruction.from_str(self.command.eval(), processed_args)
         
-        def emit(self, context):
-            return b"\xEA" + b"".join([arg.eval(context) for arg in self.args]) # \xEA is placeholder
+        def emit(self):
+            return self.out.get()
 
         def __repr__(self):
             return f"{self.command}({", ".join([repr(value) for value in self.args])})"
@@ -152,7 +174,9 @@ class Transformer(t):
         def eval(self, context):
             self.text = self.value.eval()
             context.inc_pc(len(self.text))
-        def emit(self,context):
+        def collect(self, context):
+            pass
+        def emit(self):
             return self.text.encode('utf-8')
     
     class text_nulterm(text):
@@ -162,7 +186,7 @@ class Transformer(t):
             super().eval(context)
             self.text = self.text + "\0"
             context.inc_pc(1)
-        def emit(self,context):
+        def emit(self):
             return self.text.encode('utf-8')
     
     class byte(codegen):
@@ -171,30 +195,38 @@ class Transformer(t):
             return f".byte {self.value}"
         def eval(self, context):
             context.inc_pc(1)
-        def emit(self, context):
-            return self.value.eval(context).to_bytes(1)
+        def collect(self, context):
+            self.out = self.value.eval(context).to_bytes(1)
+        def emit(self):
+            return self.out
 
     class word(codegen):
         def __repr__(self):
             return f".word {self.value}"
         def eval(self, context):
             context.inc_pc(2)
-        def emit(self, context):
-            return self.value.eval(context).to_bytes(2)
+        def collect(self, context):
+            self.out = self.value.eval(context).to_bytes(2, byteorder='little')
+        def emit(self):
+            return self.out
     class double(codegen):
         def __repr__(self):
             return f".double {self.value}"
         def eval(self, context):
             context.inc_pc(4)
-        def emit(self, context):
-            return self.value.eval(context).to_bytes(4)
+        def collect(self, context):
+            self.out = self.value.eval(context).to_bytes(4, byteorder='little')
+        def emit(self):
+            return self.out
     class quad(codegen):
         def __repr__(self):
             return f".quad {self.value}"
         def eval(self, context):
             context.inc_pc(8)
-        def emit(self, context):
-            return self.value.eval(context).to_bytes(8)
+        def collect(self, context):
+            self.out = self.value.eval(context).to_bytes(8, byteorder='little')
+        def emit(self):
+            return self.out
 
     class register(Branch):
         def __init__(self, value):
@@ -202,15 +234,29 @@ class Transformer(t):
             super().__init__(value)
         def __repr__(self):
             return f"register {self.children[0]}"
+
+        def eval(self, context):
+            if self.children[0] == "a":
+                return parameter.Register(0)
+            elif self.children[0] == "x":
+                return parameter.Register(1)
+            elif self.children[0] == "y":
+                return parameter.Register(2)
     class immediate(Branch):
         def __repr__(self):
             return f"immediate {self.children[0]}"
+        def eval(self, context):
+            return parameter.Immediate(self.children[0].eval(context))
     class direct_addr(Branch):
         def __repr__(self):
             return f"deref {self.children[0]}"
+        def eval(self, context):
+            return parameter.Dereference(self.children[0].eval(context))
     class indirect_addr(Branch):
         def __repr__(self):
             return f"deref indirect"
+        def eval(self, context):
+            return parameter.IndirectDereference()
 
     class constantdef(Branch):
         def __init__(self, value):
@@ -286,6 +332,9 @@ class Transformer(t):
     class symbol(Branch):
         def __repr__(self):
             return f"symbol {self.children[0]}"
+        def eval(self, context):
+            name = self.children[0].eval()
+            return context.get(name)
 
     class IDENTIFIER(Leaf):
         def __repr__(self):
