@@ -20,4 +20,4 @@ class Constructor:
 
         ast.collect(self.globals)
 
-        return ast.emit(self.globals)
+        return ast.emit()

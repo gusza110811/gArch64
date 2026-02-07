@@ -12,21 +12,23 @@ class Assembler:
         tree = self.parser.parse(code,filename)
         print("\n".join([repr(item) for item in tree.children]))
 
+        if tree is None:
+            return
+
         out = self.constructor.main(tree,filename)
         print("\n")
 
         for space in self.constructor.locals:
             print(space.get_all())
-        
-        print(self.constructor.globals.pc)
-
-        print(out)
+        return out
 
 def test():
     test = open(os.path.join(__dir__,"small_test.asm")).read()
 
     assembler = Assembler()
-    assembler.main(test)
+    out = assembler.main(test)
+    if out is not None:
+        print("Output bytes:", out.hex(" ", 2))
 
 if __name__ == "__main__":
     test()

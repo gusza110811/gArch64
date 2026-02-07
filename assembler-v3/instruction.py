@@ -14,6 +14,13 @@ class Instruction:
             raise SyntaxError(f"unknown instruction '{name}'")
         return map[name](args)
 
+class Jmp(Instruction):
+    def get(self,size=4):
+        if isinstance(self.args[0], Immediate): # relative jump
+            return b"\0\x70" + self.args[0].get(size)
+        if isinstance(self.args[0], Dereference): # absolute jump
+            return b"\0\x30" + self.args[0].get(size)
+
 class Mov(Instruction):
     def __repr__(self):
         return f"MovInstruction(args={self.args})"
@@ -35,6 +42,7 @@ class Int(Instruction):
         return b"\0\x80" + self.args[0].get(size)
 
 map = {
+    "jmp": Jmp,
     "mov": Mov,
-    "int": Int
+    "int": Int,
 }

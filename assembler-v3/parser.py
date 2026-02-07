@@ -59,35 +59,43 @@ class Transformer(t):
 
             for child in non_codegens:
                 child.eval(context)
-            
-            for child in codegens:
-                child.eval(context)
-        
-        def collect(self, context:Context):
-            for child in self.children:
-                if isinstance(child,Transformer.codegen_block):
-                    child.collect(context)
-        
-        def emit(self,context:Context):
-            functions = [child for child in self.children if isinstance(child,Transformer.code_block)]
-            data = [child for child in self.children if isinstance(child,Transformer.data_block)]
-            main = None
-            for func in functions:
+
+            self.functions = [child for child in self.children if isinstance(child,Transformer.code_block)]
+            self.data = [child for child in self.children if isinstance(child,Transformer.data_block)]
+            self.main = None
+            for func in self.functions:
                 print(func.name)
-                if func.name == "main":
-                    main = func
+                if func.name.value == "main":
+                    self.main = func
+                    self.functions.remove(func)
                     break
             else:
                 raise SyntaxError("No main defined")
+
+            self.main.eval(context)
+            for part in self.data:
+                part.eval(context)
+            for func in self.functions:
+                func.eval(context)
+        
+        def collect(self, context:Context):
+            
+            self.main.collect(context)
+            for part in self.data:
+                part.collect(context)
+            for func in self.functions:
+                func.collect(context)
+        
+        def emit(self):
             
             out = []
             
-            out.append(main.emit())
+            out.append(self.main.emit())
 
-            #for func in functions:
-            #    out.append(func.emit())
-            for part in data:
+            for part in self.data:
                 out.append(part.emit())
+            for func in self.functions:
+                out.append(func.emit())
             
             return b"".join(out)
 
@@ -392,7 +400,7 @@ class Parser:
             parsedTree = parser.parse(code)
         except Exception as pe:
             print(pe)
-            sys.exit(1)
+            return None
 
         tree = transformer.transform(parsedTree)
 
