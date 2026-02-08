@@ -471,19 +471,19 @@ class Popr(Command):
 
 class Ldv(Command):
     def get_value(self, params, size=4, position=0):
-        return 0x87.to_bytes(2,byteorder="little")
+        return 0x4087.to_bytes(2,byteorder="little")
 
 class Stv(Command):
     def get_value(self, params, size=4, position=0):
-        return 0x88.to_bytes(2,byteorder="little")
+        return 0x1088.to_bytes(2,byteorder="little")
 
 class Ldvd(Command):
     def get_value(self, params, size=4, position=0):
-        return 0xB7.to_bytes(2,byteorder="little")
+        return 0x40B7.to_bytes(2,byteorder="little")
 
 class Stvd(Command):
     def get_value(self, params, size=4, position=0):
-        return 0xB8.to_bytes(2,byteorder="little")
+        return 0x10B8.to_bytes(2,byteorder="little")
 
 # x32
 class Int(Command):

@@ -24,10 +24,15 @@ class Executor:
             return value + (value & 0x8000_0000)*0x1FFFF_FFFE
         
         def sys_register_variant_get():
-            read = bool(variant&0x8000 >> 15)
-            working_register = variant&0x6000 >> 13
+            read = bool(variant&0x8000 >> 7)
+            working_register = variant&0x6000 >> 5
 
             return read, working_register
+
+        def variable_mov_variant_get():
+            source = (variant&0xC0) >> 6
+            dest   = (variant&0x30) >> 4
+            return source, dest
 
         if instruction in ["BP","IVIP","SP"]:
             read, register = sys_register_variant_get()
@@ -35,7 +40,7 @@ class Executor:
 
                 case "BP":
                     if read:
-                        registers[register] = register
+                        registers[register] = ram.stack_start
                     else:
                         ram.stack_start = registers[register]
                 case "IVIP":
@@ -48,7 +53,35 @@ class Executor:
                         registers[register] = ram.stack_pos
                     else:
                         ram.stack_pos = registers[register]
-        if instruction.startswith("LD") or instruction.startswith("ST") or instruction.startswith("MOV"):
+        elif instruction.startswith("STV"):
+            # int source
+            # int* dest
+            source, dest = variable_mov_variant_get()
+            if instruction.endswith("O"):
+                offset = params[0]
+                instruction = instruction[:-1]
+            else:
+                offset = 0
+            match instruction:
+                case "STV" : ram.store(registers[dest]+offset,registers[source])
+                case "STVD": ram.store_double(registers[dest]+offset,registers[source])
+                case "STVQ": ram.store_quad(registers[dest]+offset,registers[source])
+                case "STVW": ram.store_word(registers[dest]+offset,registers[source])
+        elif instruction.startswith("LDV"):
+            # int* source
+            # int dest
+            source, dest = variable_mov_variant_get()
+            if instruction.endswith("O"):
+                offset = params[0]
+                instruction = instruction[:-1]
+            else:
+                offset = 0
+            match instruction:
+                case "LDV" : registers[dest] = ram.load(registers[source]+offset)
+                case "LDVD": registers[dest] = ram.load_double(registers[source]+offset)
+                case "LDVQ": registers[dest] = ram.load_quad(registers[source]+offset)
+                case "LDVW": registers[dest] = ram.load_word(registers[source]+offset)
+        elif instruction.startswith("LD") or instruction.startswith("ST") or instruction.startswith("MOV"):
             match instruction:
                 case "LDA": registers[0] = ram.load(params[0])
                 case "LDX": registers[1] = ram.load(params[0])
@@ -58,8 +91,6 @@ class Executor:
                 case "STX": ram.store(params[0],registers[1])
                 case "STY": ram.store(params[0],registers[2])
 
-                case "LDV": registers[0] = ram.load(registers[1])
-                case "STV": ram.store(registers[1],registers[0])
                 case "MOV": ram.store(params[0],ram.load(params[1]))
 
                 case "LDAD": registers[0] = ram.load_double(params[0])
@@ -70,8 +101,6 @@ class Executor:
                 case "STXD": ram.store_double(params[0],registers[1])
                 case "STYD": ram.store_double(params[0],registers[2])
 
-                case "LDVD": registers[0] = ram.load_double(registers[1])
-                case "STVD": ram.store_double(registers[1],registers[0])
                 case "MOVD": ram.store_double(params[0],ram.load_double(params[1]))
 
                 case "LDAQ": registers[0] = ram.load_quad(params[0])
@@ -82,8 +111,6 @@ class Executor:
                 case "STXQ": ram.store_quad(params[0],registers[1])
                 case "STYQ": ram.store_quad(params[0],registers[2])
 
-                case "LDVQ": registers[0] = ram.load_quad(registers[1])
-                case "STVQ": ram.store_quad(registers[1],registers[0])
                 case "MOVQ": ram.store_quad(params[0],ram.load_quad(params[1]))
 
                 case "LDAW": registers[0] = ram.load_word(params[0])
@@ -94,8 +121,6 @@ class Executor:
                 case "STXW": ram.store_word(params[0],registers[1])
                 case "STYW": ram.store_word(params[0],registers[2])
 
-                case "LDVW": registers[0] = ram.load_word(registers[1])
-                case "STVW": ram.store_word(registers[1],registers[0])
                 case "MOVW": ram.store_word(params[0],ram.load_word(params[1]))
 
                 case "LDAI": registers[0] = params[0]

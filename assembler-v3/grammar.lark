@@ -20,7 +20,7 @@ instruction: INST parameter ("," parameter)? "\n"
 
 register: REGISTERS
 immediate: expr
-?address: "[" "x" "]" -> indirect_addr
+?address: "[" register "]" -> indirect_addr
     | "[" expr "]" -> direct_addr
 
 data_block: "data " [IDENTIFIER] "{" data_statement* "}"
@@ -84,7 +84,7 @@ symbol: IDENTIFIER
 IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*/
 COMMENT: ";" /[^\n]*/
 
-REGISTERS: /[axyAXY]/
+REGISTERS: /[axyAXY]|"BP"|"IV"|"IP"|"SP"/
 
 DECIMAL: /[0-9_]+/
 BINARY: /[01_]+/

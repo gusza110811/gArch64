@@ -86,7 +86,7 @@ class Emulator:
         self.counter = 0xFFFF_0000
 
         # Set to true if debugging the BIOS
-        tracing = False
+        tracing = True
 
         recursion_table = {}
 
@@ -141,13 +141,23 @@ class Emulator:
             
             prev_addr = self.counter
 
+            signinst = [
+                "AJMP","AJZ","AJNZ","AJC","AJNC","ACALL","ABZ","ABNZ","ABC","ABNC",
+                "JMPV","CALLV",
+                "JMP","JZ","JNZ","JC","JNC","CALL","BZ","BNZ","BC","BNC",
+
+                "LDVO","STVO","LDVWO","STVWO","LDVDO","STVDO","LDQO","STQO",
+            ]
+
             # convert first parameter to signed for certain instructions
-            if (name.startswith("J") or (name.startswith("B") and (not name.endswith("P"))) or (name == "CALL")) and not name.endswith("V"):
+            if name in signinst:
+                #print(name)
                 param = params[0]
                 sign_bit = 1 << (self.blocksize * 16 - 1)
                 if param & sign_bit:
                     param = param - (1 << (self.blocksize * 16))
                 params[0] = param
+
             if name == "INTR":
                 param = params[1]
                 sign_bit = 1 << (self.blocksize * 16 - 1)

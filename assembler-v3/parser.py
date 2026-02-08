@@ -40,14 +40,12 @@ class Transformer(t):
             return f"{self.__class__.__name__}({self.children})"
     
     class Leaf(Node):
-        def __init__(self, value:lark.Token):
-            self.value = value.value
+        def __init__(self, token:lark.Token):
+            self.value = token.value
+            self.token = token
         
         def eval(self):
             return self.value
-        
-        def __repr__(self):
-            return f"{self.__class__.__name__} {self.value}"
 
     class start(Branch):
         def __repr__(self):
@@ -409,7 +407,6 @@ class Transformer(t):
             self.value = self.value.replace(r"\n","\n").replace(r"\t","\t").replace(r"\\","\\").replace(r"\"","\"")
             return self.value
     class CHAR(STRING):
-
         def eval(self):
             super().eval()
             if len(self.value) != 1:
@@ -418,17 +415,17 @@ class Transformer(t):
             return self.value
 
     class DECIMAL(Leaf):
-        def __init__(self, value):
-            self.value = int(value)
+        def eval(self):
+            return int(self.value)
     class BINARY(Leaf):
-        def __init__(self, value):
-            self.value = int(value,base=2)
+        def eval(self):
+            return int(self.value,base=2)
     class OCTAL(Leaf):
-        def __init__(self, value):
-            self.value = int(value,base=8)
+        def eval(self):
+            return int(self.value,base=8)
     class HEX(Leaf):
-        def __init__(self, value):
-            self.value = int(value,base=16)
+        def eval(self):
+            return int(self.value,base=16)
 
 
 class Parser:
