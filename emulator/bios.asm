@@ -7,14 +7,12 @@ const disk_data 0xFE00_0002
 const disk_stat 0xFE00_0003
 
 ; setup the stack
-page [0xFFFFF]
 mov a, 0xFFFF_FFFF
-setst 
+setst
 
 ; setup the IVT
-page [0xFFFFE]
 mov a, 0xFFFF_E000
-setiv 
+setiv
 
 ; define the functions
 intr 0x10, print
@@ -29,9 +27,6 @@ intr 0x100, intfault
 intr 0x101, opcodefault
 intr 0x102, pagefault
 intr 0x103, intoverflow
-
-; allocate the 0 page
-page 0
 
 ; load the program in boot sector
 mov a, 0

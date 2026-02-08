@@ -12,14 +12,11 @@ class undefinedInt(Exception):
 
 class Ram:
     def __init__(self):
-        self.data:dict[(int,dict[(int,int)])] = {} # dict of int:frames(dict of int:int)
-        self.page_to_frame:dict[(int,int)] = {}
+        self.data:dict[(int,list[int])] = {} # dict of int:frames(dict of int:int)
 
-        # frame 0xFE000 is reserved for ports
-        self.allocate_page(0xFE000,0xFE000)
         self.ports:list[device.Port] = []
 
-        self.stack_start = None
+        self.stack_start = 0
         self.stack_pos = 0
 
         self.int_start = None
@@ -62,47 +59,12 @@ class Ram:
 
         return addr
 
-    def allocate_page(self, page:int, frame:int=None):
-        def find_lowest_free(numbers):
-            number_set = set(numbers)
-            
-            current_num = 0
-            while current_num in number_set:
-                current_num += 1
-            
-            return current_num
-        if frame is None:
-            frame = find_lowest_free(self.page_to_frame.values())
-
-        self.page_to_frame[page] = frame
-        self.data[frame] = {}
-    
-    def relocate_page(self, old_page:int, new_page:int):
-        try:
-            self.page_to_frame[new_page] = self.page_to_frame[old_page]
-            del self.page_to_frame[old_page]
-        except KeyError:
-            self.allocate_page(new_page)
-
-    def free_page(self,page:int):
-        try:
-            del self.page_to_frame[page]
-        except KeyError:
-            pass
-    
-    def getaddr_real(self,addr:int):
-        frame = (addr & 0xFFFF_F000) >> 12
-        address = addr & 0xFFF
-        return frame, address
-
-    def getaddr_virtual(self,virtualaddr:int):
+    def getaddr(self,virtualaddr:int):
         page = (virtualaddr & 0xFFFF_F000 )>> 12
         address = virtualaddr & 0xFFF
-        try:
-            frame = self.page_to_frame[page]
-        except KeyError:
-            raise pageFault
-        return frame, address
+        if not (page in self.data.keys()):
+            self.data[page] = [0]*0x1000
+        return page, address
 
     def register_port(self, port:device.Port):
         self.ports.append(port)
@@ -110,84 +72,79 @@ class Ram:
     def register_device(self,device:device.Device):
         device.set_port(self.register_port)
 
-    def load(self, address:int, absolute=False):
-        frame, address = self.getaddr_real(address) if absolute else self.getaddr_virtual(address)
+    def load(self, address:int):
+        page, address = self.getaddr(address)
 
         try:
-            if frame == 0xFE000:
+            if page == 0xFE000:
                 device = self.ports[address]
                 return device.read()
         except IndexError:
             pass
         
         try:
-            frame = self.data[frame]
+            page = self.data[page]
         except KeyError:
             raise pageFault
 
         try:
-            return frame[address]
+            return page[address]
         except KeyError:
             return 0
 
-    def load_quad(self, address:int, absolute=False):
+    def load_quad(self, address:int):
         return (
-            self.load(address+7,absolute) << 56 |
-            self.load(address+6,absolute) << 48 |
-            self.load(address+5,absolute) << 40 |
-            self.load(address+4,absolute) << 32 |
-            self.load(address+3,absolute) << 24 |
-            self.load(address+2,absolute) << 16 |
-            self.load(address+1,absolute) << 8 |
-            self.load(address,absolute)
+            self.load(address+7) << 56 |
+            self.load(address+6) << 48 |
+            self.load(address+5) << 40 |
+            self.load(address+4) << 32 |
+            self.load(address+3) << 24 |
+            self.load(address+2) << 16 |
+            self.load(address+1) << 8 |
+            self.load(address)
         )
     
-    def store_quad(self, address:int, value:int, absolute=False):
-        self.store(address,value, absolute)
-        self.store(address+1,value >> 8, absolute)
-        self.store(address+2,value >> 16, absolute)
-        self.store(address+3,value >> 24, absolute)
-        self.store(address+4,value >> 32, absolute)
-        self.store(address+5,value >> 40, absolute)
-        self.store(address+6,value >> 48, absolute)
-        self.store(address+7,value >> 56, absolute)
+    def store_quad(self, address:int, value:int):
+        self.store(address,value,)
+        self.store(address+1,value >> 8)
+        self.store(address+2,value >> 16)
+        self.store(address+3,value >> 24)
+        self.store(address+4,value >> 32)
+        self.store(address+5,value >> 40)
+        self.store(address+6,value >> 48)
+        self.store(address+7,value >> 56)
 
-    def load_double(self, address:int, absolute=False):
-        return self.load(address+3,absolute) << 24 | self.load(address+2,absolute) << 16 | self.load(address+1,absolute) << 8 | self.load(address,absolute)
+    def load_double(self, address:int):
+        return self.load(address+3) << 24 | self.load(address+2) << 16 | self.load(address+1) << 8 | self.load(address)
     
-    def store_double(self, address:int, value:int, absolute=False):
-        self.store(address,value, absolute)
-        self.store(address+1,value >> 8, absolute)
-        self.store(address+2,value >> 16, absolute)
-        self.store(address+3,value >> 24, absolute)
+    def store_double(self, address:int, value:int):
+        self.store(address,value,)
+        self.store(address+1,value >> 8)
+        self.store(address+2,value >> 16)
+        self.store(address+3,value >> 24)
 
-    def load_word(self, address:int, absolute=False):
-        return self.load(address+1,absolute) << 8 | self.load(address,absolute)
+    def load_word(self, address:int):
+        return self.load(address+1) << 8 | self.load(address)
     
-    def store_word(self, address:int, value:int, absolute=False):
-        self.store(address,value, absolute)
-        self.store(address+1,value >> 8, absolute)
-
-    def get_frame(self, frame_id:int):
-        try:
-            return self.data[frame_id]
-        except KeyError:
-            return {0:0}
+    def store_word(self, address:int, value:int):
+        self.store(address,value,)
+        self.store(address+1,value >> 8)
     
-    def load_bypass_dev(self, address:int, absolute=False):
-        frame, address = self.getaddr_real(address) if absolute else self.getaddr_virtual(address)
+    def load_bypass_dev(self, address:int):
+        page, address = self.getaddr(address)
 
         try:
-            return self.data[frame][address]
+            return self.data[page][address]
         except KeyError:
             return 0
 
-    def store(self, address:int, value:int, absolute=False):
+    def store(self, address:int, value:int):
 
-        frame, address = self.getaddr_real(address) if absolute else self.getaddr_virtual(address)
+        page, address = self.getaddr(address)
         value = value & 0xFF
+        #print(f"{page:5x} {address:3x} {len(self.data[page])}")
         # device
-        if frame == 0xFE000:
+        if page == 0xFE000:
             try:
                 device = self.ports[address]
                 device.write(value)
@@ -195,14 +152,8 @@ class Ram:
             except IndexError:
                 pass
 
-        if value != 0:
-            try:
-                frame = self.data[frame]
-            except KeyError:
-                raise pageFault
-            frame[address] = value
-        else:
-            try:
-                del self.data[frame][address]
-            except:
-                pass
+        try:
+            page = self.data[page]
+        except KeyError:
+            raise pageFault
+        page[address] = value

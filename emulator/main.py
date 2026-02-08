@@ -3,7 +3,7 @@ from memory import *
 from device import *
 import argparse
 import os
-import executor
+from executor import Executor
 import time
 import re
 from color import *
@@ -20,10 +20,9 @@ class Emulator:
         self.registers = [0,0,0]
 
         self.opcodes = Opcodes(self)
-        self.executor = executor.Executor(self)
+        self.executor = Executor(self)
 
         self.ram = Ram()
-        self.ram.allocate_page(0xFFFF0)
 
         self.counter = 0
         self.begininst = 0
@@ -120,7 +119,7 @@ class Emulator:
 
             self.begininst = self.counter
             opcode = fetch()
-            opcode = opcode + (fetch() << 8)
+            variant = fetch()
             try:
                 info = self.opcodes.OPCODES[opcode]
             except KeyError:
@@ -143,7 +142,7 @@ class Emulator:
             prev_addr = self.counter
 
             # convert first parameter to signed for certain instructions
-            if (name.startswith("J") or name.startswith("B") or (name == "CALL")) and not name.endswith("V"):
+            if (name.startswith("J") or (name.startswith("B") and (not name.endswith("P"))) or (name == "CALL")) and not name.endswith("V"):
                 param = params[0]
                 sign_bit = 1 << (self.blocksize * 16 - 1)
                 if param & sign_bit:
@@ -157,7 +156,7 @@ class Emulator:
                 params[1] = param
 
             try:
-                self.executor.execute(name,params)
+                self.executor.execute(name,variant,params)
             except pageFault:
                 int_fault(0x102)
                 continue
@@ -233,18 +232,15 @@ class Emulator:
         print(f"Y: {self.registers[2]:03}  (x{self.registers[2]:02X})")
 
     def dump_ram(self, long=False):
-        pages = dict(sorted(self.ram.page_to_frame.items()))
-        del pages[0xFE000]
+        pages = dict(sorted(self.ram.data.items()))
         print("\n<--- RAM DUMP --->")
-        for page, frame in pages.items():
-            frame = dict(sorted(self.ram.get_frame(frame).items()))
-
-            for idx, (key, value) in enumerate(frame.items()):
+        for page, values in pages.items():
+            for idx, value in enumerate(values):
                 if not long:
                     char = ascii(chr(value))
-                    print(f"{page:05X}{key:03X}: {value:02X} : {char}{' '*(8-len(char))}{'\n' if (idx % 4) == 3 else ''}",end="")
+                    print(f"{page:05X}{idx:03X}: {value:02X} : {char}{' '*(8-len(char))}{'\n' if (idx % 4) == 3 else ''}",end="")
                 else:
-                    print(f"{key:016X}: {value:02X}")
+                    print(f"{idx:016X}: {value:02X}")
             print("\n")
     
     def dump_state(self):
@@ -304,8 +300,7 @@ if __name__ == "__main__":
         eprint(f"{os.cpu_count()} logical processors available")
 
     if stdin == "":
-        stdin = input("stdin> ")
-    if stdin:
+        stdin = input("stdin (\\ is newline)> ")
         stdin = (stdin+"\\").replace("\\", "\n")
     
     if verbose or stdin:
