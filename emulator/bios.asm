@@ -15,18 +15,18 @@ mov a, 0xFFFF_E000
 setiv
 
 ; define the functions
-intr 0x10, print
-intr 0x12, input
+intr 0x10, offset + print
+intr 0x12, offset + input
 
-intr 0x13, disk_set_sector
-intr 0x14, disk_read
-intr 0x15, disk_write
+intr 0x13, offset + disk_set_sector
+intr 0x14, offset + disk_read
+intr 0x15, offset + disk_write
 
 ; define the fault handlers
-intr 0x100, intfault
-intr 0x101, opcodefault
-intr 0x102, pagefault
-intr 0x103, intoverflow
+intr 0x100, offset + intfault
+intr 0x101, offset + opcodefault
+intr 0x102, offset + pagefault
+intr 0x103, offset + intoverflow
 
 ; load the program in boot sector
 mov a, 0

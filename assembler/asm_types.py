@@ -492,8 +492,7 @@ class Int(Command):
 
 class Intr(Command):
     def get_value(self, params, size=4, position=0):
-        params[1].value = params[1].value - position
-        params = self.encode_immediate(params,size,True)
+        params = self.encode_immediate(params,size)
         return bytes([0x90,0x00]) + params
 
 class Page(Command):

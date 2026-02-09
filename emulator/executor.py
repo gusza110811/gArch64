@@ -62,11 +62,17 @@ class Executor:
                 instruction = instruction[:-1]
             else:
                 offset = 0
+            if dest == 3:
+                dest = ram.stack_start+offset
+            else:
+                dest = registers[dest]+offset
+            if source == 3:
+                emulator.int_fault(0x101)
             match instruction:
-                case "STV" : ram.store(registers[dest]+offset,registers[source])
-                case "STVD": ram.store_double(registers[dest]+offset,registers[source])
-                case "STVQ": ram.store_quad(registers[dest]+offset,registers[source])
-                case "STVW": ram.store_word(registers[dest]+offset,registers[source])
+                case "STV" : ram.store(dest,registers[source])
+                case "STVD": ram.store_double(dest,registers[source])
+                case "STVQ": ram.store_quad(dest,registers[source])
+                case "STVW": ram.store_word(dest,registers[source])
         elif instruction.startswith("LDV"):
             # int* source
             # int dest
@@ -76,11 +82,17 @@ class Executor:
                 instruction = instruction[:-1]
             else:
                 offset = 0
+            if source == 3:
+                source = ram.stack_start+offset
+            else:
+                source = registers[source]+offset
+            if dest == 3:
+                emulator.int_fault(0x101)
             match instruction:
-                case "LDV" : registers[dest] = ram.load(registers[source]+offset)
-                case "LDVD": registers[dest] = ram.load_double(registers[source]+offset)
-                case "LDVQ": registers[dest] = ram.load_quad(registers[source]+offset)
-                case "LDVW": registers[dest] = ram.load_word(registers[source]+offset)
+                case "LDV" : registers[dest] = ram.load(source+offset)
+                case "LDVD": registers[dest] = ram.load_double(source+offset)
+                case "LDVQ": registers[dest] = ram.load_quad(source+offset)
+                case "LDVW": registers[dest] = ram.load_word(source+offset)
         elif instruction.startswith("LD") or instruction.startswith("ST") or instruction.startswith("MOV"):
             match instruction:
                 case "LDA": registers[0] = ram.load(params[0])
@@ -245,7 +257,7 @@ class Executor:
                     emulator.counter = address
 
                 case "INTR":
-                    ram.register_int(params[0],emulator.begininst+params[1])
+                    ram.register_int(params[0],params[1])
 
                 case "REDC": emulator.blocksize = max(1, emulator.blocksize * 2)
                 case "EXTN": emulator.blocksize = min(4, emulator.blocksize * 2)

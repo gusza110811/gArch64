@@ -69,6 +69,14 @@ class Emulator:
             self.zero = False
 
         return
+    
+    def int_fault(self,id):
+            target = self.ram.find_int(id)
+            if target:
+                self.ram.push_double(self.counter)
+                self.counter = target
+            elif target != 0x102:
+                self.int_fault(0x100)
 
     def main(self, disk:str, stdin):
 
@@ -106,14 +114,6 @@ class Emulator:
             self.counter += 1
             return value
 
-        def int_fault(id):
-            target = self.ram.find_int(id)
-            if target:
-                self.ram.push_double(self.counter)
-                self.counter = target
-            elif target != 0x102:
-                int_fault(0x100)
-
         while self.running:
             prev_time = time.perf_counter_ns()
 
@@ -124,7 +124,7 @@ class Emulator:
                 info = self.opcodes.OPCODES[opcode]
             except KeyError:
                 name = "???"
-                int_fault(0x101)
+                self.int_fault(0x101)
                 continue
 
             name:str = info["mnemonic"]
@@ -158,23 +158,16 @@ class Emulator:
                     param = param - (1 << (self.blocksize * 16))
                 params[0] = param
 
-            if name == "INTR":
-                param = params[1]
-                sign_bit = 1 << (self.blocksize * 16 - 1)
-                if param & sign_bit:
-                    param = param - (1 << (self.blocksize * 16))
-                params[1] = param
-
             try:
                 self.executor.execute(name,variant,params)
             except pageFault:
-                int_fault(0x102)
+                self.int_fault(0x102)
                 continue
             except ivtOverflow:
-                int_fault(0x103)
+                self.int_fault(0x103)
                 continue
             except undefinedInt:
-                int_fault(0x100)
+                self.int_fault(0x100)
                 continue
 
             self.time.append(time.perf_counter_ns()-prev_time)
@@ -245,13 +238,14 @@ class Emulator:
         pages = dict(sorted(self.ram.data.items()))
         print("\n<--- RAM DUMP --->")
         for page, values in pages.items():
+            print(f"{page:X}","{")
             for idx, value in enumerate(values):
                 if not long:
                     char = ascii(chr(value))
-                    print(f"{page:05X}{idx:03X}: {value:02X} : {char}{' '*(8-len(char))}{'\n' if (idx % 4) == 3 else ''}",end="")
+                    print(f"\t{idx:03X}: {value:02X} : {char}{' '*(8-len(char))}{'\n' if (idx % 4) == 3 else ''}",end="")
                 else:
-                    print(f"{idx:016X}: {value:02X}")
-            print("\n")
+                    print(f"\t{idx:016X}: {value:02X}")
+            print("}\n")
     
     def dump_state(self):
         print("\n<--- STATE DUMP --->")
