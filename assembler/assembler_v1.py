@@ -309,4 +309,4 @@ if __name__ == "__main__":
     with open(dest, "wb") as destfile:
         destfile.write(result)
     
-    print("\033[33mWARNING: This is an older assembler which is deprecated;\nnot every instruction is included.\nuses big-endian instead of the current little-endian.\nplease do not use it in the future\033[0m")
+    print("\033[33mWARNING: This is an old assembler which is deprecated;\nAnd is entirely incompatible with the current ISA\033[0m")

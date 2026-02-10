@@ -5,6 +5,7 @@ data text {
 }
 
 func main {
+    mov 5, a
     mov a, text ; LDAI text
     int print   ; INT print
 }

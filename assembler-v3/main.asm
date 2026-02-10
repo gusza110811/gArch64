@@ -19,26 +19,15 @@ func main {
 
     call printd
 
-    ; implicit HALT (because this function is main)
+    halt
 }
 
-func printd {
+func printd 
     mov a, text1
     int print
 
     mov a, text2
     int print
 
-    ; implicit RET
-}
-
-; function can also be defined without func
-nprintd {
-    mov a, text1
-    int print
-
-    mov a, text2
-    int print
-
-    ; implicit RET
+    ret
 }

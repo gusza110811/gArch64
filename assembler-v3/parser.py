@@ -6,6 +6,15 @@ import os, sys
 from context import Context
 import parameter
 import instruction
+from dataclasses import dataclass
+
+@dataclass
+class ParseErr(Exception):
+    msg:str
+    line:int
+    col:int
+    colend:int
+    hint:str=""
 
 __dir__ = os.path.dirname(__file__)
 
@@ -28,6 +37,9 @@ class Transformer(t):
 
         def __repr__(self):
             return f"<Invalid Node>"
+        
+        def get_first_token(self) -> lark.Token:
+            return
 
     class Branch(Node):
         def __init__(self, value:list[Transformer.Node]):
@@ -35,17 +47,26 @@ class Transformer(t):
         
         def eval(self, context:Context):
             pass
+
+        def get_first_token(self):
+            return self.children[0].get_first_token()
         
         def __repr__(self):
             return f"{self.__class__.__name__}({self.children})"
     
     class Leaf(Node):
-        def __init__(self, token:lark.Token):
+        def __init__(self, token):
             self.value = token.value
             self.token = token
         
         def eval(self):
             return self.value
+        
+        def get_first_token(self):
+            return self.token
+        
+        def __repr__(self):
+            return f"{self.__class__.__name__}({self.value})"
 
     class start(Branch):
         def __repr__(self):
@@ -62,7 +83,6 @@ class Transformer(t):
             self.data = [child for child in self.children if isinstance(child,Transformer.data_block)]
             self.main = None
             for func in self.functions:
-                print(func.name)
                 if func.name.value == "main":
                     self.main = func
                     self.functions.remove(func)
@@ -144,13 +164,6 @@ class Transformer(t):
     class code_block(codegen_block):
         def eval(self, context):
             super().eval(context)
-            context.inc_pc(2)
-        
-        def emit(self):
-            if self.name == "main":
-                return super().emit() + b"\xff\0"
-            else:
-                return super().emit() + b"\x37\0"
 
         def __repr__(self):
             return "code " + repr(self.name) + "{" + "; ".join([repr(value) for value in self.children]) + "}"
@@ -164,16 +177,21 @@ class Transformer(t):
         def __init__(self, value):
             super().__init__(value)
             self.command = self.children[0]
-            self.args = self.children[1:]
+            self.args:list[Transformer.Parameter] = self.children[1:]
 
         def eval(self, context):
+            comtok:lark.Token = self.command.token
             self.command = self.command.eval()
             tmp_args = []
             for child in self.args:
                 tmp_args.append(child.dry_eval())
-            dryinst = instruction.Instruction.from_str(self.command,tmp_args)
+            try:
+                dryinst = instruction.Instruction.from_str(self.command,tmp_args).get(0)
+            except SyntaxError:
+                raise ParseErr(f"unknown instruction '{self.command}'",comtok.line-1,comtok.column-1,comtok.end_column-1)
             self.position = context.get_pc()
-            context.inc_pc(len(dryinst.get(0)))
+            if not isinstance(dryinst,instruction.Err):
+                context.inc_pc(len(dryinst))
 
         def collect(self, context):
             processed_args = []
@@ -181,6 +199,10 @@ class Transformer(t):
             for child in self.args:
                 processed_args.append(child.eval(context))
             self.out = instruction.Instruction.from_str(self.command, processed_args).get(self.position)
+
+            if isinstance(self.out, instruction.Err):
+                err_point = self.args[self.out.pos].get_first_token()
+                raise ParseErr(self.out.msg, err_point.line-1, err_point.column-1,err_point.end_column-1,self.out.hint)
         
         def emit(self):
             return self.out
@@ -249,9 +271,10 @@ class Transformer(t):
         def emit(self):
             return self.out
 
-    class register(Branch):
+    class Parameter(Branch):pass
+
+    class register(Parameter):
         def __init__(self, value):
-            value[0] = value[0].lower()
             super().__init__(value)
         def __repr__(self):
             return f"register {self.children[0]}"
@@ -260,33 +283,51 @@ class Transformer(t):
             return parameter.Register(0)
 
         def eval(self, context):
-            if self.children[0] == "a":
-                return parameter.Register(0)
-            elif self.children[0] == "x":
-                return parameter.Register(1)
-            elif self.children[0] == "y":
-                return parameter.Register(2)
-    class immediate(Branch):
+            return parameter.Register(self.children[0].eval())
+    class immediate(Parameter):
         def __repr__(self):
             return f"immediate {self.children[0]}"
         def dry_eval(self):
             return parameter.Immediate(0)
         def eval(self, context):
             return parameter.Immediate(self.children[0].eval(context))
-    class direct_addr(Branch):
+    class direct_addr(Parameter):
+        def __init__(self, value):
+            super().__init__(value)
+            self.size:Transformer.ADDR_SIZE = value[0]
+            self.addr:Transformer.expr = value[1]
         def __repr__(self):
             return f"deref {self.children[0]}"
         def dry_eval(self):
             return parameter.Dereference(0)
         def eval(self, context):
-            return parameter.Dereference(self.children[0].eval(context))
-    class indirect_addr(Branch):
+            addr = self.addr.eval()
+            if self.size:
+                size = self.size.eval()
+            else:
+                size = None
+            return parameter.Dereference(addr,size)
+    class indirect_addr(Parameter):
+        def __init__(self, value):
+            super().__init__(value)
+            self.size:Transformer.ADDR_SIZE|None = value[0]
+            self.pointer:Transformer.REGISTER = value[1]
+            self.offset:Transformer.expr|None = value[2]
         def __repr__(self):
             return f"deref indirect"
         def dry_eval(self):
             return parameter.IndirectDereference(0)
         def eval(self, context):
-            return parameter.IndirectDereference()
+            pointer = self.pointer.eval
+            if self.size:
+                size = self.size.eval()
+            else:
+                size = None
+            if self.offset:
+                offset = self.offset.eval()
+            else:
+                offset = 0
+            return parameter.IndirectDereference(pointer,size,offset)
 
     class constantdef(Branch):
         def __init__(self, value):
@@ -397,11 +438,14 @@ class Transformer(t):
     class IDENTIFIER(Leaf):
         def __repr__(self):
             return f"identifer {self.value}"
-    
-    class INST(Leaf):pass
+
+    class REGISTER(Leaf):
+        def eval(self):
+            return ['a','x','y','bp','sp','iv','ip'].index(self.value.lower())
 
     class STRING(Leaf):
         def __init__(self,value:str):
+            super().__init__(value)
             self.value = value[1:-1]
         def eval(self):
             self.value = self.value.replace(r"\n","\n").replace(r"\t","\t").replace(r"\\","\\").replace(r"\"","\"")
@@ -426,6 +470,8 @@ class Transformer(t):
     class HEX(Leaf):
         def eval(self):
             return int(self.value,base=16)
+    
+    class ADDR_SIZE(DECIMAL):pass
 
 
 class Parser:
@@ -439,11 +485,7 @@ class Parser:
         transformer = self.transformer
         parser = self.parser
 
-        try:
-            parsedTree = parser.parse(code)
-        except Exception as pe:
-            print(pe)
-            return None
+        parsedTree = parser.parse(code)
 
         tree = transformer.transform(parsedTree)
 
