@@ -192,6 +192,9 @@ class Transformer(t):
             self.position = context.get_pc()
             if not isinstance(dryinst,instruction.Err):
                 context.inc_pc(len(dryinst))
+            else:
+                err_point = self.args[dryinst.pos].get_first_token()
+                raise ParseErr(dryinst.msg, err_point.line-1, err_point.column-1,err_point.end_column-1,dryinst.hint)
 
         def collect(self, context):
             processed_args = []
@@ -296,17 +299,19 @@ class Transformer(t):
             super().__init__(value)
             self.size:Transformer.ADDR_SIZE = value[0]
             self.addr:Transformer.expr = value[1]
+            if self.size:
+                self.size = self.size.eval()
+            else:
+                self.size = None
         def __repr__(self):
             return f"deref {self.children[0]}"
         def dry_eval(self):
-            return parameter.Dereference(0)
+            return parameter.Dereference(0,self.size)
         def eval(self, context):
-            addr = self.addr.eval()
-            if self.size:
-                size = self.size.eval()
-            else:
-                size = None
-            return parameter.Dereference(addr,size)
+            addr = self.addr.eval(context)
+            return parameter.Dereference(addr,self.size)
+        def get_first_token(self):
+            return self.children[1].get_first_token()
     class indirect_addr(Parameter):
         def __init__(self, value):
             super().__init__(value)
@@ -458,6 +463,11 @@ class Transformer(t):
             self.value = ord(self.value)
             return self.value
 
+    class Number(Leaf):
+        def __init__(self, token:lark.Token):
+            token.value = token.value.replace("_","")
+            super().__init__(token)
+
     class DECIMAL(Leaf):
         def eval(self):
             return int(self.value)
@@ -471,7 +481,9 @@ class Transformer(t):
         def eval(self):
             return int(self.value,base=16)
     
-    class ADDR_SIZE(DECIMAL):pass
+    class ADDR_SIZE(DECIMAL):
+        def eval(self):
+            return ["b","w","d","q"].index(self.value.lower())
 
 
 class Parser:

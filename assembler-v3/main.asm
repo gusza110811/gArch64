@@ -22,7 +22,7 @@ func main {
     halt
 }
 
-func printd 
+func printd {
     mov a, text1
     int print
 

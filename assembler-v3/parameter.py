@@ -1,6 +1,8 @@
 class BaseParameter:
-    def __init__(self, value: int):
+    def __init__(self, value: int, length=2):
         self.value = value
+        self.length= length
+        "bytes, in powers of twos"
     
     def get(self,size:int):
         raise NotImplementedError(f"get() is not implemented for {self.__class__.__name__}")
@@ -13,15 +15,14 @@ class Immediate(BaseParameter):
         return self.value.to_bytes(size, byteorder='little', signed=signed)
 
 class Register(BaseParameter):
-    def __init__(self, value):
-        super().__init__(value)
+    def __init__(self, value, length=2):
+        super().__init__(value, length)
     def __repr__(self):
         return f"RegisterParameter({self.value})"
 
 class Dereference(BaseParameter):
-    def __init__(self, value, length):
+    def __init__(self, value:int, length:int):
         super().__init__(value)
-        self.relative = False
         self.length = length
     def __repr__(self):
         return f"DereferenceParameter({self.value})"

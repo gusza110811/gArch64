@@ -73,13 +73,13 @@ class Movd(Command):
         source = params[-1]
         # Load ram
         if isinstance(destination,Register) and isinstance(source,RamAddr):
-            return (0xB1 + destination.value).to_bytes(2,"little") + source.value.to_bytes(size,byteorder="little")
+            return (0xA1 + destination.value).to_bytes(2,"little") + source.value.to_bytes(size,byteorder="little")
         # Store ram
         elif isinstance(destination,RamAddr) and isinstance(source,Register):
-            return (0xB4 + source.value).to_bytes(2,"little") + destination.value.to_bytes(size,byteorder="little")
+            return (0xA4 + source.value).to_bytes(2,"little") + destination.value.to_bytes(size,byteorder="little")
         # MOV
         elif isinstance(destination,RamAddr) and isinstance(source,RamAddr):
-            return 0xB9.to_bytes(2,"little") + self.encode_immediate([destination,source],size,params_count=2)
+            return 0xA9.to_bytes(2,"little") + self.encode_immediate([destination,source],size,params_count=2)
         else:
             raise SyntaxError("Movd is only for register-memory and memory-memory operations, for other operations, use Mov")
 
@@ -89,13 +89,13 @@ class Movq(Command):
         source = params[-1]
         # Load ram
         if isinstance(destination,Register) and isinstance(source,RamAddr):
-            return (0xC1 + destination.value).to_bytes(2,"little") + source.value.to_bytes(size,byteorder="little")
+            return (0xB1 + destination.value).to_bytes(2,"little") + source.value.to_bytes(size,byteorder="little")
         # Store ram
         elif isinstance(destination,RamAddr) and isinstance(source,Register):
-            return (0xC4 + source.value).to_bytes(2,"little") + destination.value.to_bytes(size,byteorder="little")
+            return (0xB4 + source.value).to_bytes(2,"little") + destination.value.to_bytes(size,byteorder="little")
         # MOV
         elif isinstance(destination,RamAddr) and isinstance(source,RamAddr):
-            return 0xC9.to_bytes(2,"little") + self.encode_immediate([destination,source],size,params_count=2)
+            return 0xB9.to_bytes(2,"little") + self.encode_immediate([destination,source],size,params_count=2)
         else:
             raise SyntaxError("Movq is only for register-memory and memory-memory operations, for other operations, use Mov")
 
@@ -105,13 +105,13 @@ class Movw(Command):
         source = params[-1]
         # Load ram
         if isinstance(destination,Register) and isinstance(source,RamAddr):
-            return (0xD1 + destination.value).to_bytes(2,"little") + source.value.to_bytes(size,byteorder="little")
+            return (0x91 + destination.value).to_bytes(2,"little") + source.value.to_bytes(size,byteorder="little")
         # Store ram
         elif isinstance(destination,RamAddr) and isinstance(source,Register):
-            return (0xD4 + source.value).to_bytes(2,"little") + destination.value.to_bytes(size,byteorder="little")
+            return (0x94 + source.value).to_bytes(2,"little") + destination.value.to_bytes(size,byteorder="little")
         # MOV
         elif isinstance(destination,RamAddr) and isinstance(source,RamAddr):
-            return 0xD9.to_bytes(2,"little") + self.encode_immediate([destination,source],size,params_count=2)
+            return 0x99.to_bytes(2,"little") + self.encode_immediate([destination,source],size,params_count=2)
         else:
             raise SyntaxError("Movw is only for register-memory and memory-memory operations, for other operations, use Mov")
 

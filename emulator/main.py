@@ -94,7 +94,7 @@ class Emulator:
         self.counter = 0xFFFF_0000
 
         # Set to true if debugging the BIOS
-        tracing = True
+        tracing = False
 
         recursion_table = {}
 

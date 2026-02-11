@@ -97,7 +97,7 @@ OCTAL: /[0-7_]+/
 HEX: /[0-9a-fA-F_]+/
 STRING: ESCAPED_STRING
 
-CHAR: ESCAPED_STRING
+CHAR: "'" /.*?/ /(?<!\\)(\\\\)*?/ "'"
 
 %import common.ESCAPED_STRING
 %import common.WS
