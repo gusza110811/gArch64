@@ -311,7 +311,10 @@ class Transformer(t):
             addr = self.addr.eval(context)
             return parameter.Dereference(addr,self.size)
         def get_first_token(self):
-            return self.children[1].get_first_token()
+            if self.children[0]:
+                return self.children[0].get_first_token()
+            else:
+                return self.children[1].get_first_token()
     class indirect_addr(Parameter):
         def __init__(self, value):
             super().__init__(value)

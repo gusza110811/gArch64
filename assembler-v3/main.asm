@@ -1,33 +1,17 @@
-const print = 0x10
+const print = 0x10 ; a bios-defined software interupt routine
+const console = 0xfe00_0000 ; raw console device
 
-; this is a data block
 data text {
-    .asciiz "Hello, World!\n"
+    .asciiz "Hello, World!"
 }
 
-; this is an anonymous data block
-data {
-    text1:  .asciiz "Beep "
-
-    text2:  .asciiz "Boop\n"
-}
-
-; main is always put at the top when assembled
 func main {
-    mov a, text ; LDAI text
-    int print   ; INT print
+    mov a, text
+    int print
 
-    call printd
-
+    mov x, '\n'
+    mov [b 0x200], x
+    mov a, [b 0x200]
+    mov [b console], a
     halt
-}
-
-func printd {
-    mov a, text1
-    int print
-
-    mov a, text2
-    int print
-
-    ret
 }

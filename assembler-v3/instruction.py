@@ -51,12 +51,12 @@ register("call",Call)
 
 class Ret(Instruction):
     def get(self, pc, size=4):
-        return b"\xff\0"
+        return b"\x37\0"
 register("ret",Ret)
 
 class Halt(Instruction):
     def get(self, pc, size=4):
-        return b"\x37\0"
+        return b"\xff\0"
 register("halt",Halt)
 
 class Mov(Instruction):
@@ -72,17 +72,22 @@ class Mov(Instruction):
         elif destlength is None:
             destlength = srclength
         if srclength is None:
-            return Err("parameter size ambiguous",0,"try adding b, w, d or q in your dereferences")
+            return Err("parameter size ambiguous",0,"try adding b, w, d or q in one of the dereferences")
         if (srclength != destlength):
-            return Err("size mismatch between source and destination",0, f"size of the two parameters are not compatible ({sizetochr[destlength]} vs {sizetochr[srclength]})")
+            if isinstance(source, Register):
+                length = destlength
+            elif isinstance(dest, Register):
+                length = srclength
+            else:
+                return Err("size mismatch between source and destination",0, f"size of the two parameters are not compatible ({sizetochr[destlength]} vs {sizetochr[srclength]})")
         elif srclength:
             length = srclength
 
         if isinstance(dest,Immediate):
             return Err("immediate is not a valid destination",0,"only register A, X, Y and memory are valid destinations")
 
-        if isinstance(dest, Register): # register load
-            if isinstance(source, Immediate):
+        elif isinstance(dest, Register):
+            if isinstance(source, Immediate): # load immediate
                 if dest.value == 0:
                     return b"\x47\0" + source.get(size)
                 elif dest.value == 1:
@@ -91,25 +96,23 @@ class Mov(Instruction):
                     return b"\x49\0" + source.get(size)
                 else:
                     return Err("invalid register for loading immediate",0,"only A, X and Y accept immediate values")
-            elif isinstance(source, Dereference):
+            elif isinstance(source, Dereference): # load
                 addr = source.get(size)
                 reg = dest.value
-                if source.value > 2:
+                if dest.value > 2:
                     return Err("invalid register for loading value",1,"only A, X and Y accept value from memory")
                 return (0x81 + (length*0x10) + reg).to_bytes(2,byteorder='little') + addr
-
-        elif isinstance(source, Register): # register store
-            if isinstance(dest, Dereference):
+        
+        elif isinstance(dest, Dereference):
+            if isinstance(source, Immediate):
+                return Err("cannot store immediate value to memory",1,"only register A, X and Y accept immediate values")
+            if isinstance(source, Register): # store
                 addr = dest.get(size)
                 reg = source.value
                 if source.value > 2:
                     return Err("invalid register for storing value",1,"only registers A, X and Y can be stored to memory")
                 return (0x84 + (length*0x10) + reg).to_bytes(2,byteorder='little') + addr
-        
-        elif isinstance(dest, Dereference): # mov
-            if isinstance(source, Immediate):
-                return Err("cannot store immediate value to memory",1,"only register A, X and Y accept immediate values")
-        
+
         return Err("not implemented",0)
 register("mov",Mov)
 
