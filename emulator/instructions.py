@@ -75,7 +75,7 @@ class Opcodes:
 
         # Indirect Flow Control
         self.define('JMPV', 0x3F, 0, [], 'Jump to address stored in register A')
-        self.define('CALLV', 0x40, 0, [], 'CALL function at address stored in register A')
+        self.define('CALLV', 0x3E, 0, [], 'Call function at address stored in register A')
 
         # Other Flow Control
         self.define('HALT', 0xFF, 0, [], 'Stop execution')

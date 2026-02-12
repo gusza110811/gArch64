@@ -335,7 +335,7 @@ class Jmpv(Command):
 
 class Callv(Command):
     def get_value(self, params, size=4, position=0):
-        return bytes([0x40,0x00])
+        return bytes([0x3E,0x00])
 
 
 # Control flow
