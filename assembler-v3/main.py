@@ -16,9 +16,9 @@ class Assembler:
         except lark.exceptions.UnexpectedCharacters as e:
             line = e.line -1 if e.line > 0 else -1
             col = e.column -1 if e.column > 0 else -1
-            print(color.fg.MAGENTA + f"unexpected character at line {line} char {col}")
-            print(color.RESET + "  "+codelns[line-1])
-            print(color.fg.RED + "  "+" "*(col-1)+"^")
+            print(color.fg.MAGENTA + f"unexpected character at line {line+1} char {col+1}")
+            print(color.RESET + "  "+codelns[line])
+            print(color.fg.RED + "  "+" "*(col)+"^")
             return None
 
         if tree is None:
@@ -28,11 +28,11 @@ class Assembler:
         try:
             out = self.constructor.main(tree,filename)
         except parser.ParseErr as e:
-            print(color.fg.MAGENTA + e.msg)
-            print(f"at line {e.line+1} char {e.col}")
+            print(f"File {filename} line {e.line+1} char {e.col}")
+            print(color.fg.MAGENTA + e.msg.capitalize())
             print(color.RESET + "  " + codelns[e.line])
             print(color.fg.RED + "  " + " "*e.col+"^"*(e.colend-e.col))
-            print(color.fg.GRAY + e.hint)
+            print(color.fg.GRAY + e.hint.capitalize())
             return None
 
         print("\n")
@@ -48,7 +48,7 @@ def test():
     if out:
         print("Output bytes:", out.hex(" "))
     
-        with open("out.bin","wb") as file:
+        with open("main.bin","wb") as file:
             file.write(out)
 
 if __name__ == "__main__":

@@ -38,6 +38,7 @@ labeldef: IDENTIFIER ":"
     | ".double" expr -> double
     | ".quad" expr -> quad
     | ".zero" expr -> zero
+    | ".org" expr -> org
 
 ?expr: bitwise_or
 

@@ -52,11 +52,13 @@ class Transformer(t):
             pass
 
         def get_first_token(self):
-            tokens = [child.get_first_token() for child in self.children if isinstance(child.get_first_token(),lark.Token)]
+            tokens = [child.get_first_token() for child in self.children if child]
+            tokens = list(filter(lambda c: isinstance(c,lark.Token), tokens))
             return tokens[0]
         
         def get_last_token(self):
-            tokens = [child.get_last_token() for child in self.children if isinstance(child.get_last_token(),lark.Token)]
+            tokens = [child.get_last_token() for child in self.children if child]
+            tokens = list(filter(lambda c: isinstance(c,lark.Token), tokens))
             return tokens[-1]
         
         def __repr__(self):
@@ -102,18 +104,18 @@ class Transformer(t):
                 raise SyntaxError("No main defined")
 
             self.main.eval(context)
-            for part in self.data:
-                part.eval(context)
             for func in self.functions:
                 func.eval(context)
+            for part in self.data:
+                part.eval(context)
         
         def collect(self, context:Context):
             
             self.main.collect(context)
-            for part in self.data:
-                part.collect(context)
             for func in self.functions:
                 func.collect(context)
+            for part in self.data:
+                part.collect(context)
         
         def emit(self):
             
@@ -121,10 +123,10 @@ class Transformer(t):
             
             out.append(self.main.emit())
 
-            for part in self.data:
-                out.append(part.emit())
             for func in self.functions:
                 out.append(func.emit())
+            for part in self.data:
+                out.append(part.emit())
             
             return b"".join(out)
 
@@ -258,7 +260,6 @@ class Transformer(t):
             self.out = self.value.eval(context).to_bytes(1)
         def emit(self):
             return self.out
-
     class word(codegen):
         def __repr__(self):
             return f".word {self.value}"
@@ -286,6 +287,18 @@ class Transformer(t):
             self.out = self.value.eval(context).to_bytes(8, byteorder='little')
         def emit(self):
             return self.out
+
+    class zero(codegen):
+        def eval(self, context):
+            context.inc_pc(self.children[0].eval(context))
+        def collect(self, context):
+            self.out = b"\0" * self.children[0].eval(context)
+        def emit(self):
+            return self.out
+
+    class org(codegen):
+        def eval(self, context):
+            return self.children[0].eval(context) - context.get_pc()
 
     class Parameter(Branch):pass
 
@@ -317,7 +330,7 @@ class Transformer(t):
             else:
                 self.size = None
         def __repr__(self):
-            return f"deref {self.children[0]}"
+            return f"deref {self.children[0]} {self.children[1]}"
         def dry_eval(self):
             return parameter.Dereference(0,self.size)
         def eval(self, context):

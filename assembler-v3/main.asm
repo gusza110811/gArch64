@@ -1,16 +1,22 @@
 const print = 0x10 ; a bios-defined software interupt routine
+const input = 0x12
 const console = 0xfe00_0000 ; raw console device
 
-data text {
-    .asciiz "Hello, World!"
+data buffer {
+    .zero 0
 }
 
 func main {
-    mov a, text
-    int print
-
+    mov a, buffer
     mov x, '\n'
-    mov [b 0x200], x
-    mov [b console], [0x200]
-    halt
+
+    call loop
+}
+
+func loop {
+    int input
+    int print
+    mov [b console], x
+
+    jmp loop
 }

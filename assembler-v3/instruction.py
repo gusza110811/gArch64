@@ -28,39 +28,68 @@ class Instruction:
     @classmethod
     def from_str(cls, name:str, args:list[BaseParameter]) -> "Instruction":
         if name not in map:
-            raise SyntaxError(f"unknown instruction '{name}'")
+            return SyntaxError(f"unknown instruction '{name}'")
         return map[name](args)
+    
+    def check_type(self, index:int, expect:BaseParameter|list[BaseParameter]):
+        if not isinstance(expect,list):
+            if isinstance(self.args[index],expect):
+                return True
+            else:
+                return False
+        else:
+            for exp in expect:
+                if isinstance(self.args[index],expect):
+                    return True
+            return False
+    def check_count(self, expect):
+        if expect == len(self.args):
+            return True
+        return False
 
 class Jmp(Instruction):
     def get(self, pc:int, size=4):
+        if not self.check_count(1):
+            return Err("expected 1 parameter",-1,f"got {len(self.args)} parameter(s)")
         if isinstance(self.args[0], Immediate): # relative jump
             self.args[0].value -= pc
             return b"\x70\0" + (self.args[0].get(size,True))
-        if isinstance(self.args[0], Dereference): # absolute jump
+        elif isinstance(self.args[0], Dereference): # absolute jump
             return b"\x30\0" + self.args[0].get(size)
+        return Err("incorrect parameter type",0,"expected Immediate or Dereference")
 register("jmp",Jmp)
 
 class Call(Instruction):
     def get(self, pc:int, size=4):
+        if not self.check_count(1):
+            return Err("expected 1 parameter",-1,f"got {len(self.args)} parameter(s)")
         if isinstance(self.args[0], Immediate): # relative
             self.args[0].value -= pc
             return b"\x78\0" + (self.args[0].get(size,True))
-        if isinstance(self.args[0], Dereference): # absolute
+        elif isinstance(self.args[0], Dereference): # absolute
             return b"\x38\0" + self.args[0].get(size)
+        return Err("incorrect parameter type",0,"expected Immediate or Dereference")
 register("call",Call)
 
 class Ret(Instruction):
     def get(self, pc, size=4):
+        if not self.check_count(0):
+            return Err("expected no parameter",-1)
         return b"\x37\0"
 register("ret",Ret)
 
 class Halt(Instruction):
     def get(self, pc, size=4):
+        if not self.check_count(0):
+            return Err("expected no parameter",-1)
         return b"\xff\0"
 register("halt",Halt)
 
 class Mov(Instruction):
     def get(self, pc:int, size=4):
+        if not self.check_count(2):
+            return Err("expected 2 parameters",-1,f"got {len(self.args)} parameter(s)")
+
         dest = self.args[0]
         source = self.args[1]
 
@@ -75,8 +104,6 @@ class Mov(Instruction):
             return Err("parameter size ambiguous",0,"try adding b, w, d or q in one of the dereferences")
         if (srclength != destlength):
             if isinstance(source, Register):
-                length = destlength
-            elif isinstance(dest, Register):
                 length = srclength
             else:
                 return Err("size mismatch between source and destination",0, f"size of the two parameters are not compatible ({sizetochr[destlength]} vs {sizetochr[srclength]})")
@@ -122,7 +149,9 @@ register("mov",Mov)
 
 class Int(Instruction):
     def get(self, pc:int, size=4):
-        if not isinstance(self.args[0], Immediate):
-            raise SyntaxError(f"parameter of `int` must be an immediate value")
+        if not self.check_count(1):
+            return Err("expected 1 parameter",-1)
+        if not self.check_type(0,Immediate):
+            return Err("expected immediate value",0)
         return b"\x80\0" + self.args[0].get(size)
 register("int",Int)
