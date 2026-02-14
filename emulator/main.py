@@ -120,7 +120,7 @@ class Emulator:
         self.counter = 0xFFFF_0000
 
         # Set to true if debugging the BIOS
-        tracing = True
+        tracing = False
 
         recursion_table = {}
 
@@ -146,32 +146,9 @@ class Emulator:
                 info = self.opcodes.OPCODES[opcode]
                 name:str = info["mnemonic"]
             except KeyError:
-                name = "?" + hex(opcode)
+                name = "?" + format(opcode,"X")
             
             prev_addr = self.counter
-
-            signinst = [
-                "AJMP","AJZ","AJNZ","AJC","AJNC","ACALL","ABZ","ABNZ","ABC","ABNC",
-                "JMPV","CALLV",
-                "JMP","JZ","JNZ","JC","JNC","CALL","BZ","BNZ","BC","BNC",
-
-                "LDVO","STVO","LDVWO","STVWO","LDVDO","STVDO","LDQO","STQO",
-            ]
-
-            try:
-                if not name.startswith("?"):
-                    self.executor.execute(name,variant)
-            except pageFault:
-                self.int_fault(0x102)
-                continue
-            except ivtOverflow:
-                self.int_fault(0x103)
-                continue
-            except undefinedInt:
-                self.int_fault(0x100)
-                continue
-
-            self.time.append(time.perf_counter_ns()-prev_time)
             
             if self.do_trace and tracing:
                 # counter,
@@ -180,8 +157,7 @@ class Emulator:
                 # parameters,
                 # registers,
                 # flags,
-                # (relavent cache address, relavent cache value)
-                # (relavent ram address, relavent ram value)
+                # (relevant ram address, relevant ram value)
                 # was a jump done
                 ram_revalence = r"(^(?:ST|LD)[AXY]|^MOV)?[WDQ]"
                 jumped = self.counter != prev_addr
@@ -204,6 +180,20 @@ class Emulator:
                     raise IndexError
             if self.do_trace and self.counter == 0: # begin tracing on the true start of the program
                 tracing = True
+            
+            try:
+                if not name.startswith("?"):
+                    self.executor.execute(name,variant)
+            except pageFault:
+                self.int_fault(0x102)
+                continue
+            except ivtOverflow:
+                self.int_fault(0x103)
+                continue
+            except undefinedInt:
+                self.int_fault(0x100)
+                continue
+            self.time.append(time.perf_counter_ns()-prev_time)
             
             if self.block_recursion:
                 if self.counter not in recursion_table:
