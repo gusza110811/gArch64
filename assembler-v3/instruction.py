@@ -10,7 +10,7 @@ class Err:
         self.hint = hint
 
         if msg == "not implemented":
-            self.hint = "come back to writing the assembler you donkey"
+            self.hint += "\ncome back to writing the assembler you donkey"
 
 map = {}
 
@@ -80,7 +80,7 @@ class Mov(Instruction):
                 length = srclength
             else:
                 return Err("size mismatch between source and destination",0, f"size of the two parameters are not compatible ({sizetochr[destlength]} vs {sizetochr[srclength]})")
-        elif srclength:
+        else:
             length = srclength
 
         if isinstance(dest,Immediate):
@@ -112,8 +112,12 @@ class Mov(Instruction):
                 if source.value > 2:
                     return Err("invalid register for storing value",1,"only registers A, X and Y can be stored to memory")
                 return (0x84 + (length*0x10) + reg).to_bytes(2,byteorder='little') + addr
+            if isinstance(source, Dereference): # mov
+                destaddr = dest.get(size)
+                srcaddr = source.get(size)
+                return (0x89 + (length*0x10)).to_bytes(2,byteorder='little') + destaddr + srcaddr
 
-        return Err("not implemented",0)
+        return Err("not implemented",0,f"no case implemented for {type(dest)}, {type(source)}")
 register("mov",Mov)
 
 class Int(Instruction):

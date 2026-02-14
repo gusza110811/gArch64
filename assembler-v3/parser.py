@@ -40,6 +40,9 @@ class Transformer(t):
         
         def get_first_token(self) -> lark.Token:
             return
+        
+        def get_last_token(self) -> lark.Token:
+            return
 
     class Branch(Node):
         def __init__(self, value:list[Transformer.Node]):
@@ -49,7 +52,12 @@ class Transformer(t):
             pass
 
         def get_first_token(self):
-            return self.children[0].get_first_token()
+            tokens = [child.get_first_token() for child in self.children if isinstance(child.get_first_token(),lark.Token)]
+            return tokens[0]
+        
+        def get_last_token(self):
+            tokens = [child.get_last_token() for child in self.children if isinstance(child.get_last_token(),lark.Token)]
+            return tokens[-1]
         
         def __repr__(self):
             return f"{self.__class__.__name__}({self.children})"
@@ -63,6 +71,9 @@ class Transformer(t):
             return self.value
         
         def get_first_token(self):
+            return self.token
+        
+        def get_last_token(self):
             return self.token
         
         def __repr__(self):
@@ -193,8 +204,9 @@ class Transformer(t):
             if not isinstance(dryinst,instruction.Err):
                 context.inc_pc(len(dryinst))
             else:
-                err_point = self.args[dryinst.pos].get_first_token()
-                raise ParseErr(dryinst.msg, err_point.line-1, err_point.column-1,err_point.end_column-1,dryinst.hint)
+                err_begin = self.args[dryinst.pos].get_first_token()
+                err_end = self.args[dryinst.pos].get_last_token()
+                raise ParseErr(dryinst.msg, err_begin.line-1, err_begin.column-1,err_end.end_column-1,dryinst.hint)
 
         def collect(self, context):
             processed_args = []
@@ -204,8 +216,9 @@ class Transformer(t):
             self.out = instruction.Instruction.from_str(self.command, processed_args).get(self.position)
 
             if isinstance(self.out, instruction.Err):
-                err_point = self.args[self.out.pos].get_first_token()
-                raise ParseErr(self.out.msg, err_point.line-1, err_point.column-1,err_point.end_column-1,self.out.hint)
+                err_begin = self.args[self.out.pos].get_first_token()
+                err_end = self.args[self.out.pos].get_last_token()
+                raise ParseErr(self.out.msg, err_begin.line-1, err_begin.column-1,err_end.end_column-1,self.out.hint)
         
         def emit(self):
             return self.out

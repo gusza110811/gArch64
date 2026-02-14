@@ -11,7 +11,6 @@ func main {
 
     mov x, '\n'
     mov [b 0x200], x
-    mov a, [b 0x200]
-    mov [b console], a
+    mov [b console], [0x200]
     halt
 }
