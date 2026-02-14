@@ -41,6 +41,8 @@ class Emulator:
         self.do_trace = False
         self.block_recursion = False
         self.recursion_limit = 10000
+
+        self.params = []
     
     # Ensure register A is within bounds
     def correct_register(self):
@@ -77,6 +79,30 @@ class Emulator:
                 self.counter = target
             elif target != 0x102:
                 self.int_fault(0x100)
+    
+    def fetch(self):
+        value = self.ram.load(self.counter)
+        self.counter += 1
+        return value
+    
+    def get_param(self,size:int=None,signed=False):
+        "size in words, defaults to address size"
+        if size is None:
+            size = self.blocksize
+        val = 0
+
+        for idx in range(size):
+            val |= (self.fetch() | (self.fetch() << 8)) << (idx*16)
+
+        if signed:
+            sign_bit = 1 << (size * 16 - 1)
+            if val & sign_bit:
+                val = val - (1 << (self.blocksize * 16))
+            val = val
+
+        self.params.append(val)
+        return val
+
 
     def main(self, disk:str, stdin):
 
@@ -94,7 +120,7 @@ class Emulator:
         self.counter = 0xFFFF_0000
 
         # Set to true if debugging the BIOS
-        tracing = False
+        tracing = True
 
         recursion_table = {}
 
@@ -109,35 +135,18 @@ class Emulator:
             raise executionError(f"Disk image \"{disk}\" not found")
         self.ram.register_device(diskio)
 
-        def fetch():
-            value = self.ram.load(self.counter)
-            self.counter += 1
-            return value
-
         while self.running:
+            self.params = []
             prev_time = time.perf_counter_ns()
 
             self.begininst = self.counter
-            opcode = fetch()
-            variant = fetch()
+            opcode = self.fetch()
+            variant = self.fetch()
             try:
                 info = self.opcodes.OPCODES[opcode]
+                name:str = info["mnemonic"]
             except KeyError:
-                name = "???"
-                self.int_fault(0x101)
-                continue
-
-            name:str = info["mnemonic"]
-            size = info["size"]
-
-            params = []
-
-            for idx in range(size):
-                value = 0
-                for idk in range(self.blocksize * 2 ): # blocksize is in words, not bytes
-                    value = value >> 8
-                    value += fetch() << (self.blocksize * 2 * 8)-8
-                params.append(value)
+                name = "?" + hex(opcode)
             
             prev_addr = self.counter
 
@@ -149,17 +158,9 @@ class Emulator:
                 "LDVO","STVO","LDVWO","STVWO","LDVDO","STVDO","LDQO","STQO",
             ]
 
-            # convert first parameter to signed for certain instructions
-            if name in signinst:
-                #print(name)
-                param = params[0]
-                sign_bit = 1 << (self.blocksize * 16 - 1)
-                if param & sign_bit:
-                    param = param - (1 << (self.blocksize * 16))
-                params[0] = param
-
             try:
-                self.executor.execute(name,variant,params)
+                if not name.startswith("?"):
+                    self.executor.execute(name,variant)
             except pageFault:
                 self.int_fault(0x102)
                 continue
@@ -185,21 +186,21 @@ class Emulator:
                 ram_revalence = r"(^(?:ST|LD)[AXY]|^MOV)?[WDQ]"
                 jumped = self.counter != prev_addr
                 try:
-                    rammed = (params[0], self.ram.load_bypass_dev(params[0])) if re.match(ram_revalence, name) else (self.registers[1], self.ram.load_bypass_dev(self.registers[1])) if (name.startswith("LDV") or name.startswith("STV")) else None
+                    rammed = (self.params[0], self.ram.load_bypass_dev(self.params[0])) if re.match(ram_revalence, name) else (self.registers[1], self.ram.load_bypass_dev(self.registers[1])) if (name.startswith("LDV") or name.startswith("STV")) else None
                 except pageFault:
-                    rammed = (params[0], 0) if re.match(ram_revalence, name) else (self.registers[1], self.ram.load_bypass_dev(self.registers[1])) if (name.startswith("LDV") or name.startswith("STV")) else None
+                    rammed = (self.params[0], 0) if re.match(ram_revalence, name) else (self.registers[1], self.ram.load_bypass_dev(self.registers[1])) if (name.startswith("LDV") or name.startswith("STV")) else None
                 try:
                     self.trace.append((
                         self.begininst,
                         opcode, name,
-                        params.copy() + [0]*(2-len(params)),
+                        self.params.copy() + [0]*(2-len(self.params)),
                         self.registers.copy(),
                         (self.carry, self.zero),
                         rammed,
                         jumped
                     ))
                 except IndexError:
-                    print(f"{opcode:X} {name} {params} {prev_addr:X}")
+                    print(f"{opcode:X} {name} {self.params} {prev_addr:X}")
                     raise IndexError
             if self.do_trace and self.counter == 0: # begin tracing on the true start of the program
                 tracing = True
@@ -210,6 +211,8 @@ class Emulator:
                 recursion_table[self.counter] += 1
                 if recursion_table[self.counter] > self.recursion_limit:
                     raise executionError(f"Recursion/Infinite loop blocked: instruction at x{self.counter:X} executed too many times")
+            if name.startswith("?"):
+                self.int_fault(0x101)
 
         return
 
@@ -250,21 +253,23 @@ class Emulator:
     def dump_state(self):
         print("\n<--- STATE DUMP --->")
 
-        if emulator.halt_type == None:
+        if self.halt_type == None:
             print("Interrupted")
-        elif emulator.halt_type == 1:
+        elif self.halt_type == 1:
             print("Halted via 0xFF (HALT)")
-        elif emulator.halt_type == 2:
+        elif self.halt_type == 2:
             print("Halted via 0x00 (HALTZ)")
-        elif emulator.halt_type == -1:
+        elif self.halt_type == -1:
             print("Internal emulation error")
             return -1
         
         print("")
 
-        print(f"Stack Top     : {emulator.ram.stack_start:8X}")
-        print(f"Stack Position: {emulator.ram.stack_pos:8X}")
-        print(f"IVT zero      : {emulator.ram.int_start:8X}")
+        if self.ram.stack_start:
+            print(f"Stack Top     : {self.ram.stack_start:8X}")
+            print(f"Stack Position: {self.ram.stack_pos:8X}")
+        if self.ram.int_start:
+            print(f"IVT zero      : {self.ram.int_start:8X}")
 
     pass
 

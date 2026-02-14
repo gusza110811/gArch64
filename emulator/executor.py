@@ -4,12 +4,15 @@ class Executor:
     def __init__(self,emulator:"Emulator"):
         self.emulator = emulator
 
-    def execute(self, instruction:str, variant:int, params:list[int]):
+    def execute(self, instruction:str, variant:int):
         emulator = self.emulator
         ram = emulator.ram
         registers = emulator.registers
         carry = emulator.carry
         zero = emulator.zero
+
+        get = emulator.get_param
+
         # extend 8 bit to 16 bit
         def sign_extend_word(value):
             value = value & 0xFF
@@ -57,11 +60,7 @@ class Executor:
             # int source
             # int* dest
             source, dest = variable_mov_variant_get()
-            if instruction.endswith("O"):
-                offset = params[0]
-                instruction = instruction[:-1]
-            else:
-                offset = 0
+            offset = 0
             if dest == 3:
                 dest = ram.stack_start+offset
             else:
@@ -77,11 +76,7 @@ class Executor:
             # int* source
             # int dest
             source, dest = variable_mov_variant_get()
-            if instruction.endswith("O"):
-                offset = params[0]
-                instruction = instruction[:-1]
-            else:
-                offset = 0
+            offset = 0
             if source == 3:
                 source = ram.stack_start+offset
             else:
@@ -95,49 +90,49 @@ class Executor:
                 case "LDVW": registers[dest] = ram.load_word(source+offset)
         elif instruction.startswith("LD") or instruction.startswith("ST") or instruction.startswith("MOV"):
             match instruction:
-                case "LDA": registers[0] = ram.load(params[0])
-                case "LDX": registers[1] = ram.load(params[0])
-                case "LDY": registers[2] = ram.load(params[0])
+                case "LDA": registers[0] = ram.load(get())
+                case "LDX": registers[1] = ram.load(get())
+                case "LDY": registers[2] = ram.load(get())
 
-                case "STA": ram.store(params[0],registers[0])
-                case "STX": ram.store(params[0],registers[1])
-                case "STY": ram.store(params[0],registers[2])
+                case "STA": ram.store(get(),registers[0])
+                case "STX": ram.store(get(),registers[1])
+                case "STY": ram.store(get(),registers[2])
 
-                case "MOV": ram.store(params[0],ram.load(params[1]))
+                case "MOV": ram.store(get(),ram.load(get()))
 
-                case "LDAD": registers[0] = ram.load_double(params[0])
-                case "LDXD": registers[1] = ram.load_double(params[0])
-                case "LDYD": registers[2] = ram.load_double(params[0])
+                case "LDAD": registers[0] = ram.load_double(get())
+                case "LDXD": registers[1] = ram.load_double(get())
+                case "LDYD": registers[2] = ram.load_double(get())
 
-                case "STAD": ram.store_double(params[0],registers[0])
-                case "STXD": ram.store_double(params[0],registers[1])
-                case "STYD": ram.store_double(params[0],registers[2])
+                case "STAD": ram.store_double(get(),registers[0])
+                case "STXD": ram.store_double(get(),registers[1])
+                case "STYD": ram.store_double(get(),registers[2])
 
-                case "MOVD": ram.store_double(params[0],ram.load_double(params[1]))
+                case "MOVD": ram.store_double(get(),ram.load_double(get()))
 
-                case "LDAQ": registers[0] = ram.load_quad(params[0])
-                case "LDXQ": registers[1] = ram.load_quad(params[0])
-                case "LDYQ": registers[2] = ram.load_quad(params[0])
+                case "LDAQ": registers[0] = ram.load_quad(get())
+                case "LDXQ": registers[1] = ram.load_quad(get())
+                case "LDYQ": registers[2] = ram.load_quad(get())
 
-                case "STAQ": ram.store_quad(params[0],registers[0])
-                case "STXQ": ram.store_quad(params[0],registers[1])
-                case "STYQ": ram.store_quad(params[0],registers[2])
+                case "STAQ": ram.store_quad(get(),registers[0])
+                case "STXQ": ram.store_quad(get(),registers[1])
+                case "STYQ": ram.store_quad(get(),registers[2])
 
-                case "MOVQ": ram.store_quad(params[0],ram.load_quad(params[1]))
+                case "MOVQ": ram.store_quad(get(),ram.load_quad(get()))
 
-                case "LDAW": registers[0] = ram.load_word(params[0])
-                case "LDXW": registers[1] = ram.load_word(params[0])
-                case "LDYW": registers[2] = ram.load_word(params[0])
+                case "LDAW": registers[0] = ram.load_word(get())
+                case "LDXW": registers[1] = ram.load_word(get())
+                case "LDYW": registers[2] = ram.load_word(get())
 
-                case "STAW": ram.store_word(params[0],registers[0])
-                case "STXW": ram.store_word(params[0],registers[1])
-                case "STYW": ram.store_word(params[0],registers[2])
+                case "STAW": ram.store_word(get(),registers[0])
+                case "STXW": ram.store_word(get(),registers[1])
+                case "STYW": ram.store_word(get(),registers[2])
 
-                case "MOVW": ram.store_word(params[0],ram.load_word(params[1]))
+                case "MOVW": ram.store_word(get(),ram.load_word(get()))
 
-                case "LDAI": registers[0] = params[0]
-                case "LDXI": registers[1] = params[0]
-                case "LDYI": registers[2] = params[0]
+                case "LDAI": registers[0] = get()
+                case "LDXI": registers[1] = get()
+                case "LDYI": registers[2] = get()
         else:
             match instruction:
                 case "HALT": emulator.running = False; emulator.halt_type = 1
@@ -174,9 +169,9 @@ class Executor:
                 case "SHLB": registers[0] = registers[1] << 8
                 case "SHRB": registers[0] = registers[1] >> 8
 
-                case "CMPA": emulator.compare(registers[0],params[0])
-                case "CMPX": emulator.compare(registers[1],params[0])
-                case "CMPY": emulator.compare(registers[2],params[0])
+                case "CMPA": emulator.compare(registers[0],get())
+                case "CMPX": emulator.compare(registers[1],get())
+                case "CMPY": emulator.compare(registers[2],get())
 
                 case "CPAX": emulator.compare(registers[0],registers[1])
                 case "CPAY": emulator.compare(registers[0],registers[2])
@@ -185,46 +180,68 @@ class Executor:
                 case "CPYA": emulator.compare(registers[2],registers[0])
                 case "CPYX": emulator.compare(registers[2],registers[1])
 
-                case "AJMP": emulator.counter = params[0]
+                case "AJMP":
+                    target = get()
+                    emulator.counter = target
                 case "AJZ":
-                    if zero: emulator.counter = params[0]
+                    target = get()
+                    if zero: emulator.counter = target
                 case "AJNZ":
-                    if not zero: emulator.counter = params[0]
+                    target = get()
+                    if not zero: emulator.counter = target
                 case "AJC":
-                    if carry: emulator.counter = params[0]
+                    target = get()
+                    if carry: emulator.counter = target
                 case "AJNC":
-                    if (not carry): emulator.counter = params[0]
+                    target = get()
+                    if (not carry): emulator.counter = target
 
                 case "RET": emulator.counter = ram.pop_double()
-                case "ACALL": ram.push_double(emulator.counter); emulator.counter = params[0]
+                case "ACALL":
+                    target = get()
+                    ram.push_double(emulator.counter); emulator.counter = target
                 case "ABZ":
-                    if zero: ram.push_double(emulator.counter); emulator.counter = params[0]
+                    target = get()
+                    if zero: ram.push_double(emulator.counter); emulator.counter = target
                 case "ABNZ":
-                    if not zero: ram.push_double(emulator.counter); emulator.counter = params[0]
+                    target = get()
+                    if not zero: ram.push_double(emulator.counter); emulator.counter = target
                 case "ABC":
-                    if carry: ram.push_double(emulator.counter); emulator.counter = params[0]
+                    target = get()
+                    if carry: ram.push_double(emulator.counter); emulator.counter = target
                 case "ABNC":
-                    if not carry: ram.push_double(emulator.counter); emulator.counter = params[0]
+                    target = get()
+                    if not carry: ram.push_double(emulator.counter); emulator.counter = target
 
-                case "JMP": emulator.counter = emulator.begininst + params[0]
+                case "JMP": emulator.counter = emulator.begininst + get(signed=True)
                 case "JZ":
-                    if zero: emulator.counter = emulator.begininst + params[0]
+                    target = get(signed=True)
+                    if zero: emulator.counter = emulator.begininst + target
                 case "JNZ":
-                    if not zero: emulator.counter = emulator.begininst + params[0]
+                    target = get(signed=True)
+                    if not zero: emulator.counter = emulator.begininst + target
                 case "JC":
-                    if carry: emulator.counter = emulator.begininst + params[0]
+                    target = get(signed=True)
+                    if carry: emulator.counter = emulator.begininst + target
                 case "JNC":
-                    if not carry: emulator.counter = emulator.begininst + params[0]
+                    target = get(signed=True)
+                    if not carry: emulator.counter = emulator.begininst + target
 
-                case "CALL": ram.push_double(emulator.counter); emulator.counter = emulator.begininst + params[0]
+                case "CALL":
+                    target = get(signed=True)
+                    ram.push_double(emulator.counter); emulator.counter = emulator.begininst + target
                 case "BZ":
-                    if zero: ram.push_double(emulator.counter); emulator.counter = emulator.begininst + params[0]
+                    target = get(signed=True)
+                    if zero: ram.push_double(emulator.counter); emulator.counter = emulator.begininst + target
                 case "BNZ":
-                    if not zero: ram.push_double(emulator.counter); emulator.counter = emulator.begininst + params[0]
+                    target = get(signed=True)
+                    if not zero: ram.push_double(emulator.counter); emulator.counter = emulator.begininst + target
                 case "BC":
-                    if carry: ram.push_double(emulator.counter); emulator.counter = emulator.begininst + params[0]
+                    target = get(signed=True)
+                    if carry: ram.push_double(emulator.counter); emulator.counter = emulator.begininst + target
                 case "BNC":
-                    if (not carry): ram.push_double(emulator.counter); emulator.counter = emulator.begininst + params[0]
+                    target = get(signed=True)
+                    if (not carry): ram.push_double(emulator.counter); emulator.counter = emulator.begininst + target
 
                 case "JMPV": emulator.counter = registers[0]
                 case "CALLV": ram.push_double(emulator.counter); emulator.counter = registers[0]
@@ -252,12 +269,12 @@ class Executor:
                     registers[0] = ram.pop_double()
 
                 case "INT":
-                    address = ram.find_int(params[0])
+                    address = ram.find_int(get())
                     ram.push_double(emulator.counter)
                     emulator.counter = address
 
                 case "INTR":
-                    ram.register_int(params[0],params[1])
+                    ram.register_int(get(),get())
 
                 case "REDC": emulator.blocksize = max(1, emulator.blocksize * 2)
                 case "EXTN": emulator.blocksize = min(4, emulator.blocksize * 2)
