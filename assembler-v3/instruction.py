@@ -139,7 +139,7 @@ class Mov(Instruction):
                 if source.value > 2:
                     return Err("invalid register for storing value",1,"only registers A, X and Y can be stored to memory")
                 return (0x84 + (length*0x10) + reg).to_bytes(2,byteorder='little') + addr
-            if isinstance(source, Dereference): # mov
+            elif isinstance(source, Dereference): # mov
                 destaddr = dest.get(size)
                 srcaddr = source.get(size)
                 return (0x89 + (length*0x10)).to_bytes(2,byteorder='little') + destaddr + srcaddr
